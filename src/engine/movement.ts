@@ -30,7 +30,6 @@ interface Plan {
   transports?: Map<UnitId, UnitId>;
 }
 
-const adjacent = (a: SpaceId, b: SpaceId) => space(a).neighbors.includes(b);
 
 /** Enemy units that make a land space contested (factories never fight). */
 const enemyDefendersAt = (state: GameState, at: SpaceId, power: Power) =>
@@ -74,7 +73,7 @@ export function planMove(state: GameState, action: MoveAction): Plan | string {
   return 'move land, sea and air units separately';
 }
 
-function commonChecks(state: GameState, u: Unit, combat: boolean): string | null {
+function commonChecks(u: Unit, combat: boolean): string | null {
   if (u.carriedBy !== null && !isAir(u.type)) return 'cargo moves with its transport';
   if (!combat && !isAir(u.type) && (u.movedInCombat || u.fought || u.retreated))
     return 'units that moved in combat or fought cannot make a noncombat move';
@@ -87,7 +86,7 @@ function planLand(state: GameState, units: Unit[], path: SpaceId[], combat: bool
   const power = state.power;
   const steps = path.length - 1;
   for (const u of units) {
-    const err = commonChecks(state, u, combat);
+    const err = commonChecks(u, combat);
     if (err) return err;
     if (remainingMove(u) < steps) return `${u.type} does not have enough movement`;
     if (combat && u.moved > 0 && enemyDefendersAt(state, u.at, power).length > 0) return 'units that entered a battle must stop';
@@ -112,7 +111,7 @@ function planSea(state: GameState, units: Unit[], path: SpaceId[], combat: boole
   const power = state.power;
   const steps = path.length - 1;
   for (const u of units) {
-    const err = commonChecks(state, u, combat);
+    const err = commonChecks(u, combat);
     if (err) return err;
     if (remainingMove(u) < steps) return `${u.type} does not have enough movement`;
     if (u.offloadedTo !== null) return 'a transport cannot move after offloading';
@@ -203,7 +202,7 @@ function planLoad(state: GameState, units: Unit[], zone: SpaceId, chosen: UnitId
   const power = state.power;
   const combat = state.phase === 'combatMove';
   for (const u of units) {
-    const err = commonChecks(state, u, combat);
+    const err = commonChecks(u, combat);
     if (err) return err;
     if (u.moved > 0) return 'land units cannot move before loading';
   }
@@ -405,10 +404,4 @@ function canEscape(state: GameState, t: Unit): boolean {
   );
 }
 
-/** Fighters of the moving power left in sea zones that no friendly carrier will cover. */
-export function excessFightersAt(state: GameState, zone: SpaceId, power: Power): number {
-  const here = unitsAt(state, zone).filter((u) => areAllied(u.owner, power));
-  const slots = here.filter((u) => u.type === 'carrier').length * CARRIER_CAPACITY;
-  return Math.max(0, here.filter((u) => u.type === 'fighter').length - slots);
-}
 

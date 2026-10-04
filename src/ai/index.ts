@@ -3,7 +3,7 @@ import { autoCasualties } from '../engine/casualties';
 import type { Action, GameState } from '../engine/types';
 import type { Draft } from './board';
 import { planCombatMove } from './combatMove';
-import { decide, intercept, nextBattle } from './decisions';
+import { decide, nextBattle } from './decisions';
 import { mobilizeAction } from './mobilize';
 import { planNoncombat } from './noncombat';
 import { purchaseAction } from './purchase';

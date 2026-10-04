@@ -18,7 +18,6 @@ export const UNIT_TYPES = [
   'battleship',
 ] as const;
 export type UnitType = (typeof UNIT_TYPES)[number];
-export type PurchasableType = UnitType;
 
 export type SpaceId = string;
 export type UnitId = number;

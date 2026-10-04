@@ -8,21 +8,13 @@ import {
   TRANSPORT_CAPACITY,
   TURKISH_STRAITS_ZONE,
   VICTORY_CITIES,
-  isAir,
-  isLand,
   isNeutral,
   space,
 } from './data';
 import type { GameState, Power, Side, SpaceId, Unit, UnitId } from './types';
 
-export const sideOf = (p: Power): Side => SIDE[p];
 export const areAllied = (a: Power, b: Power) => SIDE[a] === SIDE[b];
 
-export function unitById(state: GameState, id: UnitId): Unit {
-  const u = state.units.find((x) => x.id === id);
-  if (!u) throw new Error(`no unit ${id}`);
-  return u;
-}
 
 export const unitsAt = (state: GameState, at: SpaceId) => state.units.filter((u) => u.at === at);
 
@@ -109,20 +101,10 @@ export function victoryCities(state: GameState, side: Side): number {
 
 export const factoryAt = (state: GameState, at: SpaceId) => state.units.find((u) => u.at === at && u.type === 'factory');
 
-/** Factory production capacity remaining before placements this turn. */
-export const factoryCapacity = (state: GameState, at: SpaceId) => {
-  const f = factoryAt(state, at);
-  if (!f) return 0;
-  return Math.max(0, space(at).ipc - f.damage);
-};
 
-export function isCombatUnit(u: Unit): boolean {
-  return u.type !== 'factory' && u.type !== 'aaGun';
-}
 
 export const isPassable = (id: SpaceId) => !isNeutral(id);
 
-export const landOrAir = (u: Unit) => isLand(u.type) || isAir(u.type);
 
 export const remainingMove = (u: Unit) => STATS[u.type].move - u.moved;
 
