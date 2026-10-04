@@ -186,7 +186,9 @@ export function retreatOptions(s: GameState, b: Battle): SpaceId[] {
   const movers = att.filter((u) => !isAir(u.type) && !b.seaborne.includes(u.id));
   if (movers.length > 0) {
     return b.origins.filter((o) =>
-      space(o).water ? !isHostileSea(s, o, b.attacker) : isFriendlyLand(s, o, b.attacker),
+      space(o).water
+        ? !isHostileSea(s, o, b.attacker) && !s.hostileSeaAtTurnStart.includes(o)
+        : isFriendlyLand(s, o, b.attacker),
     );
   }
   if (att.some((u) => isAir(u.type))) return [b.space];

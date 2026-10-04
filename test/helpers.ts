@@ -1,5 +1,5 @@
 import { expect } from 'vitest';
-import { apply } from '../src/engine/game';
+import { apply, startTurn } from '../src/engine/game';
 import { autoCasualties } from '../src/engine/casualties';
 import { freshUnit, newGame } from '../src/engine/state';
 import type { Action, GameState, Phase, Power, SpaceId, Unit, UnitType } from '../src/engine/types';
@@ -21,11 +21,11 @@ export function scenario(o: ScenarioOptions): GameState {
   const s = newGame(7);
   if (!o.keepSetup) s.units = [];
   Object.assign(s.owner, o.owners ?? {});
-  s.ownerAtTurnStart = { ...s.owner };
   s.power = o.power ?? 'Germans';
   s.phase = o.phase ?? 'combatMove';
   for (const [owner, type, at, count = 1] of o.units)
     for (let i = 0; i < count; i++) s.units.push(freshUnit(s.nextUnitId++, type, owner, at));
+  startTurn(s);
   Object.assign(s.treasury, o.treasury ?? {});
   s.scriptedDice = [...(o.dice ?? [])];
   return s;

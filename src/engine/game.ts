@@ -1,4 +1,4 @@
-import { CAPITAL_OF, CARRIER_CAPACITY, STATS, VICTORY_THRESHOLD, isAir, isLand, isSea, space } from './data';
+import { CAPITAL_OF, CARRIER_CAPACITY, SPACE_IDS, STATS, VICTORY_THRESHOLD, isAir, isLand, isSea, space } from './data';
 import { POWERS } from './types';
 import type { Action, Decision, GameState, Power, Purchase, Result, SpaceId, Unit, UnitId, UnitType } from './types';
 import {
@@ -8,6 +8,7 @@ import {
   carrierRoom,
   factoryAt,
   income,
+  isHostileSea,
   unitsAt,
   victoryCities,
 } from './queries';
@@ -87,7 +88,8 @@ function eligibleFactories(s: GameState, power: Power): SpaceId[] {
         u.owner === power &&
         s.owner[u.at] === power &&
         s.ownerAtTurnStart[u.at] === power &&
-        !s.capturedThisTurn.includes(u.at),
+        !s.capturedThisTurn.includes(u.at) &&
+        !s.mobilized.includes(u.id),
     )
     .map((u) => u.at);
 }
@@ -251,7 +253,10 @@ function place(s: GameState, type: UnitType, at: SpaceId, count: number): string
   }
   p.count -= count;
   s.purchases = s.purchases.filter((x) => x.count > 0);
-  for (let i = 0; i < count; i++) s.units.push(freshUnit(s.nextUnitId++, type, power, at));
+  for (let i = 0; i < count; i++) {
+    s.mobilized.push(s.nextUnitId);
+    s.units.push(freshUnit(s.nextUnitId++, type, power, at));
+  }
   return null;
 }
 
@@ -326,9 +331,11 @@ function endTurn(s: GameState): void {
   startTurn(s);
 }
 
-function startTurn(s: GameState): void {
+export function startTurn(s: GameState): void {
   s.ownerAtTurnStart = { ...s.owner };
   s.capturedThisTurn = [];
+  s.mobilized = [];
+  s.hostileSeaAtTurnStart = SPACE_IDS.filter((id) => space(id).water && isHostileSea(s, id, s.power));
   s.battles = [];
   s.activeBattle = null;
   s.placements = {};

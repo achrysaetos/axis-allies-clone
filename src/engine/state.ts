@@ -1,4 +1,5 @@
 import { SETUP, SPACE_IDS, space } from './data';
+import { isHostileSea } from './queries';
 import type { GameState, Options, Power, Unit, UnitType } from './types';
 import { POWERS } from './types';
 
@@ -36,7 +37,7 @@ export function newGame(seed = 1942, options: Partial<Options> = {}): GameState 
   const units: Unit[] = [];
   for (const p of SETUP.units) for (let i = 0; i < p.count; i++) units.push(freshUnit(units.length + 1, p.type, p.owner, p.at));
   const treasury = Object.fromEntries(POWERS.map((p) => [p, SETUP.treasury[p]])) as Record<Power, number>;
-  return {
+  const state: GameState = {
     options: { ...DEFAULT_OPTIONS, ...options },
     round: 1,
     power: 'Russians',
@@ -45,6 +46,8 @@ export function newGame(seed = 1942, options: Partial<Options> = {}): GameState 
     owner,
     ownerAtTurnStart: { ...owner },
     capturedThisTurn: [],
+    hostileSeaAtTurnStart: [],
+    mobilized: [],
     units,
     nextUnitId: units.length + 1,
     purchases: [],
@@ -57,6 +60,8 @@ export function newGame(seed = 1942, options: Partial<Options> = {}): GameState 
     winner: null,
     log: [],
   };
+  state.hostileSeaAtTurnStart = SPACE_IDS.filter((id) => space(id).water && isHostileSea(state, id, state.power));
+  return state;
 }
 
 /** Mulberry32 step; returns [die 1..6, next rng state]. */

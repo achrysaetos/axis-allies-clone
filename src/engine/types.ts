@@ -161,6 +161,10 @@ export interface GameState {
   ownerAtTurnStart: Record<SpaceId, Power>;
   /** Territories captured this turn (cannot land, cannot place factories). */
   capturedThisTurn: SpaceId[];
+  /** Sea zones holding enemy surface warships when this turn began; retreats cannot go there. */
+  hostileSeaAtTurnStart: SpaceId[];
+  /** Units mobilized this turn; new industrial complexes produce from next turn. */
+  mobilized: UnitId[];
   units: Unit[];
   nextUnitId: number;
   purchases: Purchase[];

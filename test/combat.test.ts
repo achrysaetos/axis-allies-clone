@@ -76,6 +76,20 @@ describe('general combat (p.16-19)', () => {
     expect(count(s, 'British', 'destroyer', '8 Sea Zone')).toBe(2);
   });
 
+  it('ships cannot retreat into a zone that was hostile when the turn began', () => {
+    let s = scenario({
+      power: 'British',
+      units: [['British', 'cruiser', '7 Sea Zone'], ['Germans', 'destroyer', '7 Sea Zone'], ['Germans', 'battleship', '6 Sea Zone']],
+      dice: [6, 6, 6, 6],
+    });
+    s = move(s, ids(s, 'British', 'cruiser', '7 Sea Zone'), ['7 Sea Zone', '6 Sea Zone']);
+    expect(s.units.find((u) => u.type === 'cruiser')!.escaped).toBe(true);
+    s.units = s.units.filter((u) => u.type !== 'destroyer');
+    s = ok(s, { type: 'endPhase' });
+    s = ok(s, { type: 'startBattle', battle: battleIn(s, '6 Sea Zone').id });
+    expect(s.pending?.kind).not.toBe('retreat');
+  });
+
   it('attackers retreat together to a space they came from; aircraft stay to land later', () => {
     let s = scenario({
       units: [['Germans', 'armour', 'West Russia'], ['Germans', 'fighter', 'West Russia'], ['Russians', 'infantry', 'Archangel', 3]],
@@ -381,6 +395,13 @@ describe('mobilization and income (p.22-23)', () => {
     let s = scenario({ phase: 'mobilize', owners: { Germany: 'Russians' }, treasury: { Germans: 5 }, units: [] });
     s = ok(s, { type: 'endPhase' });
     expect(s.treasury.Germans).toBe(5);
+  });
+
+  it('a complex placed this turn produces from next turn', () => {
+    let s = scenario({ phase: 'mobilize', units: [] });
+    s.purchases = [{ type: 'factory', count: 1 }, { type: 'infantry', count: 1 }];
+    s = ok(s, { type: 'place', unitType: 'factory', at: 'Poland', count: 1 });
+    fails(s, { type: 'place', unitType: 'infantry', at: 'Poland', count: 1 });
   });
 
   it('income is collected at the end of the turn', () => {
