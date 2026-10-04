@@ -26,12 +26,12 @@ Preconditions:
 
 - **New game.** Press `Start new game`; if a save exists, press `Replace saved game and start`. Dismiss the turn card. The top bar reads `Round 1`, `Soviet Union` and `Purchase`, with `Treasury 24 · Income 24` and `Axis 6/9 · Allies 7/10`.
 - **Options.** On the setup screen, tick `Optional: fighters escort and intercept bombing raids` and choose `Total: all 13 cities`, then start. The state snippet shows `options.sbrEscortsInterceptors: true` and `options.victory: "total"`, and the top bar threshold reads `/13`.
-- **Continue.** Make one purchase, reload the page, then press `Continue: round 1, Soviet Union` and `Continue turn`. The purchase tray shows the same purchase.
-- **Import.** Press `Menu`, then `Main menu`, then run the Import snippet with `opening`. The turn card opens for `Soviet Union` in `Purchase`.
+- **Continue.** Make one purchase, reload the page, then press `Continue: round 1, Soviet Union`. The turn card shows again; in Purchase its button reads `Start turn` (`Continue turn` appears only mid-turn). Press it. The tray shows the same purchase.
+- **Import.** Press `Menu`, then `Main menu`, then run the Import snippet with `opening`. The game opens at once, with no replace prompt even when a save exists, and the turn card shows `Soviet Union` in `Purchase`. The imported game becomes the autosave on its next change.
 - **Export.** Press `Menu`, then `Export save`. The browser starts a download named `aa1942-round1-Russians.json`. Downloads need the user's permission, so record this as unverified unless they allow it.
 
 ## Gotchas
 
-- The setup screen keeps the previous choices, so set every controller explicitly.
-- The `Player` and `Computer` toggles are per side. Confirm the controllers in `saved.controllers` after starting.
+- The setup screen does not remember choices. Every visit starts at `Player` for both sides, `Standard`, and both options unticked, so set each one explicitly.
+- The `Player` and `Computer` toggles are per side and apply to every power on it. Confirm the controllers in `saved.controllers` after starting. The `--ai` scenario flag is per power.
 - Reloading resumes nothing by itself. The player must press `Continue`.

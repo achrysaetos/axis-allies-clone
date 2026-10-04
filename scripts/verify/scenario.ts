@@ -122,6 +122,44 @@ const SCENARIOS: Record<string, Scenario> = {
         { owners: { Belorussia: 'Russians' } },
       ),
   },
+  order: {
+    summary:
+      'British combat move: a bomber in the UK to raid the German complex and a tank in Northwestern Europe next to one German infantry in France.',
+    build: () =>
+      board(
+        'British',
+        'combatMove',
+        [
+          ['British', 'bomber', 'United Kingdom'],
+          ['Germans', 'factory', 'Germany'],
+          ['British', 'armour', 'Northwestern Europe'],
+          ['Germans', 'infantry', 'France'],
+        ],
+        { owners: { 'Northwestern Europe': 'British' } },
+      ),
+  },
+  repair: {
+    summary: 'German purchase with the complex in Germany carrying 4 bombing damage, so the purchase tray offers a repair.',
+    build: () => {
+      const s = board('Germans', 'purchase', [['Germans', 'factory', 'Germany']]);
+      s.units.find((u) => u.type === 'factory')!.damage = 4;
+      return s;
+    },
+  },
+  blitz: {
+    summary:
+      'German combat move: a tank in Belorussia next to an empty Soviet West Russia, with one Soviet infantry in Russia beyond it.',
+    build: () =>
+      board(
+        'Germans',
+        'combatMove',
+        [
+          ['Germans', 'armour', 'Belorussia'],
+          ['Russians', 'infantry', 'Russia'],
+        ],
+        { owners: { 'West Russia': 'Russians' } },
+      ),
+  },
   mobilize: {
     summary: 'German mobilize phase holding 4 infantry and 1 destroyer, with complexes in Germany and Italy.',
     build: () => {

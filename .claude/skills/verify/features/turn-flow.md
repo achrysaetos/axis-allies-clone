@@ -4,11 +4,11 @@ Two players share the screen. Each power's turn opens with a turn card naming th
 
 ## Sub-features
 
-- `flow-card` shows the turn card at each human power's turn, and recenters the map on its capital when dismissed.
+- `flow-card` shows the turn card at each human power's turn, and recenters the map on its capital when dismissed (on the open battle instead, when one is being viewed).
 - `flow-recap` lists captures, battle results with losses, raids and lost planes since the power's last turn.
 - `flow-guide` shows a one-line hint pill (`.hint-line`) at the top center of the map.
 - `flow-odds` shows a win-percentage pill (`.map-tag`, tones good, warn, bad) above each planned attack space, and `~N dmg` for raids.
-- `flow-warn` asks for confirmation before ending a phase with unlanded planes, unplaced units or no purchase.
+- `flow-warn` asks for confirmation before ending purchase with nothing bought (3 IPCs or more and the capital held), noncombat with unlanded planes, or mobilize with unplaced units or planes still needing a new carrier.
 - `flow-help` opens the How to play overlay from the menu or the `?` key.
 - `flow-log` opens the game log overlay from the menu or the `L` key.
 
@@ -16,7 +16,7 @@ Two players share the screen. Each power's turn opens with a turn card naming th
 
 - End a power's turn, or press `Continue` on the setup screen, to see the turn card.
 - Move units into an enemy space during combat move to see the win-percentage tag on that space.
-- Press `End phase` with a plane over enemy or newly captured territory in noncombat to see the warning.
+- Press the end button with a plane in a territory that was not friendly at the start of the turn, in noncombat, to see the warning.
 - Press `Menu` in the top bar, then `How to play (?)` or `Game log (L)`. The `?` and `L` keys do the same.
 
 ## Driving it with the browser pane
@@ -26,12 +26,12 @@ Preconditions:
 - A two-player game started from the setup screen (`opening` scenario, or `Start new game`).
 
 - **Card.** Start the game. The overlay reads `Round 1 · Allies player`, `Soviet Union`, `24 IPCs to spend`. Press Enter. The card closes. Hover `data-space="Russia"` and the `.hover-card` shows `Russia`.
-- **Odds.** Press `End phase` (choose `End anyway` on the empty-purchase warning), drag a stack from `Russia` onto `data-space="West Russia"` with `left_click_drag`, then wait a second. A `.map-tag` percentage pill appears above `West Russia`.
-- **Warning.** Win the battle, press `End phase` into noncombat, then press `End phase` again with the fighter still in West Russia. The confirmation names `1 fighter in West Russia`.
+- **Odds.** Press the end button (choose `End anyway` on the empty-purchase warning), drag a stack from `Russia` onto `data-space="West Russia"` with `left_click_drag`, then wait a second. A `.map-tag` percentage pill appears above `West Russia`. While still holding units over an enemy space, the pill reads `NN% if you go`.
+- **Warning.** Win the battle, press the end button into noncombat, then press it again with the fighter still in West Russia. The confirmation names `1 fighter in West Russia`.
 - **Recap.** Finish the turn. Germany's card shows `Since your last turn` with the Soviet capture and its losses line.
-- **Hint.** Read `.hint-line` in each phase. It names the next step for the phase.
+- **Hint.** Read `.hint-line` in each phase. Purchase starts `Click units in the chart below to buy them`, combat move `Drag pieces into enemy spaces to attack`, and combat reads `Click a ⚔ to fight that battle.` or `Every battle is fought. End the phase.`. It is hidden while a battle dialog is open.
 - **Log.** Press `Menu`, then `Game log (L)`. The log overlay lists the turn's entries. Press Esc or L to close.
-- **Help.** Press `Menu`, then `How to play (?)`. The `How to play` overlay lists the turn order and a unit table. Press Esc to close it.
+- **Help.** Press `Menu`, then `How to play (?)`. The `How to play` overlay opens with the piece controls (`Drag a piece.`, `Click a piece.`, and so on), then the turn order, a unit table and the shortcuts. Press Esc or `?` to close it.
 
 ## Gotchas
 
