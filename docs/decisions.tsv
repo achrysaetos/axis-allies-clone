@@ -14,3 +14,7 @@ when	what	why	evidence	result
 2026-10-04	Scope: two-human hotseat MVP; AI work paused (user)	user request	-	adopted
 2026-10-04	UX iterations from play-testing: nation names, two-player setup, turn card with recap, territory labels, phase guide, movable-unit filter, win odds, dice clarity, end-phase guards, quick resolve	each friction item seen in a real play-test	verified in browser per item; 125 tests	adopted
 2026-10-04	App owns the single session state	Game private copy reset on remount and autosave overwrote progress	reproduced twice; fixed state survives hot reload	adopted
+2026-10-04	Board-first UI: delete the sidebar; drag or click pieces on the map, purchase chart and mobilization tray at the bottom, odds pills on the map, log/help/export in a menu	owner asked to remove panels and play like the physical board game	browser-verified purchase, moves, landings, battles, mobilize; 134 tests	adopted
+2026-10-04	Casualties, submerge and intercept are clickable piece tiles; retreat by clicking a highlighted space	same: decisions should feel like moving pieces, not filling forms	browser-verified each prompt	adopted
+2026-10-04	Carrier fighters launch into attacks, cargo unloads together, transports auto-sail to a dropped coast	second play-test: dragging a carrier lost its fighters' attack; landings took several drags	unit tests in test/pieces.test.ts	adopted
+2026-10-04	Shore bombardment fires automatically, strongest ships first	bombarding has no cost in 1942 2E, so the prompt was a pure extra step	test/session.test.ts	adopted
