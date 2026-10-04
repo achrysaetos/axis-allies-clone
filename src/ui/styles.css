@@ -1123,3 +1123,22 @@ button.seat.mine {
   padding: 8px;
   font: inherit;
 }
+
+/* Below wide screens the end button names the next phase, so the bar keeps only the current one. */
+@media (max-width: 1599px) {
+  .phases .phase:not(.current) {
+    display: none;
+  }
+}
+.phase-bar > .money,
+.phase-bar > .to-place,
+.phase-bar > .vcs {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.phase-bar > button,
+.phase-bar > .menu-anchor,
+.phase-bar > .power {
+  flex-shrink: 0;
+}
