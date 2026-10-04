@@ -24,7 +24,7 @@ export type ClientMsg =
   | { t: 'hello'; token: string | null }
   | { t: 'join'; name: string }
   | { t: 'seat'; power: Power; take: boolean }
-  | { t: 'act'; version: number; action: Action }
+  | { t: 'act'; version: number; actions: Action[] }
   | { t: 'resolve'; version: number; battle: number }
   | { t: 'undo'; version: number };
 

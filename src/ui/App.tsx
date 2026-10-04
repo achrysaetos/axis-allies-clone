@@ -27,7 +27,7 @@ import { useDrag } from './drag';
 import { UnitSvg } from './icons';
 import { tally } from './units';
 import { POWER_STYLE } from './theme';
-import { act as step, aiBurst, quickResolve, undo } from './session';
+import { actAll, aiBurst, quickResolve, undo } from './session';
 import { autosave, downloadSave, loadAutosave } from './saves';
 import type { Controller, Session } from './session';
 import { useRoom } from '../net/client';
@@ -205,8 +205,9 @@ function Game({
   const send = online?.send;
 
   const act = useCallback(
-    (a: Action): boolean => {
-      const r = step(current.current, a);
+    (a: Action | Action[]): boolean => {
+      const actions = Array.isArray(a) ? a : [a];
+      const r = actAll(current.current, actions);
       if (!r.ok) {
         showError(r.error);
         return false;
@@ -217,7 +218,7 @@ function Game({
       }
       // Only the server knows the dice, so a roll waits for its answer; everything else shows at once.
       if (r.session.state.rng === current.current.state.rng) commit(r.session);
-      send({ t: 'act', action: a });
+      send({ t: 'act', actions });
       return true;
     },
     [commit, showError, send],
@@ -318,7 +319,7 @@ function Game({
         if (dropped) setHand(null);
         return false;
       }
-      for (const m of r.moves) if (!act({ type: 'move', ...m })) return false;
+      if (!act(r.moves.map((m) => ({ type: 'move' as const, ...m })))) return false;
       const moved = new Set(r.moves.flatMap((m) => m.units));
       const behind = units.filter((id) => !moved.has(id)).length;
       if (behind > 0) setToast({ text: `${behind} could not reach ${to} and stayed behind`, id: Date.now(), info: true });

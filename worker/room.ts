@@ -4,7 +4,7 @@ import { POWERS } from '../src/engine/types';
 import type { Action, GameState, Options, Power, Unit } from '../src/engine/types';
 import { NAME_MAX } from '../src/net/protocol';
 import type { ClientMsg, PlayerId, RoomView, ServerMsg } from '../src/net/protocol';
-import { act, quickResolve } from '../src/ui/session';
+import { actAll, quickResolve } from '../src/ui/session';
 import type { Controller, Session } from '../src/ui/session';
 
 export interface RoomRecord {
@@ -13,9 +13,9 @@ export interface RoomRecord {
   seats: Record<Power, PlayerId | null>;
   players: { id: PlayerId; name: string; token: string }[];
   session: { state: GameState; fallen: Unit[] };
-  /** The state before the first move of the current phase; undo replays `moves` from here. */
+  /** The state before the first move of the current phase; undo replays `moves` from here, one drop at a time. */
   phaseStart: GameState | null;
-  moves: Action[];
+  moves: Action[][];
 }
 
 export interface Outcome {
@@ -51,14 +51,14 @@ export function view(r: RoomRecord, online: ReadonlySet<PlayerId>): RoomView {
 const HUMANS = Object.fromEntries(POWERS.map((p) => [p, 'human'])) as Record<Power, Controller>;
 const asSession = (r: RoomRecord, state = r.session.state): Session => ({ ...r.session, state, controllers: HUMANS, undo: [] });
 
-function played(r: RoomRecord, s: Session, action: Action | null): RoomRecord {
-  const move = action?.type === 'move';
+function played(r: RoomRecord, s: Session, actions: Action[]): RoomRecord {
+  const move = actions.length > 0 && actions.every((a) => a.type === 'move');
   return {
     ...r,
     version: r.version + 1,
     session: { state: s.state, fallen: s.fallen },
     phaseStart: move ? (r.phaseStart ?? r.session.state) : null,
-    moves: move ? [...r.moves, action] : [],
+    moves: move ? [...r.moves, actions] : [],
   };
 }
 
@@ -94,9 +94,9 @@ export function handle(r: RoomRecord, me: PlayerId | null, msg: ClientMsg, onlin
       if (!me || r.seats[actingPower(state)] !== me) return refuse('it is not your move');
       if (msg.version !== r.version) return refuse('the game moved on before your action arrived');
       const step =
-        msg.t === 'act' ? act(asSession(r), msg.action) : quickResolve(asSession(r), msg.battle, (p) => r.seats[p] === me);
+        msg.t === 'act' ? actAll(asSession(r), msg.actions) : quickResolve(asSession(r), msg.battle, (p) => r.seats[p] === me);
       if (!step.ok) return refuse(step.error);
-      return { record: played(r, step.session, msg.t === 'act' ? msg.action : null) };
+      return { record: played(r, step.session, msg.t === 'act' ? msg.actions : []) };
     }
     case 'undo': {
       if (!me || r.seats[r.session.state.power] !== me) return refuse('it is not your turn');
@@ -104,7 +104,7 @@ export function handle(r: RoomRecord, me: PlayerId | null, msg: ClientMsg, onlin
       if (!r.phaseStart || r.moves.length === 0) return refuse('nothing to undo');
       let s = asSession(r, r.phaseStart);
       for (const m of r.moves.slice(0, -1)) {
-        const step = act(s, m);
+        const step = actAll(s, m);
         if (!step.ok) return refuse(`undo could not replay a move: ${step.error}`);
         s = step.session;
       }
@@ -144,8 +144,11 @@ export function parseClientMsg(text: string): ClientMsg | null {
         ? { t: 'seat', power: m.power as Power, take: m.take }
         : null;
     case 'act':
-      return isVersion(m.version) && isObject(m.action) && typeof m.action.type === 'string'
-        ? { t: 'act', version: m.version, action: m.action as Action }
+      return isVersion(m.version) &&
+        Array.isArray(m.actions) &&
+        m.actions.length > 0 &&
+        m.actions.every((a) => isObject(a) && typeof a.type === 'string')
+        ? { t: 'act', version: m.version, actions: m.actions as Action[] }
         : null;
     case 'resolve':
       return isVersion(m.version) && Number.isInteger(m.battle)

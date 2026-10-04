@@ -68,18 +68,51 @@ describe('players and seats', () => {
 describe('actions', () => {
   it('refuses an action from a player who does not hold the acting seat', () => {
     const { r, alex } = twoPlayers();
-    const out = send(r, alex, { t: 'act', version: r.version, action: { type: 'endPhase' } });
+    const out = send(r, alex, { t: 'act', version: r.version, actions: [{ type: 'endPhase' }] });
     expect(out.error).toMatch(/not your move/);
     expect(out.record).toBe(r);
   });
 
   it('refuses a stale version', () => {
     const { r, bea } = twoPlayers();
-    const r1 = accepted(r, bea, { t: 'act', version: r.version, action: { type: 'endPhase' } });
+    const r1 = accepted(r, bea, { t: 'act', version: r.version, actions: [{ type: 'endPhase' }] });
     expect(r1.version).toBe(r.version + 1);
-    const out = send(r1, bea, { t: 'act', version: r.version, action: { type: 'endPhase' } });
+    const out = send(r1, bea, { t: 'act', version: r.version, actions: [{ type: 'endPhase' }] });
     expect(out.error).toMatch(/moved on/);
     expect(out.record).toBe(r1);
+  });
+
+  it('a drop of several moves is one step: one undo takes all of it back', () => {
+    const { r: base, bea } = twoPlayers();
+    const s = scenario({ power: 'Russians', phase: 'noncombatMove', units: [['Russians', 'infantry', 'Karelia S.S.R.', 2]] });
+    let r: RoomRecord = { ...base, session: { state: s, fallen: [] } };
+    const [i1, i2] = ids(s, 'Russians', 'infantry', 'Karelia S.S.R.');
+    const drop: Action[] = [
+      { type: 'move', units: [i1!], path: ['Karelia S.S.R.', 'Archangel'] },
+      { type: 'move', units: [i2!], path: ['Karelia S.S.R.', 'Archangel'] },
+    ];
+    r = accepted(r, bea, { t: 'act', version: r.version, actions: drop });
+    expect(r.session.state.units.filter((u) => u.at === 'Archangel' && u.type === 'infantry').length).toBeGreaterThanOrEqual(2);
+    r = accepted(r, bea, { t: 'undo', version: r.version });
+    expect(r.session.state).toEqual(s);
+    expect(view(r, nobody).canUndo).toBe(false);
+  });
+
+  it('a drop with an illegal move changes nothing', () => {
+    const { r: base, bea } = twoPlayers();
+    const s = scenario({ power: 'Russians', phase: 'noncombatMove', units: [['Russians', 'infantry', 'Karelia S.S.R.', 1]] });
+    const r: RoomRecord = { ...base, session: { state: s, fallen: [] } };
+    const [i1] = ids(s, 'Russians', 'infantry', 'Karelia S.S.R.');
+    const out = send(r, bea, {
+      t: 'act',
+      version: r.version,
+      actions: [
+        { type: 'move', units: [i1!], path: ['Karelia S.S.R.', 'Archangel'] },
+        { type: 'move', units: [i1!], path: ['Archangel', 'Russia'] },
+      ],
+    });
+    expect(out.error).toBeTruthy();
+    expect(out.record).toBe(r);
   });
 
   it('undo replays the phase to the state before the last move, and a non-move ends the undo history', () => {
@@ -88,10 +121,10 @@ describe('actions', () => {
     let r: RoomRecord = { ...base, session: { state: s, fallen: [] } };
     const [i1, i2] = ids(s, 'Russians', 'infantry', 'Karelia S.S.R.');
     const first: Action = { type: 'move', units: [i1!], path: ['Karelia S.S.R.', 'Archangel'] };
-    r = accepted(r, bea, { t: 'act', version: r.version, action: first });
+    r = accepted(r, bea, { t: 'act', version: r.version, actions: [first] });
     const afterFirst = r.session.state;
     const second: Action = { type: 'move', units: [i2!], path: ['Karelia S.S.R.', 'Archangel'] };
-    r = accepted(r, bea, { t: 'act', version: r.version, action: second });
+    r = accepted(r, bea, { t: 'act', version: r.version, actions: [second] });
     expect(view(r, nobody).canUndo).toBe(true);
 
     r = accepted(r, bea, { t: 'undo', version: r.version });
@@ -101,8 +134,8 @@ describe('actions', () => {
     expect(r.phaseStart).toBeNull();
     expect(send(r, bea, { t: 'undo', version: r.version }).error).toMatch(/nothing to undo/);
 
-    r = accepted(r, bea, { t: 'act', version: r.version, action: first });
-    r = accepted(r, bea, { t: 'act', version: r.version, action: { type: 'endPhase' } });
+    r = accepted(r, bea, { t: 'act', version: r.version, actions: [first] });
+    r = accepted(r, bea, { t: 'act', version: r.version, actions: [{ type: 'endPhase' }] });
     expect(view(r, nobody).canUndo).toBe(false);
   });
 
@@ -122,7 +155,7 @@ describe('actions', () => {
 
     const out = accepted(r, alex, { t: 'resolve', version: r.version, battle: s.battles[0]!.id });
     expect(out.session.state.pending).toMatchObject({ kind: 'casualties', power: 'Russians', side: 'defender' });
-    expect(send(out, alex, { t: 'act', version: out.version, action: { type: 'casualties', units: [] } }).error).toMatch(
+    expect(send(out, alex, { t: 'act', version: out.version, actions: [{ type: 'casualties', units: [] }] }).error).toMatch(
       /not your move/,
     );
     const answered = accepted(out, bea, { t: 'resolve', version: out.version, battle: s.battles[0]!.id });
@@ -156,7 +189,7 @@ describe('messages from the wire', () => {
   it('rejects malformed envelopes', () => {
     expect(parseClientMsg('nope')).toBeNull();
     expect(parseClientMsg(JSON.stringify({ t: 'seat', power: 'Italians', take: true }))).toBeNull();
-    expect(parseClientMsg(JSON.stringify({ t: 'act', version: '1', action: { type: 'endPhase' } }))).toBeNull();
+    expect(parseClientMsg(JSON.stringify({ t: 'act', version: '1', actions: [{ type: 'endPhase' }] }))).toBeNull();
     expect(parseClientMsg(JSON.stringify({ t: 'undo', version: 3 }))).toEqual({ t: 'undo', version: 3 });
   });
 });

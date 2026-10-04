@@ -58,6 +58,18 @@ export function act(session: Session, action: Action): Step {
   };
 }
 
+/** Applies a player's step, such as one drop that flies planes and marches tanks, all or nothing and as one undo. */
+export function actAll(session: Session, actions: Action[]): Step {
+  let cur = session;
+  for (const a of actions) {
+    const r = act(cur, a);
+    if (!r.ok) return r;
+    cur = r.session;
+  }
+  const undo = actions.length > 0 && actions.every((a) => a.type === 'move') ? [...session.undo, session.state] : cur.undo;
+  return { ok: true, session: { ...cur, undo } };
+}
+
 export function undo(session: Session): Session {
   const prev = session.undo[session.undo.length - 1];
   if (!prev) return session;
