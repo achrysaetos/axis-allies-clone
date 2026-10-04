@@ -4,3 +4,4 @@ dist
 .claude/worktrees
 .verify
 .wrangler
+.dev.vars

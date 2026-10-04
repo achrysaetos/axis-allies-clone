@@ -22,6 +22,17 @@ npm run dev
 
 Press **Play online with friends** on the start screen. The game opens at a `#/g/<id>` link. Enter a name, click a power in the seat strip under the top bar to take it, and use **Copy invite link** to send the link to friends. Each player acts only for the powers they hold, and a defender answers its own casualty choices. Reopening the link in the same browser keeps your seats. `npm run deploy` builds the client and deploys the Worker to your Cloudflare account.
 
+### Push notifications
+
+A player who has closed the tab gets a browser notification when it becomes their move, when a battle needs their decision, and when the game ends. The bell in the seat strip turns this on or off for the browser. Push stays off until the server has a VAPID key pair. Set one up once, before you deploy:
+
+1. Run `npx tsx scripts/vapid.ts`. It prints a public key, a private key as a JWK, and a `.dev.vars` block.
+2. Paste the public key into `VAPID_PUBLIC_KEY` in `wrangler.jsonc`, and set `VAPID_SUBJECT` there to a contact such as `mailto:you@example.com`.
+3. Run `npx wrangler secret put VAPID_PRIVATE_JWK` and paste the private key JWK when it asks.
+4. For `npm run dev:worker`, save the printed `.dev.vars` block as `.dev.vars` in the project root. Git ignores this file.
+
+Keep the same key pair afterwards. A new key pair stops every existing subscription until each player opens the game again.
+
 ## How a turn plays
 
 Each power's turn opens with a card that names the player, shows the money to spend, and recaps what the previous power did. Press **Start turn** or Enter, and the map centers on that power's capital. A hint line at the top of the map names the next step. The ☰ menu holds the game log (L), help (?), export and the main menu.

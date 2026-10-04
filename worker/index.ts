@@ -1,11 +1,13 @@
 import { DurableObject } from 'cloudflare:workers';
 import { NO_SUCH_ROOM, ROOM_ID } from '../src/net/protocol';
-import type { CreateRoomResponse, PlayerId, ServerMsg } from '../src/net/protocol';
+import type { CreateRoomResponse, PlayerId, PushKeyResponse, PushPayload, ServerMsg } from '../src/net/protocol';
 import type { Options } from '../src/engine/types';
-import { handle, newRoom, parseClientMsg, parseOptions, view } from './room';
-import type { Outcome, RoomRecord } from './room';
+import { loadVapid, pushRequest } from './push';
+import type { VapidEnv } from './push';
+import { handle, newRoom, parseClientMsg, parseOptions, view, whoToNotify } from './room';
+import type { Notice, Outcome, RoomRecord } from './room';
 
-interface Env {
+interface Env extends VapidEnv {
   ROOMS: DurableObjectNamespace<Room>;
 }
 
@@ -31,6 +33,10 @@ export default {
       await env.ROOMS.get(env.ROOMS.idFromName(id)).create(id, seed, options);
       return json({ id } satisfies CreateRoomResponse);
     }
+    if (req.method === 'GET' && url.pathname === '/api/push-key') {
+      const on = !!(env.VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_JWK && env.VAPID_SUBJECT);
+      return json({ key: on ? env.VAPID_PUBLIC_KEY! : null } satisfies PushKeyResponse);
+    }
     const ws = url.pathname.match(/^\/api\/rooms\/([^/]+)\/ws$/);
     if (ws) {
       if (!ROOM_ID.test(ws[1]!)) return json({ error: 'no such game' }, 404);
@@ -47,7 +53,9 @@ export class Room extends DurableObject<Env> {
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
     void ctx.blockConcurrencyWhile(async () => {
-      this.record = await ctx.storage.get<RoomRecord>(RECORD_KEY);
+      const stored = await ctx.storage.get<RoomRecord>(RECORD_KEY);
+      // Rooms created before push notifications have no subscriptions.
+      this.record = stored && { ...stored, pushes: stored.pushes ?? [] };
     });
   }
 
@@ -90,6 +98,8 @@ export class Room extends DurableObject<Env> {
     if (out.record !== record) {
       this.record = out.record;
       await this.ctx.storage.put(RECORD_KEY, out.record);
+      const notices = whoToNotify(record, out.record, this.online());
+      if (notices.length > 0) this.ctx.waitUntil(this.push(notices));
     }
     // A welcome changes who is online even when the record stays the same.
     if (out.record !== record || out.reply?.t === 'welcome') this.broadcast();
@@ -106,6 +116,24 @@ export class Room extends DurableObject<Env> {
 
   override async webSocketError(ws: WebSocket): Promise<void> {
     this.broadcast(ws);
+  }
+
+  private async push(notices: Notice[]): Promise<void> {
+    const vapid = await loadVapid(this.env);
+    if (!vapid || !this.record) return;
+    const url = `/#/g/${this.record.id}`;
+    const gone = new Set<string>();
+    const sends = notices.flatMap(({ player, title, body }) =>
+      this.record!.pushes.filter((s) => s.player === player).map(async (s) => {
+        const res = await fetch(await pushRequest(s, JSON.stringify({ title, body, url } satisfies PushPayload), vapid));
+        console.log(`push to ${new URL(s.endpoint).host}: ${res.status}${res.ok ? '' : ` ${await res.text()}`}`);
+        if (res.status === 404 || res.status === 410) gone.add(s.endpoint);
+      }),
+    );
+    for (const r of await Promise.allSettled(sends)) if (r.status === 'rejected') console.warn('push failed', r.reason);
+    if (gone.size === 0 || !this.record) return;
+    this.record = { ...this.record, pushes: this.record.pushes.filter((s) => !gone.has(s.endpoint)) };
+    await this.ctx.storage.put(RECORD_KEY, this.record);
   }
 
   private sockets(leaving?: WebSocket): WebSocket[] {

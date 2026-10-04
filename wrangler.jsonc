@@ -12,4 +12,6 @@
     "bindings": [{ "name": "ROOMS", "class_name": "Room" }],
   },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Room"] }],
+  // Push stays off while these are empty; see "Push notifications" in the README. VAPID_PRIVATE_JWK is a secret.
+  "vars": { "VAPID_PUBLIC_KEY": "", "VAPID_SUBJECT": "" },
 }
