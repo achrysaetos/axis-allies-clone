@@ -694,3 +694,14 @@ table.buy tr.picked td {
 .land-label {
   cursor: pointer;
 }
+.dice-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-right: 8px;
+}
+.needs {
+  font-size: 10px;
+  color: var(--dim);
+  margin-right: 2px;
+}

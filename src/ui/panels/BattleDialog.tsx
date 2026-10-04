@@ -154,20 +154,28 @@ export function BattleDialog({ state, battle, fallen, controllers, act, onQuick,
                 {r.side === 'attacker' ? powerName(battle.attacker) : 'Defender'} · {DICE_LABEL[r.label] ?? r.label}
               </span>
               <span className="dice">
-                {r.rolls.map((v, j) => {
-                  const target = r.targets[j];
-                  const hit = target !== undefined && v <= target;
-                  return (
-                    <span
-                      key={j}
-                      className={hit ? 'die hit' : 'die'}
-                      title={target !== undefined ? `needed ${target} or less` : undefined}
-                      style={{ borderColor: r.side === 'attacker' ? POWER_STYLE[battle.attacker].color : '#666' }}
-                    >
-                      {v}
+                {[...new Set(r.targets.length > 0 ? r.targets : [0])]
+                  .sort((x, y) => y - x)
+                  .map((target) => (
+                    <span key={target} className="dice-group">
+                      {target > 0 && (
+                        <span className="needs" title={`hits on ${target} or less`}>
+                          ≤{target}
+                        </span>
+                      )}
+                      {r.rolls
+                        .filter((_, j) => (r.targets[j] ?? 0) === target)
+                        .map((v, j) => (
+                          <span
+                            key={j}
+                            className={target > 0 && v <= target ? 'die hit' : 'die'}
+                            style={{ borderColor: r.side === 'attacker' ? POWER_STYLE[battle.attacker].color : '#666' }}
+                          >
+                            {v}
+                          </span>
+                        ))}
                     </span>
-                  );
-                })}
+                  ))}
               </span>
               <span className="hits">
                 {r.hits} {r.label === 'bombing damage' ? 'damage' : r.hits === 1 ? 'hit' : 'hits'}
