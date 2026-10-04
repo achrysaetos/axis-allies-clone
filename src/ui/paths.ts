@@ -83,7 +83,14 @@ function groups(state: GameState, ids: UnitId[]): Unit[][] {
   return ['land', 'sea', 'air'].map((d) => byDomain.get(d)).filter((g): g is Unit[] => !!g);
 }
 
-function pathFor(state: GameState, units: Unit[], sbr: boolean, from: SpaceId, to: SpaceId, limit: number): MoveResolution & { path?: SpaceId[] } {
+function pathFor(
+  state: GameState,
+  units: Unit[],
+  sbr: boolean,
+  from: SpaceId,
+  to: SpaceId,
+  limit: number,
+): MoveResolution & { path?: SpaceId[] } {
   const paths = candidatePaths(units, from, to, limit);
   if (paths.length === 0) return { ok: false, error: `${to} is out of reach` };
   let firstError: string | null = null;
@@ -106,7 +113,12 @@ export function resolveMove(state: GameState, intent: MoveIntent, from: SpaceId,
     const r = pathFor(cur, g, intent.sbr, from, to, limit);
     if (!r.ok) return r;
     const move = r.moves[0]!;
-    const next = apply(cur, { type: 'move', units: move.units, path: move.path, sbr: (intent.sbr && g.some((u) => isAir(u.type))) || undefined });
+    const next = apply(cur, {
+      type: 'move',
+      units: move.units,
+      path: move.path,
+      sbr: (intent.sbr && g.some((u) => isAir(u.type))) || undefined,
+    });
     if (!next.ok) return { ok: false, error: next.error };
     moves.push(move);
     cur = next.state;

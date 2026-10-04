@@ -15,7 +15,6 @@ import type { GameState, Power, Side, SpaceId, Unit, UnitId } from './types';
 
 export const areAllied = (a: Power, b: Power) => SIDE[a] === SIDE[b];
 
-
 export const unitsAt = (state: GameState, at: SpaceId) => state.units.filter((u) => u.at === at);
 
 export const enemyUnitsAt = (state: GameState, at: SpaceId, power: Power) =>
@@ -101,10 +100,7 @@ export function victoryCities(state: GameState, side: Side): number {
 
 export const factoryAt = (state: GameState, at: SpaceId) => state.units.find((u) => u.at === at && u.type === 'factory');
 
-
-
 export const isPassable = (id: SpaceId) => !isNeutral(id);
-
 
 export const remainingMove = (u: Unit) => STATS[u.type].move - u.moved;
 

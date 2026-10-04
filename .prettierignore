@@ -1,0 +1,5 @@
+src/data
+vendor
+.verify
+.claude/worktrees
+dist

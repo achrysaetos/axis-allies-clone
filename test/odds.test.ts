@@ -8,7 +8,11 @@ import type { Placement } from './helpers';
 function landing(withBattleship: boolean): GameState {
   const s = scenario({
     power: 'British',
-    units: [['British', 'transport', '8 Sea Zone'], ['Germans', 'infantry', 'France', 2], ...(withBattleship ? [['British', 'battleship', '8 Sea Zone'] as Placement] : [])],
+    units: [
+      ['British', 'transport', '8 Sea Zone'],
+      ['Germans', 'infantry', 'France', 2],
+      ...(withBattleship ? [['British', 'battleship', '8 Sea Zone'] as Placement] : []),
+    ],
   });
   const t = s.units.find((u) => u.type === 'transport')!;
   for (const type of ['infantry', 'armour'] as UnitType[]) {
@@ -16,7 +20,11 @@ function landing(withBattleship: boolean): GameState {
     u.carriedBy = t.id;
     s.units.push(u);
   }
-  return move(s, [...ids(s, 'British', 'infantry', '8 Sea Zone'), ...ids(s, 'British', 'armour', '8 Sea Zone')], ['8 Sea Zone', 'France']);
+  return move(
+    s,
+    [...ids(s, 'British', 'infantry', '8 Sea Zone'), ...ids(s, 'British', 'armour', '8 Sea Zone')],
+    ['8 Sea Zone', 'France'],
+  );
 }
 
 describe('attack forecasts', () => {

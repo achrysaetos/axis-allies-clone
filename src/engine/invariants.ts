@@ -15,7 +15,8 @@ export function checkInvariants(s: GameState): string[] {
     if (isSea(u.type) && !water) v.push(`${u.type}#${u.id} on land ${u.at}`);
     if ((isLand(u.type) || u.type === 'factory') && water && u.carriedBy === null) v.push(`${u.type}#${u.id} adrift in ${u.at}`);
     if (u.type === 'factory' && u.damage > 2 * space(u.at).ipc) v.push(`factory in ${u.at} over-damaged`);
-    if (u.type === 'factory' && s.owner[u.at] !== u.owner) v.push(`factory in ${u.at} owned by ${u.owner} but territory by ${s.owner[u.at]}`);
+    if (u.type === 'factory' && s.owner[u.at] !== u.owner)
+      v.push(`factory in ${u.at} owned by ${u.owner} but territory by ${s.owner[u.at]}`);
     if (u.moved > STATS[u.type].move) v.push(`${u.type}#${u.id} moved ${u.moved}`);
     if (u.carriedBy !== null) {
       const c = byId.get(u.carriedBy);
@@ -29,8 +30,7 @@ export function checkInvariants(s: GameState): string[] {
     if (u.type === 'carrier' && s.units.filter((x) => x.carriedBy === u.id).length > CARRIER_CAPACITY)
       v.push(`carrier#${u.id} overloaded`);
   }
-  for (const p of Object.keys(s.treasury) as (keyof typeof s.treasury)[])
-    if (s.treasury[p] < 0) v.push(`${p} treasury negative`);
+  for (const p of Object.keys(s.treasury) as (keyof typeof s.treasury)[]) if (s.treasury[p] < 0) v.push(`${p} treasury negative`);
   if (s.phase !== 'combat' && s.activeBattle !== null) v.push('active battle outside combat');
   if (s.pending && s.pending.kind !== 'landStranded' && s.phase !== 'combat') v.push('battle decision outside combat');
   if (s.phase === 'purchase' && s.pending === null) v.push(...turnBoundary(s));
@@ -55,7 +55,8 @@ function turnBoundary(s: GameState): string[] {
   for (const u of s.units) {
     if (u.type === 'battleship' && u.damage > 0) v.push(`battleship#${u.id} still damaged`);
     if (!isAir(u.type) || space(u.at).water) continue;
-    if (!canLandAir({ ...s, ownerAtTurnStart: s.owner }, u.at, u.owner)) v.push(`${u.owner} ${u.type} grounded in hostile ${u.at}`);
+    if (!canLandAir({ ...s, ownerAtTurnStart: s.owner }, u.at, u.owner))
+      v.push(`${u.owner} ${u.type} grounded in hostile ${u.at}`);
   }
   for (const zone of new Set(s.units.filter((u) => u.type === 'fighter' && space(u.at).water).map((u) => u.at))) {
     const sides = new Map<string, { fighters: number; slots: number }>();

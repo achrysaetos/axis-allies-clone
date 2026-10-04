@@ -18,7 +18,9 @@ export function endPhaseWarnings(state: GameState): string[] {
     if (doomed.length > 0) {
       const fighters = doomed.filter((u) => u.type === 'fighter').length;
       const bombers = doomed.length - fighters;
-      const what = [fighters && plural(fighters, UNIT_GLYPH.fighter.name), bombers && plural(bombers, UNIT_GLYPH.bomber.name)].filter(Boolean).join(' and ');
+      const what = [fighters && plural(fighters, UNIT_GLYPH.fighter.name), bombers && plural(bombers, UNIT_GLYPH.bomber.name)]
+        .filter(Boolean)
+        .join(' and ');
       const where = [...new Set(doomed.map((u) => u.at))].join(', ');
       const rescue =
         carrierLeft && doomed.some((u) => space(u.at).water)
@@ -29,7 +31,8 @@ export function endPhaseWarnings(state: GameState): string[] {
   }
   if (state.phase === 'mobilize') {
     const left = state.purchases.reduce((n, p) => n + p.count, 0);
-    if (left > 0) out.push(`${plural(left, 'unit')} you bought ${left === 1 ? 'is' : 'are'} not placed. Their cost will be refunded.`);
+    if (left > 0)
+      out.push(`${plural(left, 'unit')} you bought ${left === 1 ? 'is' : 'are'} not placed. Their cost will be refunded.`);
   }
   return out;
 }

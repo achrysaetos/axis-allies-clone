@@ -54,9 +54,7 @@ export interface SpaceDef {
   neighbors: SpaceId[];
 }
 
-export const SPACES: ReadonlyMap<SpaceId, SpaceDef> = new Map(
-  (mapJson.spaces as SpaceDef[]).map((s) => [s.id, s]),
-);
+export const SPACES: ReadonlyMap<SpaceId, SpaceDef> = new Map((mapJson.spaces as SpaceDef[]).map((s) => [s.id, s]));
 export const SPACE_IDS: readonly SpaceId[] = [...SPACES.keys()];
 
 export function space(id: SpaceId): SpaceDef {

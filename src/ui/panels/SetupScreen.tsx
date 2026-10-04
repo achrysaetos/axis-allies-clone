@@ -53,7 +53,11 @@ export function SetupScreen({ saved, onStart }: Props) {
                 <strong>{side}</strong>
                 <span className="segmented">
                   {(['human', 'ai'] as const).map((c) => (
-                    <button key={c} className={players[side] === c ? 'on' : undefined} onClick={() => setPlayers({ ...players, [side]: c })}>
+                    <button
+                      key={c}
+                      className={players[side] === c ? 'on' : undefined}
+                      onClick={() => setPlayers({ ...players, [side]: c })}
+                    >
                       {c === 'human' ? 'Player' : 'Computer'}
                     </button>
                   ))}

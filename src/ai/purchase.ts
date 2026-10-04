@@ -41,7 +41,9 @@ function shoppingList(s: GameState, power: Power): Purchase[] {
   const doctrine = DOCTRINE[power];
   const factories = ownFactories(s, power);
   let slots = factories.reduce((n, f) => n + productionLeft(s, f), 0);
-  let seaSlots = factories.filter((f) => space(f).neighbors.some((n) => space(n).water)).reduce((n, f) => n + productionLeft(s, f), 0);
+  let seaSlots = factories
+    .filter((f) => space(f).neighbors.some((n) => space(n).water))
+    .reduce((n, f) => n + productionLeft(s, f), 0);
   let budget = s.treasury[power];
   const counts = new Map<UnitType, number>();
   const add = (t: UnitType, n = 1): boolean => {
@@ -72,7 +74,8 @@ function shoppingList(s: GameState, power: Power): Purchase[] {
     if (budget < STATS.transport.cost + 7) break;
     add('transport');
   }
-  if (doctrine.transports > 0 && warships < Math.ceil((transports + (counts.get('transport') ?? 0)) / 2) && budget >= 20) add('destroyer');
+  if (doctrine.transports > 0 && warships < Math.ceil((transports + (counts.get('transport') ?? 0)) / 2) && budget >= 20)
+    add('destroyer');
 
   const fighters = own.filter((u) => u.type === 'fighter').length;
   if (fighters < doctrine.fighters && budget >= 25) add('fighter');

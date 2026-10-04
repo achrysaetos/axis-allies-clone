@@ -35,7 +35,8 @@ export function PhaseBar({ state, controllers, canUndo, onEndPhase, onUndo, onEx
         ))}
       </span>
       <span className="money">
-        <span className="dim">Treasury</span> {state.treasury[state.power]} <span className="dim">· Income</span> {income(state, state.power)}
+        <span className="dim">Treasury</span> {state.treasury[state.power]} <span className="dim">· Income</span>{' '}
+        {income(state, state.power)}
       </span>
       <span className="vcs" title={`victory cities (win at ${t.Axis} Axis / ${t.Allies} Allies)`}>
         ★ Axis {victoryCities(state, 'Axis')}/{t.Axis} · Allies {victoryCities(state, 'Allies')}/{t.Allies}

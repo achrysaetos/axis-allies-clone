@@ -44,7 +44,11 @@ function casualties(s: GameState, b: Battle, d: Extract<Decision, { kind: 'casua
 export function decide(s: GameState, d: Decision): Action {
   switch (d.kind) {
     case 'casualties':
-      return casualties(s, s.battles.find((x) => x.id === d.battle)!, d);
+      return casualties(
+        s,
+        s.battles.find((x) => x.id === d.battle)!,
+        d,
+      );
     case 'submerge': {
       const b = s.battles.find((x) => x.id === d.battle)!;
       const win = attackerOdds(s, b).win;

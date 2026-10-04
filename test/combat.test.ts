@@ -19,17 +19,31 @@ function load(s: GameState, owner: Power, transportAt: SpaceId, cargo: UnitType[
 describe('general combat (p.16-19)', () => {
   it('artillery raises one attacking infantry to 2', () => {
     let s = scenario({
-      units: [['Germans', 'infantry', 'West Russia', 2], ['Germans', 'artillery', 'West Russia'], ['Russians', 'infantry', 'Archangel']],
+      units: [
+        ['Germans', 'infantry', 'West Russia', 2],
+        ['Germans', 'artillery', 'West Russia'],
+        ['Russians', 'infantry', 'Archangel'],
+      ],
       dice: [2, 2, 6, 6],
     });
-    s = move(s, [...ids(s, 'Germans', 'infantry', 'West Russia'), ...ids(s, 'Germans', 'artillery', 'West Russia')], ['West Russia', 'Archangel']);
+    s = move(
+      s,
+      [...ids(s, 'Germans', 'infantry', 'West Russia'), ...ids(s, 'Germans', 'artillery', 'West Russia')],
+      ['West Russia', 'Archangel'],
+    );
     s = fight(s, 'Archangel');
     expect(battleIn(s, 'Archangel').dice[0]).toMatchObject({ side: 'attacker', rolls: [2, 2, 6], targets: [2, 1, 2], hits: 1 });
     expect(s.owner['Archangel']).toBe('Germans');
   });
 
   it('aircraft can clear a territory but never take it', () => {
-    let s = scenario({ units: [['Germans', 'fighter', 'West Russia', 2], ['Russians', 'infantry', 'Archangel']], dice: [1, 6, 6] });
+    let s = scenario({
+      units: [
+        ['Germans', 'fighter', 'West Russia', 2],
+        ['Russians', 'infantry', 'Archangel'],
+      ],
+      dice: [1, 6, 6],
+    });
     s = move(s, ids(s, 'Germans', 'fighter', 'West Russia'), ['West Russia', 'Archangel']);
     s = fight(s, 'Archangel');
     expect(s.owner['Archangel']).toBe('Russians');
@@ -37,7 +51,13 @@ describe('general combat (p.16-19)', () => {
   });
 
   it('defending casualties fire back before they are removed', () => {
-    let s = scenario({ units: [['Germans', 'armour', 'West Russia'], ['Russians', 'infantry', 'Archangel']], dice: [1, 2] });
+    let s = scenario({
+      units: [
+        ['Germans', 'armour', 'West Russia'],
+        ['Russians', 'infantry', 'Archangel'],
+      ],
+      dice: [1, 2],
+    });
     s = move(s, ids(s, 'Germans', 'armour', 'West Russia'), ['West Russia', 'Archangel']);
     s = fight(s, 'Archangel');
     expect(count(s, 'Germans', 'armour', 'Archangel')).toBe(0);
@@ -49,7 +69,11 @@ describe('general combat (p.16-19)', () => {
   it('antiaircraft fires min(3 per gun, attacking aircraft) shots that hit on 1', () => {
     const run = (guns: number) => {
       let s = scenario({
-        units: [['Germans', 'fighter', 'West Russia', 5], ['Russians', 'infantry', 'Caucasus'], ['Russians', 'aaGun', 'Caucasus', guns]],
+        units: [
+          ['Germans', 'fighter', 'West Russia', 5],
+          ['Russians', 'infantry', 'Caucasus'],
+          ['Russians', 'aaGun', 'Caucasus', guns],
+        ],
         dice: [1, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6],
       });
       s = move(s, ids(s, 'Germans', 'fighter', 'West Russia'), ['West Russia', 'Caucasus']);
@@ -64,7 +88,13 @@ describe('general combat (p.16-19)', () => {
   });
 
   it('antiaircraft alone in an attacked territory is destroyed without firing', () => {
-    let s = scenario({ units: [['Germans', 'armour', 'West Russia'], ['Germans', 'fighter', 'West Russia'], ['Russians', 'aaGun', 'Caucasus']] });
+    let s = scenario({
+      units: [
+        ['Germans', 'armour', 'West Russia'],
+        ['Germans', 'fighter', 'West Russia'],
+        ['Russians', 'aaGun', 'Caucasus'],
+      ],
+    });
     s = move(s, ids(s, 'Germans', 'fighter', 'West Russia'), ['West Russia', 'Caucasus']);
     s = move(s, ids(s, 'Germans', 'armour', 'West Russia'), ['West Russia', 'Caucasus']);
     expect(count(s, 'Russians', 'aaGun', 'Caucasus')).toBe(0);
@@ -74,7 +104,10 @@ describe('general combat (p.16-19)', () => {
   it('battleships absorb one hit and are repaired after the battle', () => {
     let s = scenario({
       power: 'British',
-      units: [['British', 'destroyer', '8 Sea Zone', 2], ['Germans', 'battleship', '13 Sea Zone']],
+      units: [
+        ['British', 'destroyer', '8 Sea Zone', 2],
+        ['Germans', 'battleship', '13 Sea Zone'],
+      ],
       dice: [1, 6, 6],
     });
     s = move(s, ids(s, 'British', 'destroyer', '8 Sea Zone'), ['8 Sea Zone', '13 Sea Zone']);
@@ -87,7 +120,11 @@ describe('general combat (p.16-19)', () => {
   it('ships cannot retreat into a zone that was hostile when the turn began', () => {
     let s = scenario({
       power: 'British',
-      units: [['British', 'cruiser', '7 Sea Zone'], ['Germans', 'destroyer', '7 Sea Zone'], ['Germans', 'battleship', '6 Sea Zone']],
+      units: [
+        ['British', 'cruiser', '7 Sea Zone'],
+        ['Germans', 'destroyer', '7 Sea Zone'],
+        ['Germans', 'battleship', '6 Sea Zone'],
+      ],
       dice: [6, 6, 6, 6],
     });
     s = move(s, ids(s, 'British', 'cruiser', '7 Sea Zone'), ['7 Sea Zone', '6 Sea Zone']);
@@ -100,7 +137,11 @@ describe('general combat (p.16-19)', () => {
 
   it('attackers retreat together to a space they came from; aircraft stay to land later', () => {
     let s = scenario({
-      units: [['Germans', 'armour', 'West Russia'], ['Germans', 'fighter', 'West Russia'], ['Russians', 'infantry', 'Archangel', 3]],
+      units: [
+        ['Germans', 'armour', 'West Russia'],
+        ['Germans', 'fighter', 'West Russia'],
+        ['Russians', 'infantry', 'Archangel', 3],
+      ],
       dice: [6, 6, 6, 6, 6],
     });
     s = move(s, ids(s, 'Germans', 'armour', 'West Russia'), ['West Russia', 'Archangel']);
@@ -118,7 +159,11 @@ describe('general combat (p.16-19)', () => {
 describe('sea combat and submarines (p.16-17, 29-30)', () => {
   it('submarine surprise strike casualties are removed before they can fire; transports are chosen last', () => {
     let s = scenario({
-      units: [['Germans', 'submarine', '12 Sea Zone'], ['British', 'cruiser', '13 Sea Zone'], ['British', 'transport', '13 Sea Zone']],
+      units: [
+        ['Germans', 'submarine', '12 Sea Zone'],
+        ['British', 'cruiser', '13 Sea Zone'],
+        ['British', 'transport', '13 Sea Zone'],
+      ],
       dice: [2],
     });
     s = move(s, ids(s, 'Germans', 'submarine', '12 Sea Zone'), ['12 Sea Zone', '13 Sea Zone']);
@@ -132,7 +177,10 @@ describe('sea combat and submarines (p.16-17, 29-30)', () => {
 
   it('a destroyer cancels the surprise strike', () => {
     let s = scenario({
-      units: [['Germans', 'submarine', '12 Sea Zone'], ['British', 'destroyer', '13 Sea Zone']],
+      units: [
+        ['Germans', 'submarine', '12 Sea Zone'],
+        ['British', 'destroyer', '13 Sea Zone'],
+      ],
       dice: [2, 6],
     });
     s = move(s, ids(s, 'Germans', 'submarine', '12 Sea Zone'), ['12 Sea Zone', '13 Sea Zone']);
@@ -143,7 +191,13 @@ describe('sea combat and submarines (p.16-17, 29-30)', () => {
   });
 
   it('submarines can submerge instead of fighting', () => {
-    let s = scenario({ power: 'British', units: [['British', 'cruiser', '12 Sea Zone'], ['Germans', 'submarine', '13 Sea Zone']] });
+    let s = scenario({
+      power: 'British',
+      units: [
+        ['British', 'cruiser', '12 Sea Zone'],
+        ['Germans', 'submarine', '13 Sea Zone'],
+      ],
+    });
     s = move(s, ids(s, 'British', 'cruiser', '12 Sea Zone'), ['12 Sea Zone', '13 Sea Zone']);
     s = ok(s, { type: 'endPhase' });
     const b = battleIn(s, '13 Sea Zone');
@@ -156,7 +210,13 @@ describe('sea combat and submarines (p.16-17, 29-30)', () => {
   });
 
   it('aircraft cannot hit submarines without a friendly destroyer, so the battle stalls', () => {
-    let s = scenario({ power: 'British', units: [['British', 'fighter', 'United Kingdom'], ['Germans', 'submarine', '6 Sea Zone']] });
+    let s = scenario({
+      power: 'British',
+      units: [
+        ['British', 'fighter', 'United Kingdom'],
+        ['Germans', 'submarine', '6 Sea Zone'],
+      ],
+    });
     s = move(s, ids(s, 'British', 'fighter', 'United Kingdom'), ['United Kingdom', '6 Sea Zone']);
     s = fight(s, '6 Sea Zone');
     expect(battleIn(s, '6 Sea Zone').winner).toBe('none');
@@ -164,7 +224,13 @@ describe('sea combat and submarines (p.16-17, 29-30)', () => {
   });
 
   it('defenseless transports are destroyed outright', () => {
-    let s = scenario({ power: 'British', units: [['British', 'fighter', 'United Kingdom'], ['Germans', 'transport', '6 Sea Zone', 3]] });
+    let s = scenario({
+      power: 'British',
+      units: [
+        ['British', 'fighter', 'United Kingdom'],
+        ['Germans', 'transport', '6 Sea Zone', 3],
+      ],
+    });
     s = move(s, ids(s, 'British', 'fighter', 'United Kingdom'), ['United Kingdom', '6 Sea Zone']);
     s = fight(s, '6 Sea Zone');
     expect(count(s, 'Germans', 'transport', '6 Sea Zone')).toBe(0);
@@ -173,12 +239,22 @@ describe('sea combat and submarines (p.16-17, 29-30)', () => {
 });
 
 describe('casualty selection (p.17)', () => {
-  const s = scenario({ units: [['British', 'destroyer', '13 Sea Zone'], ['British', 'carrier', '13 Sea Zone'], ['British', 'fighter', '13 Sea Zone'], ['British', 'transport', '13 Sea Zone']] });
+  const s = scenario({
+    units: [
+      ['British', 'destroyer', '13 Sea Zone'],
+      ['British', 'carrier', '13 Sea Zone'],
+      ['British', 'fighter', '13 Sea Zone'],
+      ['British', 'transport', '13 Sea Zone'],
+    ],
+  });
   const pool = s.units;
   const [destroyer, carrier, fighter, transport] = pool.map((u) => u.id) as [number, number, number, number];
 
   it('as many hits as possible must be assigned', () => {
-    const groups = [{ category: 'any' as const, hits: 1 }, { category: 'notAir' as const, hits: 2 }];
+    const groups = [
+      { category: 'any' as const, hits: 1 },
+      { category: 'notAir' as const, hits: 2 },
+    ];
     expect(validateCasualties(groups, pool, [fighter, destroyer, carrier])).toBeNull();
     expect(validateCasualties(groups, pool, [destroyer, carrier, transport])).toMatch(/transports/);
     expect(validateCasualties(groups, pool, [destroyer, carrier])).toMatch(/exactly 3/);
@@ -203,19 +279,31 @@ describe('capture, liberation and capitals (p.18-19)', () => {
   });
 
   it('liberating an ally’s territory returns it to the original controller', () => {
-    let s = scenario({ power: 'British', owners: { Persia: 'British', Caucasus: 'Germans' }, units: [['British', 'armour', 'Persia']] });
+    let s = scenario({
+      power: 'British',
+      owners: { Persia: 'British', Caucasus: 'Germans' },
+      units: [['British', 'armour', 'Persia']],
+    });
     s = move(s, ids(s, 'British', 'armour', 'Persia'), ['Persia', 'Caucasus']);
     expect(s.owner['Caucasus']).toBe('Russians');
   });
 
   it('if the ally’s capital is held by the enemy, the liberator keeps the territory', () => {
-    let s = scenario({ power: 'British', owners: { Caucasus: 'Germans', Russia: 'Germans' }, units: [['British', 'armour', 'Persia']] });
+    let s = scenario({
+      power: 'British',
+      owners: { Caucasus: 'Germans', Russia: 'Germans' },
+      units: [['British', 'armour', 'Persia']],
+    });
     s = move(s, ids(s, 'British', 'armour', 'Persia'), ['Persia', 'Caucasus']);
     expect(s.owner['Caucasus']).toBe('British');
   });
 
   it('liberating a capital returns that power’s territories held by friends', () => {
-    let s = scenario({ power: 'British', owners: { Caucasus: 'British', Russia: 'Germans' }, units: [['British', 'armour', 'Caucasus']] });
+    let s = scenario({
+      power: 'British',
+      owners: { Caucasus: 'British', Russia: 'Germans' },
+      units: [['British', 'armour', 'Caucasus']],
+    });
     s = move(s, ids(s, 'British', 'armour', 'Caucasus'), ['Caucasus', 'Russia']);
     expect(s.owner['Russia']).toBe('Russians');
     expect(s.owner['Caucasus']).toBe('Russians');
@@ -224,9 +312,18 @@ describe('capture, liberation and capitals (p.18-19)', () => {
 
 describe('strategic bombing (p.14, 25, 27)', () => {
   it('the complex fires at each bomber; damage caps at twice the territory value', () => {
-    let s = scenario({ power: 'British', units: [['British', 'bomber', 'United Kingdom', 3], ['Germans', 'factory', 'Germany']], dice: [1, 6, 6, 6, 6] });
+    let s = scenario({
+      power: 'British',
+      units: [
+        ['British', 'bomber', 'United Kingdom', 3],
+        ['Germans', 'factory', 'Germany'],
+      ],
+      dice: [1, 6, 6, 6, 6],
+    });
     s.units.find((u) => u.type === 'factory')!.damage = 10;
-    s = move(s, ids(s, 'British', 'bomber', 'United Kingdom'), ['United Kingdom', '6 Sea Zone', '5 Sea Zone', 'Germany'], { sbr: true });
+    s = move(s, ids(s, 'British', 'bomber', 'United Kingdom'), ['United Kingdom', '6 Sea Zone', '5 Sea Zone', 'Germany'], {
+      sbr: true,
+    });
     s = fight(s, 'Germany');
     expect(count(s, 'British', 'bomber', 'Germany')).toBe(2);
     expect(s.units.find((u) => u.type === 'factory')!.damage).toBe(20);
@@ -236,11 +333,22 @@ describe('strategic bombing (p.14, 25, 27)', () => {
     let s = scenario({
       power: 'British',
       owners: { 'Northwestern Europe': 'British' },
-      units: [['British', 'bomber', 'United Kingdom', 2], ['British', 'fighter', 'United Kingdom'], ['Germans', 'factory', 'Germany'], ['Germans', 'fighter', 'Germany', 2], ['Germans', 'infantry', 'Germany']],
+      units: [
+        ['British', 'bomber', 'United Kingdom', 2],
+        ['British', 'fighter', 'United Kingdom'],
+        ['Germans', 'factory', 'Germany'],
+        ['Germans', 'fighter', 'Germany', 2],
+        ['Germans', 'infantry', 'Germany'],
+      ],
       dice: [1, 6, 6, 2, 6, 6, 4, 5],
     });
     s.options.sbrEscortsInterceptors = true;
-    s = move(s, [...ids(s, 'British', 'bomber', 'United Kingdom'), ...ids(s, 'British', 'fighter', 'United Kingdom')], ['United Kingdom', '6 Sea Zone', '5 Sea Zone', 'Germany'], { sbr: true });
+    s = move(
+      s,
+      [...ids(s, 'British', 'bomber', 'United Kingdom'), ...ids(s, 'British', 'fighter', 'United Kingdom')],
+      ['United Kingdom', '6 Sea Zone', '5 Sea Zone', 'Germany'],
+      { sbr: true },
+    );
     s = ok(s, { type: 'endPhase' });
     s = ok(s, { type: 'startBattle', battle: battleIn(s, 'Germany').id });
     expect(s.pending).toMatchObject({ kind: 'intercept', power: 'Germans' });
@@ -262,7 +370,13 @@ describe('strategic bombing (p.14, 25, 27)', () => {
     let s = scenario({
       power: 'British',
       owners: { 'Northwestern Europe': 'British' },
-      units: [['British', 'bomber', 'United Kingdom'], ['British', 'armour', 'Northwestern Europe'], ['Germans', 'factory', 'France'], ['Germans', 'fighter', 'France'], ['Germans', 'infantry', 'France']],
+      units: [
+        ['British', 'bomber', 'United Kingdom'],
+        ['British', 'armour', 'Northwestern Europe'],
+        ['Germans', 'factory', 'France'],
+        ['Germans', 'fighter', 'France'],
+        ['Germans', 'infantry', 'France'],
+      ],
       dice: [6, 6, 6, 3, 1, 6],
     });
     s.options.sbrEscortsInterceptors = true;
@@ -281,8 +395,23 @@ describe('strategic bombing (p.14, 25, 27)', () => {
   });
 
   it('without the optional rule fighters cannot join a raid', () => {
-    const s = scenario({ power: 'British', units: [['British', 'fighter', 'United Kingdom'], ['Germans', 'factory', 'Germany']] });
-    fails(s, { type: 'move', units: ids(s, 'British', 'fighter', 'United Kingdom'), path: ['United Kingdom', '6 Sea Zone', '5 Sea Zone', 'Germany'], sbr: true }, /bombers/);
+    const s = scenario({
+      power: 'British',
+      units: [
+        ['British', 'fighter', 'United Kingdom'],
+        ['Germans', 'factory', 'Germany'],
+      ],
+    });
+    fails(
+      s,
+      {
+        type: 'move',
+        units: ids(s, 'British', 'fighter', 'United Kingdom'),
+        path: ['United Kingdom', '6 Sea Zone', '5 Sea Zone', 'Germany'],
+        sbr: true,
+      },
+      /bombers/,
+    );
   });
 
   it('a damaged complex mobilizes fewer units and repairs cost 1 IPC each', () => {
@@ -344,7 +473,11 @@ describe('amphibious assaults (p.13-15)', () => {
     let s = scenario({
       power: 'British',
       owners: { 'Northwestern Europe': 'British' },
-      units: [['British', 'transport', '8 Sea Zone'], ['British', 'armour', 'Northwestern Europe'], ['Germans', 'infantry', 'France', 3]],
+      units: [
+        ['British', 'transport', '8 Sea Zone'],
+        ['British', 'armour', 'Northwestern Europe'],
+        ['Germans', 'infantry', 'France', 3],
+      ],
       dice: [6, 6, 6, 6, 6],
     });
     load(s, 'British', '8 Sea Zone', ['infantry']);
@@ -370,8 +503,21 @@ describe('amphibious assaults (p.13-15)', () => {
 
 describe('mobilization and income (p.22-23)', () => {
   it('units appear only at complexes held since the start of the turn, within production', () => {
-    let s = scenario({ phase: 'purchase', units: [['Germans', 'factory', 'Italy'], ['Germans', 'factory', 'Germany']], treasury: { Germans: 100 } });
-    s = ok(s, { type: 'buy', purchases: [{ type: 'infantry', count: 4 }, { type: 'destroyer', count: 1 }] });
+    let s = scenario({
+      phase: 'purchase',
+      units: [
+        ['Germans', 'factory', 'Italy'],
+        ['Germans', 'factory', 'Germany'],
+      ],
+      treasury: { Germans: 100 },
+    });
+    s = ok(s, {
+      type: 'buy',
+      purchases: [
+        { type: 'infantry', count: 4 },
+        { type: 'destroyer', count: 1 },
+      ],
+    });
     s.phase = 'mobilize';
     fails(s, { type: 'place', unitType: 'infantry', at: 'Italy', count: 4 }, /only 3/);
     s = ok(s, { type: 'place', unitType: 'infantry', at: 'Italy', count: 2 });
@@ -384,7 +530,12 @@ describe('mobilization and income (p.22-23)', () => {
   });
 
   it('a captured complex cannot be used until next turn', () => {
-    let s = scenario({ units: [['Germans', 'armour', 'West Russia'], ['Russians', 'factory', 'Caucasus']] });
+    let s = scenario({
+      units: [
+        ['Germans', 'armour', 'West Russia'],
+        ['Russians', 'factory', 'Caucasus'],
+      ],
+    });
     s.purchases = [{ type: 'infantry', count: 1 }];
     s = move(s, ids(s, 'Germans', 'armour', 'West Russia'), ['West Russia', 'Caucasus']);
     expect(s.units.find((u) => u.type === 'factory')!.owner).toBe('Germans');
@@ -393,7 +544,13 @@ describe('mobilization and income (p.22-23)', () => {
   });
 
   it('new fighters may launch from an own carrier next to a complex', () => {
-    let s = scenario({ phase: 'mobilize', units: [['Germans', 'factory', 'Italy'], ['Germans', 'carrier', '15 Sea Zone']] });
+    let s = scenario({
+      phase: 'mobilize',
+      units: [
+        ['Germans', 'factory', 'Italy'],
+        ['Germans', 'carrier', '15 Sea Zone'],
+      ],
+    });
     s.purchases = [{ type: 'fighter', count: 3 }];
     s = ok(s, { type: 'place', unitType: 'fighter', at: '15 Sea Zone', count: 2 });
     fails(s, { type: 'place', unitType: 'fighter', at: '15 Sea Zone', count: 1 }, /carriers/);
@@ -407,7 +564,10 @@ describe('mobilization and income (p.22-23)', () => {
 
   it('a complex placed this turn produces from next turn', () => {
     let s = scenario({ phase: 'mobilize', units: [] });
-    s.purchases = [{ type: 'factory', count: 1 }, { type: 'infantry', count: 1 }];
+    s.purchases = [
+      { type: 'factory', count: 1 },
+      { type: 'infantry', count: 1 },
+    ];
     s = ok(s, { type: 'place', unitType: 'factory', at: 'Poland', count: 1 });
     fails(s, { type: 'place', unitType: 'infantry', at: 'Poland', count: 1 });
   });
@@ -422,19 +582,34 @@ describe('mobilization and income (p.22-23)', () => {
 
 describe('victory (p.6 errata)', () => {
   it('the Axis win holding 9 victory cities after the US turn', () => {
-    const s = scenario({ power: 'Americans', phase: 'mobilize', owners: { Russia: 'Germans', 'Karelia S.S.R.': 'Germans', India: 'Japanese' }, units: [] });
+    const s = scenario({
+      power: 'Americans',
+      phase: 'mobilize',
+      owners: { Russia: 'Germans', 'Karelia S.S.R.': 'Germans', India: 'Japanese' },
+      units: [],
+    });
     expect(ok(s, { type: 'endPhase' }).winner).toBe('Axis');
   });
 
   it('the check happens only after the US turn', () => {
-    const s = scenario({ power: 'Japanese', phase: 'mobilize', owners: { Russia: 'Germans', 'Karelia S.S.R.': 'Germans', India: 'Japanese' }, units: [] });
+    const s = scenario({
+      power: 'Japanese',
+      phase: 'mobilize',
+      owners: { Russia: 'Germans', 'Karelia S.S.R.': 'Germans', India: 'Japanese' },
+      units: [],
+    });
     expect(ok(s, { type: 'endPhase' }).winner).toBeNull();
   });
 
   it('the Allies need 10', () => {
     const nine = scenario({ power: 'Americans', phase: 'mobilize', owners: { France: 'British', Italy: 'British' }, units: [] });
     expect(ok(nine, { type: 'endPhase' }).winner).toBeNull();
-    const ten = scenario({ power: 'Americans', phase: 'mobilize', owners: { France: 'British', Italy: 'British', Germany: 'Russians' }, units: [] });
+    const ten = scenario({
+      power: 'Americans',
+      phase: 'mobilize',
+      owners: { France: 'British', Italy: 'British', Germany: 'Russians' },
+      units: [],
+    });
     expect(ok(ten, { type: 'endPhase' }).winner).toBe('Allies');
   });
 });
@@ -442,7 +617,11 @@ describe('victory (p.6 errata)', () => {
 describe('stranded fighters (p.21, 27)', () => {
   it('defending fighters whose carrier sank land within one space', () => {
     let s = scenario({
-      units: [['Germans', 'battleship', '5 Sea Zone', 3], ['British', 'carrier', '6 Sea Zone'], ['British', 'fighter', '6 Sea Zone', 2]],
+      units: [
+        ['Germans', 'battleship', '5 Sea Zone', 3],
+        ['British', 'carrier', '6 Sea Zone'],
+        ['British', 'fighter', '6 Sea Zone', 2],
+      ],
       dice: [1, 6, 6, 6, 6, 6],
     });
     s = move(s, ids(s, 'Germans', 'battleship', '5 Sea Zone'), ['5 Sea Zone', '6 Sea Zone']);

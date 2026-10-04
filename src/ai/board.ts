@@ -58,8 +58,9 @@ export const isEnemyLand = (s: GameState, id: SpaceId, power: Power) => {
 };
 
 export const enemiesAt = (s: GameState, at: SpaceId, power: Power) =>
-  s.units.filter((u) => u.at === at && !areAllied(u.owner, power) && u.type !== 'factory' && !(u.carriedBy !== null && !isAir(u.type)));
-
+  s.units.filter(
+    (u) => u.at === at && !areAllied(u.owner, power) && u.type !== 'factory' && !(u.carriedBy !== null && !isAir(u.type)),
+  );
 
 /** Land hops from each territory to the nearest enemy-held territory, walking through any land. */
 export function frontDistance(s: GameState, power: Power): Map<SpaceId, number> {
@@ -89,7 +90,14 @@ export const capitalOf = (p: Power) => CAPITAL_OF[p];
 
 export function ownFactories(s: GameState, power: Power): SpaceId[] {
   return s.units
-    .filter((u) => u.type === 'factory' && u.owner === power && s.owner[u.at] === power && s.ownerAtTurnStart[u.at] === power && !s.capturedThisTurn.includes(u.at))
+    .filter(
+      (u) =>
+        u.type === 'factory' &&
+        u.owner === power &&
+        s.owner[u.at] === power &&
+        s.ownerAtTurnStart[u.at] === power &&
+        !s.capturedThisTurn.includes(u.at),
+    )
     .map((u) => u.at);
 }
 

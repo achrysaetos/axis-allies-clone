@@ -19,7 +19,13 @@ function mulberry(seed: number) {
   };
 }
 
-interface Outcome { seed: number; rounds: number; actions: number; winner: string | null; failure?: string }
+interface Outcome {
+  seed: number;
+  rounds: number;
+  actions: number;
+  winner: string | null;
+  failure?: string;
+}
 
 const coverage: Record<string, number> = {};
 const hit = (k: string) => (coverage[k] = (coverage[k] ?? 0) + 1);
@@ -51,7 +57,10 @@ function observe(before: GameState, after: GameState, a: Action): void {
 
 function play(seed: number): Outcome {
   const rand = mulberry(seed * 7919);
-  let s: GameState = newGame(seed, process.env.OPTIONAL ? { sbrEscortsInterceptors: true, turkishStraitsClosed: true, victory: 'total' } : {});
+  let s: GameState = newGame(
+    seed,
+    process.env.OPTIONAL ? { sbrEscortsInterceptors: true, turkishStraitsClosed: true, victory: 'total' } : {},
+  );
   let phaseStart = s;
   const recent: Action[] = [];
   let actions = 0;
@@ -63,7 +72,13 @@ function play(seed: number): Outcome {
     try {
       r = apply(s, a);
     } catch (e) {
-      return { seed, rounds: s.round, actions, winner: null, failure: `threw on ${JSON.stringify(a)}: ${(e as Error).stack}\nrecent: ${JSON.stringify(recent.slice(-8))}` };
+      return {
+        seed,
+        rounds: s.round,
+        actions,
+        winner: null,
+        failure: `threw on ${JSON.stringify(a)}: ${(e as Error).stack}\nrecent: ${JSON.stringify(recent.slice(-8))}`,
+      };
     }
     if (!r.ok) {
       if (a.type === 'endPhase' && s.phase === 'combatMove' && !s.pending) {
@@ -74,9 +89,17 @@ function play(seed: number): Outcome {
           s = r2.state;
         }
         const retry = apply(s, a);
-        if (!retry.ok) return { seed, rounds: s.round, actions, winner: null, failure: `cannot end untouched combat move: ${retry.error}` };
+        if (!retry.ok)
+          return { seed, rounds: s.round, actions, winner: null, failure: `cannot end untouched combat move: ${retry.error}` };
         r = retry;
-      } else return { seed, rounds: s.round, actions, winner: null, failure: `random agent produced illegal ${JSON.stringify(a)}: ${r.error} (${s.power} ${s.phase}, pending ${s.pending?.kind})` };
+      } else
+        return {
+          seed,
+          rounds: s.round,
+          actions,
+          winner: null,
+          failure: `random agent produced illegal ${JSON.stringify(a)}: ${r.error} (${s.power} ${s.phase}, pending ${s.pending?.kind})`,
+        };
     }
     const before = s;
     s = r.state;
@@ -89,7 +112,13 @@ function play(seed: number): Outcome {
     }
     const v = checkInvariants(s);
     if (v.length > 0)
-      return { seed, rounds: s.round, actions, winner: null, failure: `invariant after ${JSON.stringify(a)} (${before.power} ${before.phase}): ${v.slice(0, 5).join('; ')}\nrecent: ${JSON.stringify(recent.slice(-8))}` };
+      return {
+        seed,
+        rounds: s.round,
+        actions,
+        winner: null,
+        failure: `invariant after ${JSON.stringify(a)} (${before.power} ${before.phase}): ${v.slice(0, 5).join('; ')}\nrecent: ${JSON.stringify(recent.slice(-8))}`,
+      };
   }
   return { seed, rounds: s.round, actions, winner: s.winner };
 }
@@ -106,8 +135,15 @@ for (let seed = firstSeed; seed < firstSeed + games; seed++) {
     if (failures.length <= 3) console.log(`seed ${seed} round ${o.rounds}: ${o.failure}\n`);
   } else wins[(o.winner ?? 'none') as keyof typeof wins]++;
 }
-console.log(`games=${games} failures=${failures.length} actions=${totalActions} wins=${JSON.stringify(wins)} seconds=${((Date.now() - started) / 1000).toFixed(1)}`);
-console.log(Object.entries(coverage).sort().map(([k, n]) => `${k}=${n}`).join('\n'));
+console.log(
+  `games=${games} failures=${failures.length} actions=${totalActions} wins=${JSON.stringify(wins)} seconds=${((Date.now() - started) / 1000).toFixed(1)}`,
+);
+console.log(
+  Object.entries(coverage)
+    .sort()
+    .map(([k, n]) => `${k}=${n}`)
+    .join('\n'),
+);
 if (failures.length > 0) {
   console.log(`failing seeds: ${failures.map((f) => f.seed).join(' ')}`);
   process.exit(1);

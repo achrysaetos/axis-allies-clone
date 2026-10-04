@@ -64,7 +64,11 @@ export function CombatPanel({ state, odds, act, onQuick, onView, onFocus }: Prop
                 >
                   Start
                 </button>
-                <button disabled={blocker !== null} title="Fight it out with the default choices for both sides" onClick={() => onQuick(b.id)}>
+                <button
+                  disabled={blocker !== null}
+                  title="Fight it out with the default choices for both sides"
+                  onClick={() => onQuick(b.id)}
+                >
                   Quick
                 </button>
                 {b.optional && <button onClick={() => act({ type: 'skipBattle', battle: b.id })}>Skip</button>}

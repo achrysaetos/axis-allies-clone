@@ -26,8 +26,18 @@ describe('saved games', () => {
 
 describe('quick resolve', () => {
   it('fights a battle to the end with default choices for both sides', () => {
-    let s = scenario({ units: [['Germans', 'armour', 'West Russia', 3], ['Germans', 'infantry', 'West Russia', 2], ['Russians', 'infantry', 'Archangel', 3]] });
-    s = move(s, [...ids(s, 'Germans', 'armour', 'West Russia'), ...ids(s, 'Germans', 'infantry', 'West Russia')], ['West Russia', 'Archangel']);
+    let s = scenario({
+      units: [
+        ['Germans', 'armour', 'West Russia', 3],
+        ['Germans', 'infantry', 'West Russia', 2],
+        ['Russians', 'infantry', 'Archangel', 3],
+      ],
+    });
+    s = move(
+      s,
+      [...ids(s, 'Germans', 'armour', 'West Russia'), ...ids(s, 'Germans', 'infantry', 'West Russia')],
+      ['West Russia', 'Archangel'],
+    );
     s = ok(s, { type: 'endPhase' });
     const session = newSession(s, Object.fromEntries(POWERS.map((p) => [p, 'human'])) as Parameters<typeof newSession>[1]);
     const r = quickResolve(session, s.battles[0]!.id);

@@ -24,7 +24,6 @@ const idle = (u: Unit) => !u.movedInCombat && !u.fought && !u.retreated;
 const transportsOf = (s: GameState) =>
   mine(s).filter((u) => u.type === 'transport' && idle(u) && u.offloadedTo === null && u.moved < STATS.transport.move);
 
-
 /** Zones next to coasts worth delivering troops to: enemy shores and our own front line. */
 function landingGoals(s: GameState, front: Map<SpaceId, number>): Set<SpaceId> {
   const goals = new Set<SpaceId>();
@@ -83,7 +82,17 @@ function pickUp(d: Draft, t: Unit, goals: Set<SpaceId>, kept: Set<UnitId>): bool
 
 /** Up to a transport's load of idle, ungarrisoned troops in `land`: a heavy unit plus infantry when possible. */
 function cargoFrom(s: GameState, land: SpaceId, kept: Set<UnitId>): Unit[] {
-  const pool = s.units.filter((u) => u.at === land && u.owner === s.power && isLand(u.type) && u.type !== 'aaGun' && u.moved === 0 && idle(u) && u.carriedBy === null && !kept.has(u.id));
+  const pool = s.units.filter(
+    (u) =>
+      u.at === land &&
+      u.owner === s.power &&
+      isLand(u.type) &&
+      u.type !== 'aaGun' &&
+      u.moved === 0 &&
+      idle(u) &&
+      u.carriedBy === null &&
+      !kept.has(u.id),
+  );
   const picked: Unit[] = [];
   let room = TRANSPORT_CAPACITY;
   const order = ['armour', 'artillery', 'infantry', 'infantry'] as const;
@@ -121,7 +130,13 @@ function deliver(d: Draft, t: Unit, front: Map<SpaceId, number>, goals: Set<Spac
   const drops: { zone: SpaceId; path: SpaceId[]; land: SpaceId; f: number }[] = [];
   for (const [zone, path] of zones)
     for (const land of space(zone).neighbors)
-      if (!space(land).water && !isNeutral(land) && isFriendly(s, land, s.power) && (front.get(land) ?? 99) <= 2 && cargo.every((u) => u.turnStart !== land))
+      if (
+        !space(land).water &&
+        !isNeutral(land) &&
+        isFriendly(s, land, s.power) &&
+        (front.get(land) ?? 99) <= 2 &&
+        cargo.every((u) => u.turnStart !== land)
+      )
         drops.push({ zone, path, land, f: front.get(land)! });
   drops.sort((a, b) => a.f - b.f || a.path.length - b.path.length);
   for (const drop of drops) {
@@ -130,7 +145,9 @@ function deliver(d: Draft, t: Unit, front: Map<SpaceId, number>, goals: Set<Spac
     if (d.try({ type: 'move', units: cargo.map((u) => u.id), path: [drop.zone, drop.land] })) return;
     d.rollback(mark);
   }
-  const ranked = zones.filter(([z]) => !isHostileSea(s, z, s.power)).sort((a, b) => nearestGoal(a[0], goals) - nearestGoal(b[0], goals) || a[1].length - b[1].length);
+  const ranked = zones
+    .filter(([z]) => !isHostileSea(s, z, s.power))
+    .sort((a, b) => nearestGoal(a[0], goals) - nearestGoal(b[0], goals) || a[1].length - b[1].length);
   for (const [, path] of ranked) {
     if (path.length === 1) return;
     if (d.try({ type: 'move', units: [t.id], path })) return;
@@ -161,13 +178,20 @@ function landAir(d: Draft): void {
     const left = STATS[u.type].move - u.moved;
     const here = space(u.at).water ? u.type === 'fighter' && carrierRoom(s, u.at, u.owner) >= 0 : safeLanding(s, u, u.at);
     if (left <= 0) continue;
-    const reach = paths(u.at, left, (_p, n) => !isNeutral(n), (n) => !isNeutral(n));
+    const reach = paths(
+      u.at,
+      left,
+      (_p, n) => !isNeutral(n),
+      (n) => !isNeutral(n),
+    );
     const score = (at: SpaceId) => {
       if (space(at).water) return -3;
       const f = front.get(at) ?? 9;
       return -Math.abs(f - 1) + (ownFactories(s, s.power).includes(at) ? 0.5 : 0);
     };
-    const options = [...reach].filter(([at]) => safeLanding(s, u, at)).sort((a, b) => score(b[0]) - score(a[0]) || a[1].length - b[1].length);
+    const options = [...reach]
+      .filter(([at]) => safeLanding(s, u, at))
+      .sort((a, b) => score(b[0]) - score(a[0]) || a[1].length - b[1].length);
     const risky: SpaceId[][] = [];
     let landed = false;
     for (const [at, path] of options) {
@@ -191,7 +215,12 @@ function advance(d: Draft, kept: Set<UnitId>): void {
     if (u.carriedBy !== null || !idle(u) || u.offloadedTo !== null || u.moved >= STATS[u.type].move) continue;
     const here = front.get(u.at) ?? 99;
     if (here <= 1) continue;
-    const reach = paths(u.at, STATS[u.type].move - u.moved, (_p, n) => isFriendly(s, n, s.power) && !isNeutral(n), (n) => isFriendly(s, n, s.power));
+    const reach = paths(
+      u.at,
+      STATS[u.type].move - u.moved,
+      (_p, n) => isFriendly(s, n, s.power) && !isNeutral(n),
+      (n) => isFriendly(s, n, s.power),
+    );
     const best = [...reach].sort((a, b) => (front.get(a[0]) ?? 99) - (front.get(b[0]) ?? 99) || a[1].length - b[1].length)[0];
     if (!best || (front.get(best[0]) ?? 99) >= here) continue;
     if (kept.has(u.id)) continue;

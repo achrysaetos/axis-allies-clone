@@ -9,7 +9,9 @@
     "typecheck": "tsc --noEmit",
     "fuzz": "tsx scripts/fuzz.ts",
     "dev": "vite",
-    "build": "vite build"
+    "build": "vite build",
+    "format": "prettier --write src test scripts",
+    "format:check": "prettier --check src test scripts"
   },
   "devDependencies": {
     "@types/node": "^26.6.4",
@@ -17,6 +19,7 @@
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.1",
     "fast-xml-parser": "^5.11.2",
+    "prettier": "^3.9.9",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
     "vite": "^8.3.2",

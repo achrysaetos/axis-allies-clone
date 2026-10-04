@@ -4,7 +4,13 @@ import { ids, move, ok, scenario } from './helpers';
 
 describe('end of phase warnings', () => {
   it('warns when a plane would be lost for lack of a landing', () => {
-    let s = scenario({ power: 'Germans', units: [['Germans', 'armour', 'West Russia'], ['Germans', 'fighter', 'West Russia']] });
+    let s = scenario({
+      power: 'Germans',
+      units: [
+        ['Germans', 'armour', 'West Russia'],
+        ['Germans', 'fighter', 'West Russia'],
+      ],
+    });
     s = move(s, ids(s, 'Germans', 'fighter', 'West Russia'), ['West Russia', 'Caucasus']);
     s = move(s, ids(s, 'Germans', 'armour', 'West Russia'), ['West Russia', 'Caucasus']);
     s = ok(s, { type: 'endPhase' });

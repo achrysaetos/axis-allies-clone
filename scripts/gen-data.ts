@@ -4,7 +4,11 @@ import { XMLParser } from 'fast-xml-parser';
 const XML = 'vendor/triplea/WW2v5_1942_2nd.xml';
 const POWERS = ['Russians', 'Germans', 'British', 'Japanese', 'Americans'] as const;
 
-const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '', isArray: (_n: string, _p: unknown, _l: boolean, isAttr: boolean) => !isAttr });
+const parser = new XMLParser({
+  ignoreAttributes: false,
+  attributeNamePrefix: '',
+  isArray: (_n: string, _p: unknown, _l: boolean, isAttr: boolean) => !isAttr,
+});
 const root = parser.parse(readFileSync(XML, 'utf8')).game[0];
 
 type Attrs = Record<string, string>;
@@ -13,8 +17,7 @@ const territories: Attrs[] = map.territory;
 const connections: Attrs[] = map.connection;
 
 const attachments: Array<Attrs & { option?: Attrs[] }> = root.attachmentList[0].attachment;
-const options = (a: { option?: Attrs[] }) =>
-  Object.fromEntries((a.option ?? []).map((o) => [o.name, o.value]));
+const options = (a: { option?: Attrs[] }) => Object.fromEntries((a.option ?? []).map((o) => [o.name, o.value]));
 
 const init = root.initialize[0];
 const owners: Attrs[] = init.ownerInitialize[0].territoryOwner;
@@ -50,7 +53,11 @@ for (const s of spaces) s.neighbors.sort();
 const canalGroups = new Map<string, { name: string; seaZones: string[]; landTerritories: string[] }>();
 for (const a of attachments.filter((x) => x.javaClass?.endsWith('CanalAttachment'))) {
   const o = options(a);
-  const g = canalGroups.get(o.canalName!) ?? { name: o.canalName!, seaZones: [] as string[], landTerritories: o.landTerritories!.split(':') };
+  const g = canalGroups.get(o.canalName!) ?? {
+    name: o.canalName!,
+    seaZones: [] as string[],
+    landTerritories: o.landTerritories!.split(':'),
+  };
   g.seaZones.push(a.attachTo!);
   canalGroups.set(o.canalName!, g);
 }
@@ -68,10 +75,7 @@ for (const u of units) {
 
 const treasury = Object.fromEntries(resources.map((r) => [r.player, Number(r.quantity)]));
 
-writeFileSync(
-  'src/data/map.json',
-  JSON.stringify({ spaces, canals: [...canalGroups.values()] }, null, 1) + '\n',
-);
+writeFileSync('src/data/map.json', JSON.stringify({ spaces, canals: [...canalGroups.values()] }, null, 1) + '\n');
 writeFileSync('src/data/setup.json', JSON.stringify({ treasury, units }, null, 1) + '\n');
 
 type Pt = [number, number];
@@ -110,7 +114,10 @@ for (const line of readFileSync('vendor/triplea/polygons.txt', 'utf8').split('\n
     const pts = parsePoints(poly);
     if (pts.length < 3) continue;
     const half = Math.floor(pts.length / 2);
-    const simple = [...simplify(pts.slice(0, half + 1), 1.2).slice(0, -1), ...simplify([...pts.slice(half), pts[0]!], 1.2).slice(0, -1)];
+    const simple = [
+      ...simplify(pts.slice(0, half + 1), 1.2).slice(0, -1),
+      ...simplify([...pts.slice(half), pts[0]!], 1.2).slice(0, -1),
+    ];
     g.polygons.push('M' + simple.map(([x, y]) => `${x},${y}`).join('L') + 'Z');
   }
 }

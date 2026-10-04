@@ -9,7 +9,12 @@
   --good: #6fbf73;
   --bad: #e5634d;
   --ocean: #234a6b;
-  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
   font-size: 13px;
   color: var(--text);
   background: var(--bg);

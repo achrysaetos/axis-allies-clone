@@ -16,7 +16,9 @@ export function PurchasePanel({ state, act }: Props) {
   const spent = state.purchases.reduce((n, p) => n + STATS[p.type].cost * p.count, 0);
   const left = state.treasury[power] - spent;
   const setCount = (t: UnitType, count: number) => {
-    const next: Purchase[] = UNIT_TYPES.map((type) => ({ type, count: type === t ? count : countOf(type) })).filter((p) => p.count > 0);
+    const next: Purchase[] = UNIT_TYPES.map((type) => ({ type, count: type === t ? count : countOf(type) })).filter(
+      (p) => p.count > 0,
+    );
     act({ type: 'buy', purchases: next });
   };
   const capacity = productionCapacity(state, power);
@@ -59,7 +61,11 @@ export function PurchasePanel({ state, act }: Props) {
                 <td>{s.cost}</td>
                 <td className="dim">{t === 'factory' ? '—' : `${s.attack}/${s.defense}/${s.move}`}</td>
                 <td>
-                  <Stepper value={n} max={n + Math.min(Math.floor(Math.max(0, left) / s.cost), Math.max(0, room(t)))} onChange={(v) => setCount(t, v)} />
+                  <Stepper
+                    value={n}
+                    max={n + Math.min(Math.floor(Math.max(0, left) / s.cost), Math.max(0, room(t)))}
+                    onChange={(v) => setCount(t, v)}
+                  />
                 </td>
               </tr>
             );
@@ -79,10 +85,7 @@ export function PurchasePanel({ state, act }: Props) {
           <button disabled={left < 1} onClick={() => act({ type: 'repair', factory: f.id, amount: 1 })}>
             Repair 1
           </button>
-          <button
-            disabled={left < 1}
-            onClick={() => act({ type: 'repair', factory: f.id, amount: Math.min(f.damage, left) })}
-          >
+          <button disabled={left < 1} onClick={() => act({ type: 'repair', factory: f.id, amount: Math.min(f.damage, left) })}>
             Repair {Math.min(f.damage, Math.max(left, 0))}
           </button>
         </div>

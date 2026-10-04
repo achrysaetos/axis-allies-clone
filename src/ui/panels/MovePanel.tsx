@@ -49,8 +49,7 @@ export function MovePanel({ state, at, selected, sbr, onSelect, onSbr }: Props) 
   const toggle = (id: UnitId) => onSelect(chosen.has(id) ? selected.filter((x) => x !== id) : [...selected, id]);
   const selectedUnits = mine.filter((u) => chosen.has(u.id));
   const raiders = state.options.sbrEscortsInterceptors ? ['bomber', 'fighter'] : ['bomber'];
-  const canRaid =
-    selectedUnits.some((u) => u.type === 'bomber') && selectedUnits.every((u) => raiders.includes(u.type));
+  const canRaid = selectedUnits.some((u) => u.type === 'bomber') && selectedUnits.every((u) => raiders.includes(u.type));
   useEffect(() => {
     if (sbr && !canRaid) onSbr(false);
   }, [sbr, canRaid, onSbr]);
@@ -80,7 +79,12 @@ export function MovePanel({ state, at, selected, sbr, onSelect, onSbr }: Props) 
         return (
           <div key={t.id} className="transport">
             <label className="row">
-              <input type="checkbox" disabled={moveBlocker(state, t) !== null} checked={chosen.has(t.id)} onChange={() => toggle(t.id)} />
+              <input
+                type="checkbox"
+                disabled={moveBlocker(state, t) !== null}
+                checked={chosen.has(t.id)}
+                onChange={() => toggle(t.id)}
+              />
               <Chip owner={t.owner} type="transport" />
               <span className="grow">
                 Transport #{t.id} <span className="dim">· {remainingMove(t)} mv</span>
@@ -97,7 +101,9 @@ export function MovePanel({ state, at, selected, sbr, onSelect, onSbr }: Props) 
                 />
                 <Chip owner={c.owner} type={c.type} />
                 <span className="grow">{UNIT_GLYPH[c.type].name}</span>
-                <span className="dim">{c.owner !== state.power ? 'allied' : c.offloadedTo ? `→ ${c.offloadedTo}` : 'offload'}</span>
+                <span className="dim">
+                  {c.owner !== state.power ? 'allied' : c.offloadedTo ? `→ ${c.offloadedTo}` : 'offload'}
+                </span>
               </label>
             ))}
           </div>

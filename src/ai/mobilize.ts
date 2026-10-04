@@ -25,12 +25,16 @@ export function mobilizeAction(s: GameState): Action {
 }
 
 const seaRoom = (s: GameState, zone: SpaceId) =>
-  space(zone).neighbors.filter((n) => ownFactories(s, s.power).includes(n)).reduce((k, f) => k + productionLeft(s, f), 0);
+  space(zone)
+    .neighbors.filter((n) => ownFactories(s, s.power).includes(n))
+    .reduce((k, f) => k + productionLeft(s, f), 0);
 
 function seaSpots(s: GameState, factories: SpaceId[]): SpaceId[] {
   const zones = [...new Set(factories.flatMap((f) => space(f).neighbors.filter((n) => space(n).water)))];
   const score = (z: SpaceId) =>
-    s.units.filter((u) => u.at === z).reduce((n, u) => n + (areAllied(u.owner, s.power) ? (u.owner === s.power ? 3 : 1) : -100), 0);
+    s.units
+      .filter((u) => u.at === z)
+      .reduce((n, u) => n + (areAllied(u.owner, s.power) ? (u.owner === s.power ? 3 : 1) : -100), 0);
   return zones.sort((a, b) => score(b) - score(a));
 }
 

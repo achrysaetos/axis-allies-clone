@@ -30,7 +30,6 @@ interface Plan {
   transports?: Map<UnitId, UnitId>;
 }
 
-
 /** Enemy units that make a land space contested (factories never fight). */
 const enemyDefendersAt = (state: GameState, at: SpaceId, power: Power) =>
   enemyUnitsAt(state, at, power).filter((u) => u.type !== 'factory');
@@ -162,7 +161,8 @@ function planAir(state: GameState, units: Unit[], path: SpaceId[], combat: boole
   if (sbr) {
     if (!combat) return 'strategic bombing raids are declared during combat move';
     const escorts = state.options.sbrEscortsInterceptors ? ['bomber', 'fighter'] : ['bomber'];
-    if (units.some((u) => !escorts.includes(u.type))) return 'only bombers (and escorting fighters) can raid industrial complexes';
+    if (units.some((u) => !escorts.includes(u.type)))
+      return 'only bombers (and escorting fighters) can raid industrial complexes';
     const f = factoryAt(state, dest);
     if (!f || areAllied(f.owner, state.power)) return 'raids must target an enemy industrial complex';
   }
@@ -176,11 +176,20 @@ function planAir(state: GameState, units: Unit[], path: SpaceId[], combat: boole
     }
     for (const [key, n] of needCarrier) {
       const left = Number(key.slice(key.lastIndexOf(':') + 1));
-      if (carrierSlotsWithin(state, dest, left) < n) return `fighters would have no possible landing space after attacking ${dest}`;
+      if (carrierSlotsWithin(state, dest, left) < n)
+        return `fighters would have no possible landing space after attacking ${dest}`;
     }
   } else if (space(dest).water) {
     if (!units.every((u) => u.type === 'fighter')) return `air units cannot land in ${dest}`;
-    if (carrierSlotsWithin(state, dest, 0, units.map((u) => u.id)) < units.length) return `no carrier can be in ${dest} for these fighters`;
+    if (
+      carrierSlotsWithin(
+        state,
+        dest,
+        0,
+        units.map((u) => u.id),
+      ) < units.length
+    )
+      return `no carrier can be in ${dest} for these fighters`;
   } else if (!canLandAir(state, dest, state.power)) return `air units cannot land in ${dest}`;
   return { kind: 'air', units };
 }
@@ -193,20 +202,27 @@ function carrierSlotsWithin(state: GameState, at: SpaceId, left: number, ignorin
   const counted = new Set<UnitId>();
   for (const z of zones) {
     const here = unitsAt(state, z).filter((u) => areAllied(u.owner, power) && !ignoring.includes(u.id));
-    const room = here.filter((u) => u.type === 'carrier').length * CARRIER_CAPACITY - here.filter((u) => u.type === 'fighter').length;
+    const room =
+      here.filter((u) => u.type === 'carrier').length * CARRIER_CAPACITY - here.filter((u) => u.type === 'fighter').length;
     slots += Math.max(0, room);
     for (const c of here) if (c.type === 'carrier') counted.add(c.id);
   }
   for (const c of state.units) {
     if (c.type !== 'carrier' || c.owner !== power || counted.has(c.id) || c.fought || c.movedInCombat) continue;
     const reach = seaDistances(state, c.at, remainingMove(c), power);
-    if (zones.some((z) => reach.has(z))) slots += CARRIER_CAPACITY - unitsAt(state, c.at).filter((u) => u.carriedBy === c.id).length;
+    if (zones.some((z) => reach.has(z)))
+      slots += CARRIER_CAPACITY - unitsAt(state, c.at).filter((u) => u.carriedBy === c.id).length;
   }
   const newCarriers = state.purchases.find((p) => p.type === 'carrier')?.count ?? 0;
-  if (newCarriers > 0 && zones.some((z) => space(z).neighbors.some((n) => {
-    const f = factoryAt(state, n);
-    return f && f.owner === power && state.ownerAtTurnStart[n] === power && !state.capturedThisTurn.includes(n);
-  })))
+  if (
+    newCarriers > 0 &&
+    zones.some((z) =>
+      space(z).neighbors.some((n) => {
+        const f = factoryAt(state, n);
+        return f && f.owner === power && state.ownerAtTurnStart[n] === power && !state.capturedThisTurn.includes(n);
+      }),
+    )
+  )
     slots += newCarriers * CARRIER_CAPACITY;
   return slots;
 }
@@ -301,8 +317,7 @@ export function applyMove(draft: GameState, plan: Plan, action: MoveAction): voi
       return;
     }
     case 'land': {
-      if (combat)
-        for (const u of plan.units) if (u.moved > 0 && draft.capturedThisTurn.includes(u.at)) u.blitzed = true;
+      if (combat) for (const u of plan.units) if (u.moved > 0 && draft.capturedThisTurn.includes(u.at)) u.blitzed = true;
       let stopped = false;
       for (let i = 1; i < path.length; i++) {
         const s = path[i]!;
@@ -383,7 +398,11 @@ export function combatMoveErrors(state: GameState): string[] {
     } else if (isAir(u.type)) {
       const target = space(u.at).water ? enemies.length > 0 : wasHostileAtTurnStart(state, u.at, power);
       if (!target) errors.push(`${u.type} in ${u.at} must end its combat move in a space under attack`);
-    } else if (enemies.length === 0 && !amphibZones.has(u.at) && !(u.escaped && (state.hostileSeaAtTurnStart.includes(u.turnStart) || battleWillOccur(state, u.turnStart)))) {
+    } else if (
+      enemies.length === 0 &&
+      !amphibZones.has(u.at) &&
+      !(u.escaped && (state.hostileSeaAtTurnStart.includes(u.turnStart) || battleWillOccur(state, u.turnStart)))
+    ) {
       errors.push(`${u.type} in ${u.at} must end its combat move in a sea zone with enemy units`);
     }
   }
@@ -392,7 +411,8 @@ export function combatMoveErrors(state: GameState): string[] {
     if (enemyUnitsAt(state, zone, power).length === 0 || amphibZones.has(zone)) continue;
     if (mine.some((u) => STATS[u.type].attack > 0)) continue;
     const transports = mine.filter((u) => u.type === 'transport');
-    if (transports.some((u) => u.movedInCombat && !u.escaped)) errors.push(`transports in ${zone} cannot attack without combat units`);
+    if (transports.some((u) => u.movedInCombat && !u.escaped))
+      errors.push(`transports in ${zone} cannot attack without combat units`);
     else if (isHostileSea(state, zone, power) && transports.some((t) => canEscape(state, t)))
       errors.push(`transports sharing ${zone} with enemy warships must leave it`);
   }
@@ -416,5 +436,3 @@ function canEscape(state: GameState, t: Unit): boolean {
     (n) => space(n).water && seaPassageOpen(state, t.at, n, state.power) && !isHostileSea(state, n, state.power),
   );
 }
-
-

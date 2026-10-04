@@ -1,15 +1,7 @@
 import { POWERS } from './types';
 import type { Battle, GameState, HitCategory, HitGroup, PendingHits, Power, SpaceId, Unit, UnitId } from './types';
 import { STATS, isAir, isLand, space } from './data';
-import {
-  areAllied,
-  enemyUnitsAt,
-  factoryAt,
-  isFriendlyLand,
-  isHostileSea,
-  unitsAt,
-  wasHostileAtTurnStart,
-} from './queries';
+import { areAllied, enemyUnitsAt, factoryAt, isFriendlyLand, isHostileSea, unitsAt, wasHostileAtTurnStart } from './queries';
 import { assignable, autoCasualties, canTake, validateCasualties } from './casualties';
 import { captureTerritory } from './capture';
 import { roll } from './state';
@@ -53,7 +45,14 @@ export function createBattles(draft: GameState): void {
   draft.battles = [...draft.battles, ...battles];
 }
 
-function newBattle(id: number, at: SpaceId, kind: Battle['kind'], attacker: Power, optional: boolean, tier: Battle['tier']): Battle {
+function newBattle(
+  id: number,
+  at: SpaceId,
+  kind: Battle['kind'],
+  attacker: Power,
+  optional: boolean,
+  tier: Battle['tier'],
+): Battle {
   return {
     id,
     space: at,
@@ -142,15 +141,10 @@ function rollGroup(s: GameState, b: Battle, side: 'attacker' | 'defender', label
 }
 
 function fire(s: GameState, b: Battle, side: 'attacker' | 'defender', firers: Unit[]): HitGroup[] {
-  const friendlyDestroyer = (side === 'attacker' ? liveAttackers(s, b) : liveDefenders(s, b)).some(
-    (u) => u.type === 'destroyer',
-  );
+  const friendlyDestroyer = (side === 'attacker' ? liveAttackers(s, b) : liveDefenders(s, b)).some((u) => u.type === 'destroyer');
   const infantrySupported =
     side === 'attacker'
-      ? Math.min(
-          firers.filter((u) => u.type === 'infantry').length,
-          firers.filter((u) => u.type === 'artillery').length,
-        )
+      ? Math.min(firers.filter((u) => u.type === 'infantry').length, firers.filter((u) => u.type === 'artillery').length)
       : 0;
   let supported = 0;
   const byCategory = new Map<HitCategory, number[]>();
@@ -186,9 +180,7 @@ export function retreatOptions(s: GameState, b: Battle): SpaceId[] {
   const movers = att.filter((u) => !isAir(u.type) && !b.seaborne.includes(u.id));
   if (movers.length > 0) {
     return b.origins.filter((o) =>
-      space(o).water
-        ? !isHostileSea(s, o, b.attacker) && !s.hostileSeaAtTurnStart.includes(o)
-        : isFriendlyLand(s, o, b.attacker),
+      space(o).water ? !isHostileSea(s, o, b.attacker) && !s.hostileSeaAtTurnStart.includes(o) : isFriendlyLand(s, o, b.attacker),
     );
   }
   if (att.some((u) => isAir(u.type))) return [b.space];
@@ -197,7 +189,12 @@ export function retreatOptions(s: GameState, b: Battle): SpaceId[] {
 
 function finish(s: GameState, b: Battle, winner: Battle['winner']): void {
   const att = liveAttackers(s, b);
-  if (b.kind === 'land' && winner === 'attacker' && att.some((u) => isLand(u.type) && u.type !== 'aaGun') && s.owner[b.space] !== undefined)
+  if (
+    b.kind === 'land' &&
+    winner === 'attacker' &&
+    att.some((u) => isLand(u.type) && u.type !== 'aaGun') &&
+    s.owner[b.space] !== undefined
+  )
     if (!areAllied(s.owner[b.space]!, b.attacker)) captureTerritory(s, b.space, b.attacker);
   for (const u of [...alive(s, b.attackers), ...alive(s, b.defenders)]) {
     u.fought = true;
@@ -212,10 +209,10 @@ function finish(s: GameState, b: Battle, winner: Battle['winner']): void {
     airOnly
       ? `${b.attacker} clears ${b.space} but has no land units left to take it`
       : winner === 'attacker'
-      ? `${b.attacker} wins the battle for ${b.space}`
-      : winner === 'defender'
-        ? `${b.space} holds against ${b.attacker}`
-        : `The battle for ${b.space} ends with no winner`,
+        ? `${b.attacker} wins the battle for ${b.space}`
+        : winner === 'defender'
+          ? `${b.space} holds against ${b.attacker}`
+          : `The battle for ${b.space} ends with no winner`,
   );
 }
 
@@ -270,7 +267,13 @@ function step(s: GameState, b: Battle): void {
       if (b.kind !== 'land' || b.seaborne.length === 0 || liveDefenders(s, b).length === 0) return;
       const ships = bombardShips(s, b);
       if (ships.length === 0) return;
-      s.pending = { kind: 'bombard', battle: b.id, power: b.attacker, ships: ships.map((u) => u.id), max: Math.min(ships.length, b.seaborne.length) };
+      s.pending = {
+        kind: 'bombard',
+        battle: b.id,
+        power: b.attacker,
+        ships: ships.map((u) => u.id),
+        max: Math.min(ships.length, b.seaborne.length),
+      };
       return;
     }
     case 'aa': {
@@ -296,7 +299,13 @@ function step(s: GameState, b: Battle): void {
       b.step = side === 'attacker' ? 'submergeDefender' : 'subStrike';
       const subs = eligibleStrikers(s, b, side);
       if (subs.length > 0)
-        s.pending = { kind: 'submerge', battle: b.id, power: side === 'attacker' ? b.attacker : defendingPower(s, b), side, subs: subs.map((u) => u.id) };
+        s.pending = {
+          kind: 'submerge',
+          battle: b.id,
+          power: side === 'attacker' ? b.attacker : defendingPower(s, b),
+          side,
+          subs: subs.map((u) => u.id),
+        };
       return;
     }
     case 'subStrike': {
@@ -304,10 +313,24 @@ function step(s: GameState, b: Battle): void {
       const att = eligibleStrikers(s, b, 'attacker');
       const def = eligibleStrikers(s, b, 'defender');
       b.struck = [...att, ...def].map((u) => u.id);
-      const aHits = rollGroup(s, b, 'attacker', 'surprise strike', att.map(() => STATS.submarine.attack));
-      const dHits = rollGroup(s, b, 'defender', 'surprise strike', def.map(() => STATS.submarine.defense));
-      if (aHits > 0) b.queue.push({ side: 'defender', groups: [{ category: 'notAir', hits: aHits }], immediate: true, reason: 'subStrike' });
-      if (dHits > 0) b.queue.push({ side: 'attacker', groups: [{ category: 'notAir', hits: dHits }], immediate: true, reason: 'subStrike' });
+      const aHits = rollGroup(
+        s,
+        b,
+        'attacker',
+        'surprise strike',
+        att.map(() => STATS.submarine.attack),
+      );
+      const dHits = rollGroup(
+        s,
+        b,
+        'defender',
+        'surprise strike',
+        def.map(() => STATS.submarine.defense),
+      );
+      if (aHits > 0)
+        b.queue.push({ side: 'defender', groups: [{ category: 'notAir', hits: aHits }], immediate: true, reason: 'subStrike' });
+      if (dHits > 0)
+        b.queue.push({ side: 'attacker', groups: [{ category: 'notAir', hits: dHits }], immediate: true, reason: 'subStrike' });
       return;
     }
     case 'attackerFire': {
@@ -338,7 +361,10 @@ function step(s: GameState, b: Battle): void {
       const options = retreatOptions(s, b);
       if (options.length > 0) s.pending = { kind: 'retreat', battle: b.id, power: b.attacker, options };
       else if (liveAttackers(s, b).every((u) => u.type === 'transport')) {
-        removeUnits(s, liveAttackers(s, b).map((u) => u.id));
+        removeUnits(
+          s,
+          liveAttackers(s, b).map((u) => u.id),
+        );
       }
       return;
     }
@@ -368,7 +394,10 @@ function start(s: GameState, b: Battle): void {
   }
   const here = unitsAt(s, b.space);
   b.attackers = here
-    .filter((u) => u.owner === power && u.carriedBy === null && !u.sbr && (b.kind === 'sea' || u.movedInCombat || b.seaborne.includes(u.id)))
+    .filter(
+      (u) =>
+        u.owner === power && u.carriedBy === null && !u.sbr && (b.kind === 'sea' || u.movedInCombat || b.seaborne.includes(u.id)),
+    )
     .map((u) => u.id);
   b.defenders = here
     .filter((u) => !areAllied(u.owner, power) && u.type !== 'factory' && !isCargo(u) && !u.fought)
@@ -412,8 +441,11 @@ function strategicBombing(s: GameState, b: Battle): void {
   if (!factory || areAllied(factory.owner, b.attacker)) return finish(s, b, 'none');
   b.step = 'airBattle';
   if (!s.options.sbrEscortsInterceptors) return;
-  const fighters = s.units.filter((u) => u.at === b.space && u.type === 'fighter' && !areAllied(u.owner, b.attacker) && !u.fought);
-  if (fighters.length > 0) s.pending = { kind: 'intercept', battle: b.id, power: fighters[0]!.owner, fighters: fighters.map((u) => u.id) };
+  const fighters = s.units.filter(
+    (u) => u.at === b.space && u.type === 'fighter' && !areAllied(u.owner, b.attacker) && !u.fought,
+  );
+  if (fighters.length > 0)
+    s.pending = { kind: 'intercept', battle: b.id, power: fighters[0]!.owner, fighters: fighters.map((u) => u.id) };
 }
 
 function raidStep(s: GameState, b: Battle): void {
@@ -421,13 +453,25 @@ function raidStep(s: GameState, b: Battle): void {
     case 'airBattle': {
       b.step = 'interceptorsFire';
       if (b.defenders.length === 0) return;
-      const hits = rollGroup(s, b, 'attacker', 'escort fire', liveAttackers(s, b).map(() => 1));
+      const hits = rollGroup(
+        s,
+        b,
+        'attacker',
+        'escort fire',
+        liveAttackers(s, b).map(() => 1),
+      );
       if (hits > 0) b.queue.push({ side: 'defender', groups: [{ category: 'air', hits }], immediate: true, reason: 'fire' });
       return;
     }
     case 'interceptorsFire': {
       b.step = 'raid';
-      const hits = rollGroup(s, b, 'defender', 'interceptor fire', liveDefenders(s, b).map(() => 2));
+      const hits = rollGroup(
+        s,
+        b,
+        'defender',
+        'interceptor fire',
+        liveDefenders(s, b).map(() => 2),
+      );
       if (hits > 0) b.queue.push({ side: 'attacker', groups: [{ category: 'air', hits }], immediate: true, reason: 'fire' });
       return;
     }
@@ -441,7 +485,14 @@ function bomb(s: GameState, b: Battle): void {
   for (const u of liveAttackers(s, b)) if (u.type === 'fighter') u.retreated = true;
   const bombers = liveAttackers(s, b).filter((u) => u.type === 'bomber');
   const aaRolls = roll(s, bombers.length);
-  b.dice.push({ round: 0, side: 'defender', label: 'factory air defense', rolls: aaRolls, targets: aaRolls.map(() => 1), hits: aaRolls.filter((r) => r === 1).length });
+  b.dice.push({
+    round: 0,
+    side: 'defender',
+    label: 'factory air defense',
+    rolls: aaRolls,
+    targets: aaRolls.map(() => 1),
+    hits: aaRolls.filter((r) => r === 1).length,
+  });
   const shotDown = bombers.filter((_, i) => aaRolls[i] === 1).map((u) => u.id);
   removeUnits(s, shotDown);
   const survivors = bombers.length - shotDown.length;
@@ -451,7 +502,9 @@ function bomb(s: GameState, b: Battle): void {
   const applied = Math.min(total, cap - factory.damage);
   factory.damage += applied;
   b.dice.push({ round: 0, side: 'attacker', label: 'bombing damage', rolls: dmgRolls, targets: [], hits: applied });
-  s.log.push(`${b.attacker} bombs ${b.space} for ${applied} damage, losing ${shotDown.length} bomber${shotDown.length === 1 ? '' : 's'}`);
+  s.log.push(
+    `${b.attacker} bombs ${b.space} for ${applied} damage, losing ${shotDown.length} bomber${shotDown.length === 1 ? '' : 's'}`,
+  );
   finish(s, b, survivors > 0 ? 'attacker' : 'defender');
 }
 
@@ -460,7 +513,10 @@ function checkEnd(s: GameState, b: Battle): boolean {
   let att = liveAttackers(s, b);
   let def = liveDefenders(s, b);
   if (b.kind === 'land' && def.length > 0 && def.every((u) => u.type === 'aaGun') && att.length > 0) {
-    removeUnits(s, def.map((u) => u.id));
+    removeUnits(
+      s,
+      def.map((u) => u.id),
+    );
     def = [];
   }
   const attDestroyer = att.some((u) => u.type === 'destroyer');
@@ -473,7 +529,10 @@ function checkEnd(s: GameState, b: Battle): boolean {
     if (!attackerHitsCombat && !defenderHitsCombat) {
       const transports = def.filter((u) => u.type === 'transport');
       if (transports.length > 0 && canHit(att, transports, 'attacker', attDestroyer)) {
-        removeUnits(s, transports.map((u) => u.id));
+        removeUnits(
+          s,
+          transports.map((u) => u.id),
+        );
         def = liveDefenders(s, b);
       }
     }
@@ -535,7 +594,13 @@ export function applyDecision(s: GameState, action: { type: string } & Record<st
         u.bombarded = true;
         u.fought = true;
       }
-      const hits = rollGroup(s, b!, 'attacker', 'bombardment', ships.map((u) => STATS[u.type].attack));
+      const hits = rollGroup(
+        s,
+        b!,
+        'attacker',
+        'bombardment',
+        ships.map((u) => STATS[u.type].attack),
+      );
       if (hits > 0) b!.queue.push({ side: 'defender', groups: [{ category: 'any', hits }], immediate: false, reason: 'bombard' });
       return null;
     }
@@ -573,4 +638,3 @@ function retreat(s: GameState, b: Battle, to: SpaceId): void {
   s.log.push(`${b.attacker} retreats from ${b.space}`);
   if (liveAttackers(s, b).length === 0) finish(s, b, 'defender');
 }
-

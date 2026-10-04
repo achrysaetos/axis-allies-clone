@@ -93,7 +93,8 @@ function Side({
 
 function outcome(state: GameState, b: Battle): string {
   const attacker = powerName(b.attacker);
-  if (b.kind === 'sbr') return b.winner === 'attacker' ? `${attacker} damages the industrial complex` : 'Every bomber was shot down';
+  if (b.kind === 'sbr')
+    return b.winner === 'attacker' ? `${attacker} damages the industrial complex` : 'Every bomber was shot down';
   if (b.winner === 'defender') return `${b.space} holds`;
   if (b.winner === 'none') return 'Neither side can hit the other, so the battle ends';
   if (b.kind === 'sea') return `${attacker} wins the sea battle`;
@@ -157,9 +158,7 @@ export function BattleDialog({ state, battle, fallen, controllers, act, onQuick,
         ))}
       </div>
       {battle.resolved && (
-        <div className={`result ${battle.winner === 'attacker' ? 'good' : 'bad'}`}>
-          {outcome(state, battle)}
-        </div>
+        <div className={`result ${battle.winner === 'attacker' ? 'good' : 'bad'}`}>{outcome(state, battle)}</div>
       )}
       {mine &&
         (waitingOnAi ? (

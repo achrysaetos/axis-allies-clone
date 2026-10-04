@@ -1,6 +1,14 @@
 import { useEffect } from 'react';
 
-export function ConfirmEnd({ warnings, onConfirm, onCancel }: { warnings: string[]; onConfirm: () => void; onCancel: () => void }) {
+export function ConfirmEnd({
+  warnings,
+  onConfirm,
+  onCancel,
+}: {
+  warnings: string[];
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Enter') onConfirm();

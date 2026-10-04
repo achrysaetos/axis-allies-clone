@@ -117,7 +117,13 @@ describe('AI', () => {
     const s = scenario({
       power: 'Germans',
       phase: 'noncombatMove',
-      owners: { Poland: 'Russians', 'Baltic States': 'Russians', 'Northwestern Europe': 'Russians', Finland: 'Russians', Norway: 'Russians' },
+      owners: {
+        Poland: 'Russians',
+        'Baltic States': 'Russians',
+        'Northwestern Europe': 'Russians',
+        Finland: 'Russians',
+        Norway: 'Russians',
+      },
       units: [
         ['Germans', 'bomber', '5 Sea Zone'],
         ['Russians', 'armour', 'Poland', 12],

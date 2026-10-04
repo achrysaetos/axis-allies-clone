@@ -174,7 +174,9 @@ function nextStranded(s: GameState): Decision | null {
     const fighters = enemySide.filter((u) => u.type === 'fighter').sort((a, b) => b.id - a.id);
     const lost = !space(zone).water && areAllied(s.owner[zone]!, s.power);
     if (!space(zone).water && !lost) continue;
-    const excess = lost ? fighters.length : fighters.length - enemySide.filter((u) => u.type === 'carrier').length * CARRIER_CAPACITY;
+    const excess = lost
+      ? fighters.length
+      : fighters.length - enemySide.filter((u) => u.type === 'carrier').length * CARRIER_CAPACITY;
     if (excess <= 0) continue;
     const stranded = fighters.slice(0, excess);
     const owner = POWERS.find((p) => stranded.some((f) => f.owner === p))!;
@@ -239,9 +241,13 @@ function place(s: GameState, type: UnitType, at: SpaceId, count: number): string
     const room = sources.reduce((n, f) => n + productionLeft(s, f), 0);
     if (room < count) return `no industrial complex next to ${at} can mobilize ${count} more units`;
     if (type === 'fighter') {
-      const own = unitsAt(s, at).filter((u) => u.type === 'carrier' && u.owner === power).map((u) => u.id);
+      const own = unitsAt(s, at)
+        .filter((u) => u.type === 'carrier' && u.owner === power)
+        .map((u) => u.id);
       const aboard = unitsAt(s, at).filter(
-        (u) => u.type === 'fighter' && ((u.owner === power && u.carriedBy === null) || (u.carriedBy !== null && own.includes(u.carriedBy))),
+        (u) =>
+          u.type === 'fighter' &&
+          ((u.owner === power && u.carriedBy === null) || (u.carriedBy !== null && own.includes(u.carriedBy))),
       ).length;
       if (own.length * CARRIER_CAPACITY - aboard < count) return 'new fighters need room on your own carriers';
     }
@@ -304,7 +310,10 @@ function bindGuestFighters(s: GameState): void {
     for (const c of here.filter((u) => u.type === 'carrier' && u.owner !== power)) {
       const ownersFighters = here.filter((u) => u.type === 'fighter' && u.owner === c.owner && u.carriedBy === null).length;
       const ownersCarriers = here.filter((u) => u.type === 'carrier' && u.owner === c.owner);
-      const freeOnOwner = ownersCarriers.length * CARRIER_CAPACITY - ownersFighters - here.filter((u) => u.carriedBy !== null && ownersCarriers.some((oc) => oc.id === u.carriedBy)).length;
+      const freeOnOwner =
+        ownersCarriers.length * CARRIER_CAPACITY -
+        ownersFighters -
+        here.filter((u) => u.carriedBy !== null && ownersCarriers.some((oc) => oc.id === u.carriedBy)).length;
       let free = Math.min(CARRIER_CAPACITY - here.filter((u) => u.carriedBy === c.id).length, freeOnOwner);
       for (const f of mine) {
         if (overflow <= 0 || free <= 0) break;
@@ -365,4 +374,3 @@ export function startTurn(s: GameState): void {
     u.escaped = false;
   }
 }
-

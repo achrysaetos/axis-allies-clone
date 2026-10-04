@@ -49,7 +49,7 @@ export function randomAction(s: GameState, rand: Rand = Math.random): Action {
       case 'submerge':
         return { type: 'submerge', units: d.subs.filter(() => rand() < 0.3) };
       case 'retreat':
-        return { type: 'retreat', to: rand() < 0.25 ? pick(d.options, rand) ?? null : null };
+        return { type: 'retreat', to: rand() < 0.25 ? (pick(d.options, rand) ?? null) : null };
       case 'bombard':
         return { type: 'bombard', ships: d.ships.filter(() => rand() < 0.8).slice(0, d.max) };
       case 'intercept':
@@ -95,7 +95,9 @@ function randomPurchase(s: GameState, rand: Rand): Action {
 }
 
 function randomMove(s: GameState, rand: Rand, combat: boolean): Action {
-  const movable = s.units.filter((u) => u.owner === s.power && u.type !== 'factory' && (remainingMove(u) > 0 || u.carriedBy !== null));
+  const movable = s.units.filter(
+    (u) => u.owner === s.power && u.type !== 'factory' && (remainingMove(u) > 0 || u.carriedBy !== null),
+  );
   for (let attempt = 0; attempt < 12; attempt++) {
     const u = pick(movable, rand);
     if (!u) break;
@@ -111,16 +113,25 @@ function randomMove(s: GameState, rand: Rand, combat: boolean): Action {
 
 function candidateMove(s: GameState, u: Unit, group: number[], rand: Rand, combat: boolean): Action | null {
   if (u.carriedBy !== null && isLand(u.type)) {
-    const target = pick(space(u.at).neighbors.filter((n) => !space(n).water), rand);
+    const target = pick(
+      space(u.at).neighbors.filter((n) => !space(n).water),
+      rand,
+    );
     return target ? { type: 'move', units: group, path: [u.at, target] } : null;
   }
   if (isLand(u.type) && rand() < 0.25) {
-    const zone = pick(space(u.at).neighbors.filter((n) => space(n).water), rand);
+    const zone = pick(
+      space(u.at).neighbors.filter((n) => space(n).water),
+      rand,
+    );
     if (zone) return { type: 'move', units: group, path: [u.at, zone] };
   }
   const paths = pathsFrom(u, remainingMove(u));
   let targets = [...paths.keys()];
-  if (combat) targets = targets.filter((t) => enemyUnitsAt(s, t, s.power).length > 0 || (!space(t).water && !areAllied(s.owner[t]!, s.power)));
+  if (combat)
+    targets = targets.filter(
+      (t) => enemyUnitsAt(s, t, s.power).length > 0 || (!space(t).water && !areAllied(s.owner[t]!, s.power)),
+    );
   const target = pick(targets, rand);
   if (!target) return null;
   const sbr = combat && u.type === 'bomber' && !!factoryAt(s, target) && rand() < 0.5;

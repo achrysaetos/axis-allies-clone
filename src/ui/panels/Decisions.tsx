@@ -70,11 +70,7 @@ export function CasualtyPicker({ state, d, act }: { state: GameState; d: Of<'cas
             {bk.sample.damage > 0 ? ' (damaged)' : ''}
             {STATS[bk.sample.type].hitPoints - bk.sample.damage > 1 ? <span className="dim"> · 2 hits each</span> : null}
           </span>
-          <Stepper
-            value={picks[bk.key] ?? 0}
-            max={bk.slots.length}
-            onChange={(v) => setPicks({ ...picks, [bk.key]: v })}
-          />
+          <Stepper value={picks[bk.key] ?? 0} max={bk.slots.length} onChange={(v) => setPicks({ ...picks, [bk.key]: v })} />
         </div>
       ))}
       <div className="row actions">
@@ -155,10 +151,7 @@ function LandStranded({ state, d, act }: { state: GameState; d: Of<'landStranded
             <span className="grow">
               Fighter #{f} in {u?.at}
             </span>
-            <select
-              value={landings[f] ?? ''}
-              onChange={(e) => setLandings({ ...landings, [f]: e.target.value || null })}
-            >
+            <select value={landings[f] ?? ''} onChange={(e) => setLandings({ ...landings, [f]: e.target.value || null })}>
               {(d.options[f] ?? []).map((o) => (
                 <option key={o} value={o}>
                   {o}

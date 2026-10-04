@@ -74,7 +74,9 @@ function category(f: Piece, friendlyDestroyer: boolean): Category {
 /** Hits by category for one volley. */
 function volley(firers: Piece[], attacking: boolean, rand: () => number): Map<Category, number> {
   const destroyer = firers.some((f) => f.type === 'destroyer');
-  let support = attacking ? Math.min(firers.filter((f) => f.type === 'artillery').length, firers.filter((f) => f.type === 'infantry').length) : 0;
+  let support = attacking
+    ? Math.min(firers.filter((f) => f.type === 'artillery').length, firers.filter((f) => f.type === 'infantry').length)
+    : 0;
   const out = new Map<Category, number>();
   for (const f of firers) {
     let v = attacking ? STATS[f.type].attack : STATS[f.type].defense;
@@ -91,16 +93,20 @@ function volley(firers: Piece[], attacking: boolean, rand: () => number): Map<Ca
 }
 
 function applyHits(side: Piece[], hits: Map<Category, number>): void {
-  for (const cat of ['air', 'notAir', 'notSub', 'any'] as Category[]) for (let i = 0; i < (hits.get(cat) ?? 0); i++) hit(side, cat);
+  for (const cat of ['air', 'notAir', 'notSub', 'any'] as Category[])
+    for (let i = 0; i < (hits.get(cat) ?? 0); i++) hit(side, cat);
 }
 
 const canHitAny = (firers: Piece[], targets: Piece[], attacking: boolean) => {
   const destroyer = firers.some((f) => f.type === 'destroyer');
-  return firers.some((f) => (attacking ? STATS[f.type].attack : STATS[f.type].defense) > 0 && targets.some((t) => canTake(category(f, destroyer), t.type)));
+  return firers.some(
+    (f) =>
+      (attacking ? STATS[f.type].attack : STATS[f.type].defense) > 0 &&
+      targets.some((t) => canTake(category(f, destroyer), t.type)),
+  );
 };
 
-const lossValue = (start: Piece[], end: Piece[]) =>
-  start.reduce((n, f, i) => n + (end[i]!.hp <= 0 ? STATS[f.type].cost : 0), 0);
+const lossValue = (start: Piece[], end: Piece[]) => start.reduce((n, f, i) => n + (end[i]!.hp <= 0 ? STATS[f.type].cost : 0), 0);
 
 /** Monte Carlo estimate of a battle fought to the end with cheapest-first casualties and no retreat. */
 export function simulate(spec: BattleSpec): Odds {
@@ -163,8 +169,16 @@ function fight(spec: BattleSpec, att: Piece[], def: Piece[], rand: () => number)
       a = live(att);
       d = live(def);
     }
-    const aHits = volley(a.filter((f) => !struck.includes(f)), true, rand);
-    const dHits = volley(d.filter((f) => !struck.includes(f)), false, rand);
+    const aHits = volley(
+      a.filter((f) => !struck.includes(f)),
+      true,
+      rand,
+    );
+    const dHits = volley(
+      d.filter((f) => !struck.includes(f)),
+      false,
+      rand,
+    );
     applyHits(def, aHits);
     applyHits(att, dHits);
   }

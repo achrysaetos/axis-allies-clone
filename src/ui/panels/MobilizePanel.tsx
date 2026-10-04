@@ -15,7 +15,9 @@ export function placementOptions(state: GameState, type: UnitType): PlacementOpt
   const factories = state.units.filter((u) => u.type === 'factory' && u.owner === state.power).map((u) => u.at);
   const candidates =
     type === 'factory'
-      ? Object.entries(state.owner).filter(([, o]) => o === state.power).map(([id]) => id)
+      ? Object.entries(state.owner)
+          .filter(([, o]) => o === state.power)
+          .map(([id]) => id)
       : [...new Set(factories.flatMap((f) => [f, ...space(f).neighbors.filter((n) => space(n).water)]))];
   const out: PlacementOption[] = [];
   for (const at of candidates) {

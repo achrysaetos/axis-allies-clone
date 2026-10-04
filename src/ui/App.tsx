@@ -145,11 +145,15 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
       const r = resolveMove(state, intent, inspect, id);
       if (!r.ok) return showError(r.error);
       for (const m of r.moves) {
-        const air = current.current.state.units.some((u) => m.units.includes(u.id) && (u.type === 'bomber' || u.type === 'fighter'));
+        const air = current.current.state.units.some(
+          (u) => m.units.includes(u.id) && (u.type === 'bomber' || u.type === 'fighter'),
+        );
         if (!act({ type: 'move', units: m.units, path: m.path, sbr: (sbr && air) || undefined })) return;
       }
       const after = current.current.state;
-      const left = after.units.some((u) => u.at === inspect && u.owner === after.power && u.type !== 'factory' && remainingMove(u) > 0);
+      const left = after.units.some(
+        (u) => u.at === inspect && u.owner === after.power && u.type !== 'factory' && remainingMove(u) > 0,
+      );
       inspectSpace(left ? inspect : id);
       return;
     }
@@ -236,7 +240,9 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
           {humanActs && !state.winner && <section className="panel guide">{PHASE_GUIDE[state.phase]}</section>}
           {humanActs && state.phase === 'purchase' && <PurchasePanel state={state} act={act} />}
           {humanActs && state.phase === 'combatMove' && <AttackPlan forecasts={odds} onFocus={focusOn} />}
-          {state.phase === 'combat' && <CombatPanel state={state} odds={odds} act={act} onQuick={quick} onView={setBattleView} onFocus={focusOn} />}
+          {state.phase === 'combat' && (
+            <CombatPanel state={state} odds={odds} act={act} onQuick={quick} onView={setBattleView} onFocus={focusOn} />
+          )}
           {humanActs && state.phase === 'mobilize' && (
             <MobilizePanel state={state} type={placeType} options={placements} onType={setPlaceType} act={act} />
           )}

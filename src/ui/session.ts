@@ -158,9 +158,10 @@ export function parseSession(text: string): Session | string {
   const s = r.state;
   if (r.version !== 1 || !s || !Array.isArray(s.units) || typeof s.round !== 'number' || !POWERS.includes(s.power))
     return 'not a saved game from this version';
-  const controllers = Object.fromEntries(
-    POWERS.map((p) => [p, r.controllers?.[p] === 'ai' ? 'ai' : 'human']),
-  ) as Record<Power, Controller>;
+  const controllers = Object.fromEntries(POWERS.map((p) => [p, r.controllers?.[p] === 'ai' ? 'ai' : 'human'])) as Record<
+    Power,
+    Controller
+  >;
   const state: GameState = {
     ...s,
     options: { ...DEFAULT_OPTIONS, ...s.options },

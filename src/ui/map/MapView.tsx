@@ -25,7 +25,7 @@ function normalize(v: View, w: number, h: number): View {
   const minK = Math.max(w / MAP_WIDTH, h / MAP_HEIGHT, 0.05);
   const k = Math.min(MAX_ZOOM, Math.max(minK, v.k));
   const span = MAP_WIDTH * k;
-  const tx = ((v.tx % span) + span) % span - span;
+  const tx = (((v.tx % span) + span) % span) - span;
   const ty = Math.min(0, Math.max(h - MAP_HEIGHT * k, v.ty));
   return { tx, ty, k };
 }
