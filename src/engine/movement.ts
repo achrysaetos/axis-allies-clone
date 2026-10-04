@@ -281,7 +281,8 @@ export function applyMove(draft: GameState, plan: Plan, action: MoveAction): voi
     case 'land':
       for (let i = 1; i < path.length; i++) {
         const s = path[i]!;
-        if (combat && isHostileLand(draft, s, power) && enemyDefendersAt(draft, s, power).length === 0) {
+        const onlyInfrastructure = enemyUnitsAt(draft, s, power).every((u) => u.type === 'factory' || u.type === 'aaGun');
+        if (combat && isHostileLand(draft, s, power) && onlyInfrastructure) {
           captureTerritory(draft, s, power);
           if (i < path.length - 1) for (const u of plan.units) u.blitzed = true;
         }
