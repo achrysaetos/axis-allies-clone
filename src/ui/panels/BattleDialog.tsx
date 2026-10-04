@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { POWERS, UNIT_TYPES } from '../../engine/types';
 import type { Action, Battle, GameState, Power, Unit, UnitId } from '../../engine/types';
 import type { Controller } from '../session';
@@ -47,7 +48,7 @@ type Status = 'ready' | 'hit' | 'submerged' | 'dead';
 const DICE_LABEL: Record<string, string> = {
   any: 'fire',
   notAir: 'submarines fire',
-  notSub: 'air fire',
+  notSub: 'planes fire',
   aa: 'antiaircraft fire',
 };
 
@@ -152,6 +153,10 @@ export function BattleDialog({ state, battle, fallen, controllers, act, onQuick,
   const blocker = fresh ? battleBlocker(state, battle) : null;
   const human = controllers[battle.attacker] === 'human';
   const { attackers, defenders } = lineup(state, battle);
+  const log = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    log.current?.scrollTo({ top: log.current.scrollHeight });
+  }, [battle.dice.length, battle.id]);
   return (
     <div className="battle-dialog">
       <header>
@@ -171,7 +176,7 @@ export function BattleDialog({ state, battle, fallen, controllers, act, onQuick,
           <Side title="Defender" ids={defenders} state={state} battle={battle} fallen={fallen} />
         )}
       </div>
-      <div className="dice-log">
+      <div className="dice-log" ref={log}>
         {battle.dice.length === 0 && !fresh && !mine && <div className="dim">No dice rolled yet.</div>}
         {fresh && forecast && (
           <div className={`forecast ${oddsClass(forecast.win)}`}>

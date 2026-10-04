@@ -405,9 +405,8 @@ path.selected {
 
 .toast {
   position: absolute;
-  bottom: 18px;
   left: 50%;
-  bottom: 150px;
+  top: 52px;
   z-index: 30;
   transform: translateX(-50%);
   background: #4a1f19;

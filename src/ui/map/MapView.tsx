@@ -52,6 +52,19 @@ function centeredOn(id: SpaceId, k: number, w: number, h: number, inset = 0): Vi
   return normalize({ tx: (w - inset) / 2 - x * k, ty: h / 2 - y * k, k }, w, h);
 }
 
+const NEAR_PX = 14;
+
+/** The piece nearest a press that just missed one, so a slightly-off grab still picks it up instead of panning. */
+function pieceNear(x: number, y: number): { space: SpaceId; stack: string } | null {
+  let best: { el: Element; d: number } | null = null;
+  for (const el of document.querySelectorAll('.map [data-stack]')) {
+    const r = el.getBoundingClientRect();
+    const d = Math.hypot(Math.max(r.left - x, 0, x - r.right), Math.max(r.top - y, 0, y - r.bottom));
+    if (d <= NEAR_PX && (!best || d < best.d)) best = { el, d };
+  }
+  return best ? pieceOf(best.el) : null;
+}
+
 function pieceOf(target: EventTarget): { space: SpaceId; stack: string } | null {
   const el = (target as Element).closest('[data-stack]');
   const space = el?.closest('[data-space]')?.getAttribute('data-space');
@@ -116,6 +129,12 @@ export function MapView({ onSpace, onPiece, onPieceDown, onHover, onBackground, 
     });
   const zoomRef = useRef(zoomAt);
   zoomRef.current = zoomAt;
+  const panRef = useRef((_dx: number, _dy: number) => {});
+  panRef.current = (dx, dy) =>
+    setView((cur) => {
+      const base = normalize(cur ?? v, size.w, size.h);
+      return normalize({ ...base, tx: base.tx + dx, ty: base.ty + dy }, size.w, size.h);
+    });
 
   useEffect(() => {
     const el = box.current;
@@ -123,7 +142,11 @@ export function MapView({ onSpace, onPiece, onPieceDown, onHover, onBackground, 
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
       const r = el.getBoundingClientRect();
-      zoomRef.current(Math.exp(-e.deltaY * 0.0015), e.clientX - r.left, e.clientY - r.top);
+      // A pinch (ctrlKey) or a notched mouse wheel zooms; a trackpad's two-finger scroll pans like dragging.
+      const wheel = e.deltaX === 0 && Math.abs(e.deltaY) >= 50;
+      if (e.ctrlKey || wheel)
+        zoomRef.current(Math.exp(-e.deltaY * (e.ctrlKey ? 0.01 : 0.0015)), e.clientX - r.left, e.clientY - r.top);
+      else panRef.current(-e.deltaX, -e.deltaY);
     };
     el.addEventListener('wheel', onWheel, { passive: false });
     return () => el.removeEventListener('wheel', onWheel);
@@ -132,7 +155,7 @@ export function MapView({ onSpace, onPiece, onPieceDown, onHover, onBackground, 
   const hovered = useRef<SpaceId | null>(null);
   const onPointerDown = (e: ReactPointerEvent) => {
     if (e.button !== 0) return;
-    const p = pieceOf(e.target);
+    const p = pieceOf(e.target) ?? pieceNear(e.clientX, e.clientY);
     if (p && onPieceDown(p.space, p.stack, e.clientX, e.clientY, e.shiftKey)) {
       drag.current = null;
       return;

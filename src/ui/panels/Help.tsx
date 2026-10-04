@@ -22,8 +22,11 @@ const NOTES: Record<UnitType, string> = {
 };
 
 const CONTROLS = [
-  ['Drag a piece', 'Move that whole stack. Units that cannot reach stay behind.'],
-  ['Click a piece', 'Pick up one unit; click again for more. Shift-click takes the stack, right-click puts one back.'],
+  [
+    'Drag a piece',
+    'Move every unit of that type in the space. Shift-drag moves everything you have there. Units that cannot reach stay behind.',
+  ],
+  ['Click a piece', 'Pick up one unit; click again for more. Shift-click takes all of that type, right-click puts one back.'],
   ['Click a space', 'Move what you are holding there. Highlighted spaces are in reach.'],
   ['Hover an enemy space', 'While holding units, see your chance to win if you attack.'],
   [

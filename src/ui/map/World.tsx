@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { space } from '../../engine/data';
+import { SIDE, space } from '../../engine/data';
 import type { GameState, SpaceId, Unit, UnitId } from '../../engine/types';
 import { UnitIcon } from '../icons';
 import { stacksAt } from '../pieces';
@@ -37,8 +37,12 @@ const widthOf = (st: Stack) => 4 + ICON_W + (st.units.length > 1 ? 3 + String(st
 
 function Pieces({ id, x, y, stacks, held }: { id: SpaceId; x: number; y: number; stacks: Stack[]; held: ReadonlySet<UnitId> }) {
   if (stacks.length === 0) return null;
+  // Each side gets its own rows, so attackers and defenders in a contested space read apart.
   const rows: Stack[][] = [];
-  for (let i = 0; i < stacks.length; i += PER_ROW) rows.push(stacks.slice(i, i + PER_ROW));
+  for (const side of ['Allies', 'Axis'] as const) {
+    const mine = stacks.filter((st) => SIDE[st.owner] === side);
+    for (let i = 0; i < mine.length; i += PER_ROW) rows.push(mine.slice(i, i + PER_ROW));
+  }
   return (
     <g data-space={id} className="pieces">
       {rows.flatMap((row, r) => {

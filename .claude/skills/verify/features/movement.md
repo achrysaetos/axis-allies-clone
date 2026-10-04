@@ -49,3 +49,6 @@ Preconditions:
 - A failed drop shows the reason and releases the held units. A drop off the board shows `Dropped off the board, so nothing moved`.
 - While units are held during combat move, hovering an enemy space shows `N% if you go` above it, the odds that attack would have with the held units added.
 - Faint arrows (`.trails line`) run from where the moving power's pieces started the turn to where they are now, from combat move through noncombat move.
+- Shift-dragging a piece that is not cargo moves everything the player can move in that space. The browser pane's drag tool does not pass Shift, so verify it with synthetic `PointerEvent`s carrying `shiftKey: true` (pointerdown on the piece, pointermoves and pointerup on `window`).
+- A press within 14 px of a piece grabs that piece instead of panning the map.
+- In a space with both sides, each side's pieces sit on their own rows.

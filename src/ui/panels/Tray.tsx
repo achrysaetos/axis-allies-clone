@@ -60,7 +60,7 @@ export function BuyTray({ state, act }: { state: GameState; act: (a: Action) => 
         <strong className={left < 0 ? 'bad' : undefined}>{left}</strong>
         <span className="dim">IPCs left</span>
         <span className="dim" title="How many units your industrial complexes can place this turn">
-          · {units}/{capacity.total} units
+          · {units} of {capacity.total} units your factories can place
         </span>
         {state.purchases.length > 0 && (
           <button className="link" onClick={() => act({ type: 'buy', purchases: [] })}>

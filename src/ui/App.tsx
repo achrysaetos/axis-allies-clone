@@ -19,7 +19,7 @@ import { forecasts, oddsClass } from './odds';
 import { ConfirmEnd } from './panels/ConfirmEnd';
 import { endPhaseWarnings } from './warnings';
 import { powerName } from './theme';
-import { dropMoves, grabbable, handReach, shipmates, stackAt } from './pieces';
+import { dropMoves, grabbable, handReach, pickable, shipmates, stackAt } from './pieces';
 import type { Hand } from './pieces';
 import { useDrag } from './drag';
 import { UnitSvg } from './icons';
@@ -60,7 +60,8 @@ function raidPossible(state: GameState, ids: UnitId[], to: SpaceId): boolean {
 
 const HINT: Partial<Record<GameState['phase'], string>> = {
   purchase: 'Click units in the chart below to buy them; shift-click buys as many as you can afford. They arrive at Mobilize.',
-  combatMove: 'Drag pieces into enemy spaces to attack. Click a piece to pick up one at a time; shift-click takes the stack.',
+  combatMove:
+    'Drag pieces into enemy spaces to attack; shift-drag brings everything in the space. Click a piece to pick up one at a time.',
   noncombatMove: 'Move units that did not attack, and land every plane on friendly ground or a carrier.',
   mobilize: 'Drag new units from the tray onto a highlighted space. Anything left unplaced is refunded.',
 };
@@ -140,6 +141,7 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
   useEffect(() => {
     setHand(null);
     setRaidChoice(null);
+    setToast(null);
     const first =
       state.phase === 'combat' && controllers[state.power] === 'human' ? nextBattle(current.current.state) : undefined;
     setBattleView(first?.id ?? null);
@@ -282,7 +284,8 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
     const st = stackAt(state, space, key);
     const picked = st ? grabbable(state, st) : [];
     if (picked.length === 0) return false;
-    const ids = st?.carried && shift ? shipmates(state, picked) : picked;
+    const everything = state.units.filter((u) => u.at === space && !u.carriedBy && pickable(state, u)).map((u) => u.id);
+    const ids = !shift ? picked : st?.carried ? shipmates(state, picked) : everything;
     pending.current = { kind: 'units', space, ids };
     drag.begin(x, y);
     return true;
