@@ -38,7 +38,6 @@ export const landDist = lookup(LAND);
 export const airDist = lookup(AIR);
 export const seaDist = lookup(SEA);
 
-export const isCoastal = (id: SpaceId) => space(id).neighbors.some((n) => space(n).water);
 export const seaNeighbors = (id: SpaceId) => space(id).neighbors.filter((n) => space(n).water);
 
 /**

@@ -1,4 +1,4 @@
-import { CAPITAL_OF, STATS, isAir, space } from '../engine/data';
+import { CAPITAL_OF, isAir, space } from '../engine/data';
 import { apply } from '../engine/game';
 import { areAllied, carrierRoom, canLandAir, factoryAt } from '../engine/queries';
 import type { Action, GameState, Power, SpaceId, Unit } from '../engine/types';
@@ -59,7 +59,6 @@ export const isEnemyLand = (s: GameState, id: SpaceId, power: Power) => {
 export const enemiesAt = (s: GameState, at: SpaceId, power: Power) =>
   s.units.filter((u) => u.at === at && !areAllied(u.owner, power) && u.type !== 'factory' && !(u.carriedBy !== null && !isAir(u.type)));
 
-export const value = (us: Unit[]) => us.reduce((n, u) => n + (u.type === 'factory' ? 0 : STATS[u.type].cost), 0);
 
 /** Land hops from each territory to the nearest enemy-held territory, walking through any land. */
 export function frontDistance(s: GameState, power: Power): Map<SpaceId, number> {
