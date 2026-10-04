@@ -175,14 +175,16 @@ path.sea:hover {
   filter: brightness(1.15);
 }
 path.highlight {
-  fill: rgba(255, 255, 255, 0.18);
-  stroke: #fff6c2;
-  stroke-width: 3;
+  fill: rgba(255, 255, 255, 0.14);
+  stroke: #ffffff;
+  stroke-width: 2.5;
+  stroke-dasharray: 9 6;
 }
 path.selected {
-  fill: rgba(233, 185, 73, 0.25);
-  stroke: var(--accent);
+  fill: none;
+  stroke: #ffffff;
   stroke-width: 4;
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.85));
 }
 .sea-label {
   font-size: 13px;
