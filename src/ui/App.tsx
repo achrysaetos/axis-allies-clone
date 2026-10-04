@@ -15,6 +15,8 @@ import { PurchasePanel } from './panels/PurchasePanel';
 import { SetupScreen } from './panels/SetupScreen';
 import { SpaceInfo } from './panels/SpaceInfo';
 import { TurnCard } from './panels/TurnCard';
+import { AttackPlan } from './panels/AttackPlan';
+import { forecasts } from './odds';
 import { PHASE_GUIDE, powerName } from './theme';
 import { reachable, resolveMove } from './paths';
 import { act as step, aiBurst, autosave, downloadSave, loadAutosave, undo } from './session';
@@ -112,6 +114,7 @@ function Game({ initial, onMenu }: { initial: Session; onMenu: () => void }) {
     () => (moving && inspect && selected.length > 0 ? reachable(state, intent, inspect) : new Set<SpaceId>()),
     [moving, inspect, selected.length, state, intent],
   );
+  const odds = useMemo(() => (humanActs ? forecasts(state) : []), [state, humanActs]);
   const placements = useMemo(
     () => (state.phase === 'mobilize' && placeType && humanActs ? placementOptions(state, placeType) : []),
     [state, placeType, humanActs],
@@ -208,7 +211,8 @@ function Game({ initial, onMenu }: { initial: Session; onMenu: () => void }) {
           )}
           {humanActs && !state.winner && <section className="panel guide">{PHASE_GUIDE[state.phase]}</section>}
           {humanActs && state.phase === 'purchase' && <PurchasePanel state={state} act={act} />}
-          {state.phase === 'combat' && <CombatPanel state={state} act={act} onView={setBattleView} onFocus={focusOn} />}
+          {humanActs && state.phase === 'combatMove' && <AttackPlan forecasts={odds} onFocus={focusOn} />}
+          {state.phase === 'combat' && <CombatPanel state={state} odds={odds} act={act} onView={setBattleView} onFocus={focusOn} />}
           {humanActs && state.phase === 'mobilize' && (
             <MobilizePanel state={state} type={placeType} options={placements} onType={setPlaceType} act={act} />
           )}

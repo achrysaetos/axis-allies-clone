@@ -635,3 +635,17 @@ table.buy tr.picked td {
   line-height: 1.45;
   border-left: 3px solid var(--accent);
 }
+.tag.good {
+  background: rgba(111, 191, 115, 0.2);
+}
+.tag.warn {
+  color: var(--accent);
+  background: rgba(233, 185, 73, 0.18);
+}
+.tag.bad {
+  background: rgba(229, 99, 77, 0.2);
+}
+.small {
+  font-size: 11px;
+  margin-top: 6px;
+}

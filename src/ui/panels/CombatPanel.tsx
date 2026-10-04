@@ -1,8 +1,11 @@
 import { battleBlocker } from '../../engine/combat';
 import type { Action, Battle, GameState, SpaceId } from '../../engine/types';
+import type { Forecast } from '../odds';
+import { OddsTag } from './AttackPlan';
 
 interface Props {
   state: GameState;
+  odds: Forecast[];
   act: (a: Action) => boolean;
   onView: (battle: number) => void;
   onFocus: (id: SpaceId) => void;
@@ -18,7 +21,7 @@ function outcome(b: Battle): string {
   return 'no decision';
 }
 
-export function CombatPanel({ state, act, onView, onFocus }: Props) {
+export function CombatPanel({ state, odds, act, onView, onFocus }: Props) {
   const battles = [...state.battles].sort((a, b) => a.tier - b.tier || a.id - b.id);
   const open = battles.filter((b) => !b.resolved);
   return (
@@ -28,6 +31,7 @@ export function CombatPanel({ state, act, onView, onFocus }: Props) {
       {open.length === 0 && battles.length > 0 && <div className="hint">All battles resolved. End the phase.</div>}
       {battles.map((b) => {
         const blocker = b.resolved ? null : battleBlocker(state, b);
+        const forecast = b.resolved || b.kind === 'sbr' ? undefined : odds.find((f) => f.space === b.space && f.kind === b.kind);
         return (
           <div key={b.id} className={b.resolved ? 'battle-row done' : 'battle-row'}>
             <button className="link grow left" onClick={() => onFocus(b.space)}>
@@ -36,6 +40,7 @@ export function CombatPanel({ state, act, onView, onFocus }: Props) {
             <span className="tag">{KIND_LABEL[b.kind]}</span>
             <span className="tag dim">{TIER_LABEL[b.tier]}</span>
             {b.optional && !b.resolved && <span className="tag">optional</span>}
+            {forecast && state.activeBattle !== b.id && <OddsTag f={forecast} />}
             {state.activeBattle === b.id ? (
               <button className="link" onClick={() => onView(b.id)}>
                 in progress
