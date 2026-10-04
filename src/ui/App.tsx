@@ -19,8 +19,7 @@ import { forecasts, oddsClass } from './odds';
 import { ConfirmEnd } from './panels/ConfirmEnd';
 import { endPhaseWarnings } from './warnings';
 import { powerName } from './theme';
-import { reachable } from './paths';
-import { dropMoves, grabbable, stackAt } from './pieces';
+import { dropMoves, grabbable, handReach, shipmates, stackAt } from './pieces';
 import type { Hand } from './pieces';
 import { useDrag } from './drag';
 import { UnitSvg } from './icons';
@@ -143,7 +142,7 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
   }, [state.phase, state.power]);
 
   const reach = useMemo(
-    () => (hand?.kind === 'units' && moving ? reachable(state, { units: hand.units, sbr: false }, hand.from) : null),
+    () => (hand?.kind === 'units' && moving ? handReach(state, hand.units, hand.from) : null),
     [hand, moving, state],
   );
   const placements = useMemo(
@@ -162,8 +161,11 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
   const route = useMemo(() => {
     if (hand?.kind !== 'units' || !hover || !reach?.has(hover)) return null;
     const r = dropMoves(state, hand.units, hand.from, hover, false);
-    return r.ok ? r.moves[0]!.path : null;
+    return r.ok
+      ? r.moves.flatMap((m, i) => (i === 0 ? m.path : m.path.slice(1))).filter((id, i, all) => id !== all[i - 1])
+      : null;
   }, [hand, hover, reach, state]);
+  const revealed = useMemo(() => placements.map((p) => p.at), [placements]);
   const held = useMemo(() => new Set(hand?.kind === 'units' ? hand.units : []), [hand]);
   const odds = useMemo(() => (humanActs ? forecasts(state) : []), [state, humanActs]);
   const tags = useMemo(() => {
@@ -175,23 +177,24 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
   }, [odds]);
 
   const moveHand = useCallback(
-    (units: UnitId[], from: SpaceId, to: SpaceId, sbr: boolean): boolean => {
+    (units: UnitId[], from: SpaceId, to: SpaceId, sbr: boolean, dropped = false): boolean => {
       const r = dropMoves(current.current.state, units, from, to, sbr);
       if (!r.ok) {
         showError(r.error);
+        if (dropped) setHand(null);
         return false;
       }
       for (const m of r.moves) if (!act({ type: 'move', ...m })) return false;
-      const moved = r.moves.reduce((n, m) => n + m.units.length, 0);
-      if (moved < units.length)
-        setToast({ text: `${units.length - moved} could not reach ${to} and stayed behind`, id: Date.now(), info: true });
+      const moved = new Set(r.moves.flatMap((m) => m.units));
+      const behind = units.filter((id) => !moved.has(id)).length;
+      if (behind > 0) setToast({ text: `${behind} could not reach ${to} and stayed behind`, id: Date.now(), info: true });
       setHand(null);
       return true;
     },
     [act, showError],
   );
 
-  const playHand = (hand: Hand, to: SpaceId, x: number, y: number) => {
+  const playHand = (hand: Hand, to: SpaceId, x: number, y: number, dropped = false) => {
     if (hand.kind === 'new') {
       const opt = placementOptions(state, hand.type).find((p) => p.at === to);
       if (!opt) return showError(`A new ${hand.type === 'factory' ? 'industrial complex' : hand.type} cannot be placed in ${to}`);
@@ -200,7 +203,7 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
     }
     if (to === hand.from) return setHand(null);
     if (raidPossible(state, hand.units, to)) return setRaidChoice({ units: hand.units, from: hand.from, to, x, y });
-    moveHand(hand.units, hand.from, to, false);
+    moveHand(hand.units, hand.from, to, false, dropped);
   };
 
   const last = useRef({ x: 0, y: 0 });
@@ -233,16 +236,18 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
       const h = dragged.current;
       pending.current = null;
       dragged.current = null;
+      if (h && !to) setToast({ text: 'Dropped off the board, so nothing moved', id: Date.now(), info: true });
       if (!h || !to || (h.kind === 'units' && to === h.from)) return setHand(null);
-      playHand(h, to, drag.at?.x ?? 0, drag.at?.y ?? 0);
+      playHand(h, to, drag.at?.x ?? 0, drag.at?.y ?? 0, true);
     },
   });
 
   const onPieceDown = (space: SpaceId, key: string, x: number, y: number): boolean => {
     if (!humanActs || !moving || state.pending) return false;
     const st = stackAt(state, space, key);
-    const ids = st ? grabbable(state, st) : [];
-    if (ids.length === 0) return false;
+    const picked = st ? grabbable(state, st) : [];
+    if (picked.length === 0) return false;
+    const ids = st?.carried ? shipmates(state, picked) : picked;
     pending.current = { kind: 'units', space, ids };
     drag.begin(x, y);
     return true;
@@ -359,6 +364,7 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
           onHover={setHover}
           onBackground={() => setHand(null)}
           focus={focus}
+          reveal={revealed}
         />
         {hover && !drag.at && !viewed && <SpaceInfo state={state} id={hover} />}
         {hint && !viewed && <div className="hint-line">{hint}</div>}

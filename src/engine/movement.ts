@@ -190,8 +190,16 @@ function planAir(state: GameState, units: Unit[], path: SpaceId[], combat: boole
       ) < units.length
     )
       return `no carrier can be in ${dest} for these fighters`;
-  } else if (!canLandAir(state, dest, state.power)) return `air units cannot land in ${dest}`;
+  } else if (!canLandAir(state, dest, state.power)) return `air units cannot land in ${dest}: ${landingRefusal(state, dest)}`;
   return { kind: 'air', units };
+}
+
+function landingRefusal(state: GameState, dest: SpaceId): string {
+  const start = state.ownerAtTurnStart[dest];
+  if (start === undefined) return 'it is neutral';
+  if (!areAllied(start, state.power))
+    return 'it was not friendly at the start of the turn (planes cannot land in a territory captured this turn)';
+  return 'it is not friendly now';
 }
 
 /** Carrier slots that could be available within `left` spaces of `at` by the end of the turn. */

@@ -58,7 +58,7 @@ export function BuyTray({ state, act }: { state: GameState; act: (a: Action) => 
     <div className="tray">
       <div className="tray-head">
         <strong className={left < 0 ? 'bad' : undefined}>{left}</strong>
-        <span className="dim">of {state.treasury[power]} IPCs left</span>
+        <span className="dim">IPCs left</span>
         <span className="dim" title="How many units your industrial complexes can place this turn">
           · {units}/{capacity.total} units
         </span>

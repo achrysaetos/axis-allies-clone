@@ -171,7 +171,7 @@ export function BattleDialog({ state, battle, fallen, controllers, act, onQuick,
         )}
       </div>
       <div className="dice-log">
-        {battle.dice.length === 0 && !fresh && <div className="dim">No dice rolled yet.</div>}
+        {battle.dice.length === 0 && !fresh && !mine && <div className="dim">No dice rolled yet.</div>}
         {fresh && forecast && (
           <div className={`forecast ${oddsClass(forecast.win)}`}>
             {forecast.kind === 'sbr'

@@ -34,3 +34,4 @@ Preconditions:
 - Drags must use `left_click_drag` between the card and the space. Take the card rect from `getBoundingClientRect()` of the `button.card`, scale it to the screenshot frame, and expect screenshots to lag one frame.
 - Unplaced units are refunded silently when the turn ends. Check the treasury, not just the map.
 - Victory is checked only after the US turn. Ending any other power's turn never ends the game.
+- Picking up a new unit pans the map to the nearest legal space when none is on screen.

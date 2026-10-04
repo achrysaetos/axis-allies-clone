@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { SIDE, STATS } from '../../engine/data';
+import { SIDE, STATS, isAir } from '../../engine/data';
 import { assignable, autoCasualties } from '../../engine/casualties';
 import type { Action, Decision, GameState, HitCategory, Unit, UnitId } from '../../engine/types';
 import { casualtyPool, unreachable } from '../session';
@@ -20,6 +20,15 @@ const CATEGORY_LABEL: Record<HitCategory, string> = {
 };
 
 const REASON_LABEL = { aa: 'Antiaircraft fire', bombard: 'Shore bombardment', subStrike: 'Surprise strike', fire: 'Combat fire' };
+
+/** Whether a hit category actually limits the choice here; with no subs or planes present every hit can take anything. */
+const restricted = (groups: Of<'casualties'>['groups'], pool: Unit[]) =>
+  groups.some(
+    (g) =>
+      (g.category === 'notSub' && pool.some((u) => u.type === 'submarine')) ||
+      (g.category === 'notAir' && pool.some((u) => isAir(u.type))) ||
+      (g.category === 'air' && pool.some((u) => !isAir(u.type))),
+  );
 
 interface HitBucket {
   key: string;
@@ -103,7 +112,8 @@ export function CasualtyPicker({ state, d, act }: { state: GameState; d: Of<'cas
         {powerName(d.power)} ({SIDE[d.power]} player): {need} hit{need === 1 ? '' : 's'} to take
       </div>
       <div className="dim">
-        {REASON_LABEL[d.reason]} · {d.groups.map((g) => `${g.hits} × ${CATEGORY_LABEL[g.category]}`).join(', ')}
+        {REASON_LABEL[d.reason]}
+        {restricted(d.groups, pool) && ` · ${d.groups.map((g) => `${g.hits} × ${CATEGORY_LABEL[g.category]}`).join(', ')}`}
       </div>
       <div className="zone-label dim">In the fight, click to take a hit</div>
       <div className="tiles">

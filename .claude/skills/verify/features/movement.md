@@ -44,3 +44,6 @@ Preconditions:
 - Pieces share a space with other stacks. Match `data-stack` exactly, including the carried and spent flags.
 - An offload in combat move does not put units ashore immediately. They land when the battle starts.
 - Undo clears as soon as any non-move action happens, such as ending the phase or starting a battle.
+- Dragging a cargo piece lifts everything aboard the same transports. Dropping it on a coast the transport has not reached sails the transport to an adjacent sea zone first, then lands the cargo. The route arrow shows both legs.
+- Dragging a carrier into a hostile sea zone during combat move launches its own fighters so they fight. In noncombat they ride along as cargo.
+- A failed drop shows the reason and releases the held units. A drop off the board shows `Dropped off the board, so nothing moved`.

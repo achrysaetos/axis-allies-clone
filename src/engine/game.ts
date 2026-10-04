@@ -143,6 +143,7 @@ function repair(s: GameState, factory: UnitId, amount: number): string | null {
   if (amount + costOf(s.purchases) > s.treasury[s.power]) return 'not enough IPCs';
   f.damage -= amount;
   s.treasury[s.power] -= amount;
+  s.log.push(`${s.power} repairs ${amount} damage to the industrial complex in ${f.at}`);
   return null;
 }
 

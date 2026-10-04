@@ -215,7 +215,7 @@ function finish(s: GameState, b: Battle, winner: Battle['winner']): void {
       : winner === 'defender'
         ? `${b.space} holds against ${b.attacker}`
         : `The battle for ${b.space} ends with no winner`;
-  s.log.splice(logAt, 0, `${message}. ${lossesOf(s, b)}`);
+  s.log.splice(logAt, 0, `${message}${message.endsWith('.') ? '' : '.'} ${lossesOf(s, b)}`);
 }
 
 function enlist(s: GameState, b: Battle, ids: UnitId[]): void {

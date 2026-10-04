@@ -29,6 +29,8 @@ interface Props extends WorldProps {
   onBackground: () => void;
   /** Changing this value recenters the map on the space. */
   focus: { id: SpaceId; nonce: number } | null;
+  /** Spaces the player now needs to see; the map pans to the nearest one only if none is on screen. */
+  reveal: readonly SpaceId[];
 }
 
 const MAX_ZOOM = 4;
@@ -56,7 +58,7 @@ function pieceOf(target: EventTarget): { space: SpaceId; stack: string } | null 
   return space && stack ? { space, stack } : null;
 }
 
-export function MapView({ onSpace, onPiece, onPieceDown, onHover, onBackground, focus, ...world }: Props) {
+export function MapView({ onSpace, onPiece, onPieceDown, onHover, onBackground, focus, reveal, ...world }: Props) {
   const box = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 1000, h: 700 });
   const [view, setView] = useState<View | null>(null);
@@ -75,6 +77,32 @@ export function MapView({ onSpace, onPiece, onPieceDown, onHover, onBackground, 
     if (!focus) return;
     setView((v) => centeredOn(focus.id, v?.k ?? START_ZOOM, size.w, size.h));
   }, [focus, size.w, size.h]);
+
+  const revealKey = reveal.join('|');
+  useEffect(() => {
+    if (reveal.length === 0) return;
+    setView((cur) => {
+      const base = normalize(cur ?? centeredOn('Germany', START_ZOOM, size.w, size.h), size.w, size.h);
+      const span = MAP_WIDTH * base.k;
+      const onScreen = (id: SpaceId) => {
+        const [x, y] = CENTER.get(id) ?? [0, 0];
+        const sx = (((x * base.k + base.tx) % span) + span) % span;
+        const sy = y * base.k + base.ty;
+        return { sx, sy, seen: sx > 40 && sx < size.w - 40 && sy > 40 && sy < size.h - 140 };
+      };
+      if (reveal.some((id) => onScreen(id).seen)) return cur;
+      const near = [...reveal].sort((a, b) => {
+        const d = (id: SpaceId) => {
+          const p = onScreen(id);
+          return Math.min(Math.abs(p.sx - size.w / 2), span - Math.abs(p.sx - size.w / 2)) + Math.abs(p.sy - size.h / 2);
+        };
+        return d(a) - d(b);
+      })[0]!;
+      return centeredOn(near, base.k, size.w, size.h);
+    });
+    // The list is compared by value so a re-render with the same spaces does not pan again.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [revealKey, size.w, size.h]);
 
   const v = normalize(view ?? centeredOn('Germany', START_ZOOM, size.w, size.h), size.w, size.h);
 
