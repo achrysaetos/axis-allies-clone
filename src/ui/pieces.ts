@@ -5,6 +5,8 @@ import type { GameState, Power, SpaceId, Unit, UnitId, UnitType } from '../engin
 import { reachable, resolveMove } from './paths';
 import type { MoveResolution, PlannedMove } from './paths';
 import { apply } from '../engine/game';
+import { forecasts } from './odds';
+import type { Forecast } from './odds';
 import { areAllied } from '../engine/queries';
 
 /** One piece on the board: every unit of one owner and type in a space, split by whether it rides a transport and can still move. */
@@ -143,4 +145,24 @@ export function dropMoves(state: GameState, picked: UnitId[], from: SpaceId, to:
   for (const id of hand) if (resolveMove(state, { units: [...able, id], sbr }, from, to).ok) able.push(id);
   if (able.length === 0) return all;
   return resolveMove(state, { units: able, sbr }, from, to);
+}
+
+/** What dropping the hand on `to` would do: the route it takes and, in combat move, the odds of the attack it joins. */
+export function dropPreview(
+  state: GameState,
+  hand: UnitId[],
+  from: SpaceId,
+  to: SpaceId,
+): { route: SpaceId[]; odds?: Forecast } | null {
+  const r = dropMoves(state, hand, from, to, false);
+  if (!r.ok) return null;
+  const route = r.moves.flatMap((m, i) => (i === 0 ? m.path : m.path.slice(1))).filter((id, i, all) => id !== all[i - 1]);
+  let after = state;
+  for (const m of r.moves) {
+    const next = apply(after, { type: 'move', ...m });
+    if (!next.ok) return { route };
+    after = next.state;
+  }
+  if (state.phase !== 'combatMove') return { route };
+  return { route, odds: forecasts(after).find((f) => f.space === to && f.kind !== 'sbr') };
 }

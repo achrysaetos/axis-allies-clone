@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CAPITAL_OF, isAir } from '../engine/data';
 import { battleBlocker } from '../engine/combat';
-import { actingPower, apply } from '../engine/game';
+import { actingPower } from '../engine/game';
 import { areAllied, factoryAt } from '../engine/queries';
 import type { Action, Battle, GameState, SpaceId, UnitId, UnitType } from '../engine/types';
 import { MapView } from './map/MapView';
@@ -19,7 +19,7 @@ import { forecasts, oddsClass } from './odds';
 import { ConfirmEnd } from './panels/ConfirmEnd';
 import { endPhaseWarnings } from './warnings';
 import { powerName } from './theme';
-import { dropMoves, grabbable, handReach, pickable, shipmates, stackAt } from './pieces';
+import { dropMoves, dropPreview, grabbable, handReach, pickable, shipmates, stackAt } from './pieces';
 import type { Hand } from './pieces';
 import { useDrag } from './drag';
 import { UnitSvg } from './icons';
@@ -31,7 +31,6 @@ import type { Session } from './session';
 const AI_DELAY_MS = 120;
 const AI_BUDGET_MS = 30;
 const TOAST_MS = 4500;
-const CAPTURE_MS = 1800;
 /** Width the battle dialog covers on the right, kept clear when the map centers on a battle. */
 const BATTLE_DIALOG_W = 590;
 
@@ -167,35 +166,15 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
     [reach, retreat, placements],
   );
   /** Where the held units would go if dropped on the hovered space, and the odds of the attack they would make. */
-  const preview = useMemo(() => {
-    if (hand?.kind !== 'units' || !hover || !reach?.has(hover)) return null;
-    const r = dropMoves(state, hand.units, hand.from, hover, false);
-    if (!r.ok) return null;
-    const route = r.moves.flatMap((m, i) => (i === 0 ? m.path : m.path.slice(1))).filter((id, i, all) => id !== all[i - 1]);
-    let after = state;
-    for (const m of r.moves) {
-      const next = apply(after, { type: 'move', ...m });
-      if (!next.ok) return { route, odds: undefined };
-      after = next.state;
-    }
-    const odds = state.phase === 'combatMove' ? forecasts(after).find((f) => f.space === hover && f.kind !== 'sbr') : undefined;
-    return { route, odds };
-  }, [hand, hover, reach, state]);
+  const preview = useMemo(
+    () => (hand?.kind === 'units' && hover && reach?.has(hover) ? dropPreview(state, hand.units, hand.from, hover) : null),
+    [hand, hover, reach, state],
+  );
   const route = preview?.route ?? null;
   const viewedSpace = state.battles.find((b) => b.id === battleView)?.space;
   useEffect(() => {
     if (viewedSpace) setFocus({ id: viewedSpace, nonce: Date.now(), inset: BATTLE_DIALOG_W });
   }, [viewedSpace]);
-  const [captured, setCaptured] = useState<ReadonlySet<SpaceId>>(new Set());
-  const owners = useRef(state.owner);
-  useEffect(() => {
-    const changed = Object.keys(state.owner).filter((id) => state.owner[id] !== owners.current[id]);
-    owners.current = state.owner;
-    if (changed.length === 0) return;
-    setCaptured(new Set(changed));
-    const t = setTimeout(() => setCaptured(new Set()), CAPTURE_MS);
-    return () => clearTimeout(t);
-  }, [state.owner]);
   const revealed = useMemo(() => {
     if (placements.length > 0) return placements.map((p) => p.at);
     if (state.phase !== 'mobilize' || !humanActs || greeting) return [];
@@ -400,7 +379,6 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
           held={held}
           tags={tags}
           route={route}
-          captured={captured}
           onSpace={onSpace}
           onPiece={onPiece}
           onPieceDown={onPieceDown}

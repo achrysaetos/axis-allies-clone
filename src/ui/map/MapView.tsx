@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent, MouseEvent as ReactMouseEvent } from 'react';
-import type { SpaceId } from '../../engine/types';
+import type { GameState, SpaceId } from '../../engine/types';
 import { CENTER, MAP_HEIGHT, MAP_WIDTH } from './geometry';
 import { NeutralPattern, TrailHead, World } from './World';
 import type { WorldProps } from './World';
@@ -20,7 +20,7 @@ export interface PieceEvent {
   putBack: boolean;
 }
 
-interface Props extends WorldProps {
+interface Props extends Omit<WorldProps, 'captured'> {
   onSpace: (id: SpaceId) => void;
   onPiece: (e: PieceEvent) => void;
   /** A press on a piece; returning true means the piece can be dragged, so the map does not pan. */
@@ -34,6 +34,22 @@ interface Props extends WorldProps {
 }
 
 const MAX_ZOOM = 4;
+const CAPTURE_MS = 1800;
+
+/** Territories whose owner just changed, held for one pulse of the capture animation. */
+function useCaptured(owner: GameState['owner']): ReadonlySet<SpaceId> {
+  const [captured, setCaptured] = useState<ReadonlySet<SpaceId>>(new Set());
+  const last = useRef(owner);
+  useEffect(() => {
+    const changed = Object.keys(owner).filter((id) => owner[id] !== last.current[id]);
+    last.current = owner;
+    if (changed.length === 0) return;
+    setCaptured(new Set(changed));
+    const t = setTimeout(() => setCaptured(new Set()), CAPTURE_MS);
+    return () => clearTimeout(t);
+  }, [owner]);
+  return captured;
+}
 const DRAG_SLOP = 4;
 const START_ZOOM = 1.35;
 
@@ -201,7 +217,8 @@ export function MapView({ onSpace, onPiece, onPieceDown, onHover, onBackground, 
     if (hovered.current !== null) onHover((hovered.current = null));
   };
 
-  const content = <World {...world} />;
+  const captured = useCaptured(world.state.owner);
+  const content = <World {...world} captured={captured} />;
   return (
     <div
       ref={box}

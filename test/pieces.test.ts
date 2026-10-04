@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { space } from '../src/engine/data';
-import { dropMoves, grabbable, handReach, shipmates, stacksAt } from '../src/ui/pieces';
+import { dropMoves, dropPreview, grabbable, handReach, shipmates, stacksAt } from '../src/ui/pieces';
 import { ids, move, scenario } from './helpers';
 
 const RUSSIAN_LAND = ['Russia', 'Archangel', 'Vologda', 'Karelia S.S.R.', 'Novosibirsk', 'Kazakh S.S.R.', 'Caucasus'];
@@ -121,5 +121,21 @@ describe('pieces on the board', () => {
 
     if (!r.ok) throw new Error(r.error);
     expect(r.moves.flatMap((m) => m.units)).toHaveLength(2);
+  });
+
+  it('previews the route and the odds of the attack a drop would join, without moving anything', () => {
+    const s = scenario({
+      units: [
+        ['Germans', 'armour', 'Poland', 3],
+        ['Russians', 'infantry', 'Belorussia'],
+      ],
+      owners: { Belorussia: 'Russians' },
+    });
+
+    const p = dropPreview(s, ids(s, 'Germans', 'armour', 'Poland'), 'Poland', 'Belorussia');
+
+    expect(p?.route).toEqual(['Poland', 'Belorussia']);
+    expect(p?.odds?.win).toBeGreaterThan(0.9);
+    expect(s.units.filter((u) => u.at === 'Belorussia')).toHaveLength(1);
   });
 });
