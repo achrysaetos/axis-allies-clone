@@ -40,3 +40,4 @@ Each feature file starts with an H1 title and one paragraph on the player-visibl
 - [Mobilize and income](./mobilize-and-income.md) covers placing units from the tray, ending a turn, income and victory.
 - [AI turns](./ai-turns.md) covers computer-controlled powers and handing decisions to human defenders.
 - [Turn flow and guidance](./turn-flow.md) covers the turn card, hint line, odds tags, end-phase warnings, the menu, log and help.
+- [Online play](./online-play.md) covers rooms by link, seats, live moves across browsers and cross-player battles.
