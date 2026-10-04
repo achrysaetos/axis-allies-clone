@@ -91,9 +91,11 @@ export function BuyTray({ state, act }: { state: GameState; act: (a: Action) => 
               key={t}
               className={n > 0 ? 'card picked' : 'card'}
               disabled={!can && n === 0}
-              onClick={(e) => (e.altKey ? less(e) : can && setCount(t, n + 1))}
+              onClick={(e) =>
+                e.altKey ? less(e) : can && setCount(t, n + (e.shiftKey ? Math.min(Math.floor(left / s.cost), room(t)) : 1))
+              }
               onContextMenu={less}
-              title={`${UNIT_GLYPH[t].name}: ${t === 'factory' ? '' : `attack ${s.attack}, defense ${s.defense}, move ${s.move}. `}Click to buy, right-click to remove.`}
+              title={`${UNIT_GLYPH[t].name}: ${t === 'factory' ? '' : `attack ${s.attack}, defense ${s.defense}, move ${s.move}. `}Click to buy one, shift-click to buy as many as you can afford, right-click to remove one.`}
             >
               <UnitSvg type={t} color={style.color} size={34} />
               <span className="card-name">{UNIT_GLYPH[t].name}</span>

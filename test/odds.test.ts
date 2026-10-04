@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { freshUnit } from '../src/engine/state';
 import type { GameState, UnitType } from '../src/engine/types';
-import { forecasts } from '../src/ui/odds';
+import { expectedDamage, forecasts } from '../src/ui/odds';
 import { ids, move, scenario } from './helpers';
 import type { Placement } from './helpers';
 
@@ -33,5 +33,14 @@ describe('attack forecasts', () => {
     const supported = forecasts(landing(true));
     expect(plain.map((f) => f.space)).toEqual(['France']);
     expect(supported[0]!.win).toBeGreaterThan(plain[0]!.win + 0.1);
+  });
+});
+
+describe('raid damage forecast', () => {
+  it('averages capped damage per outcome rather than capping the average', () => {
+    expect(expectedDamage(1, 100)).toBeCloseTo((5 / 6) * 3.5, 6);
+    // One bomber against a cap of 4: rolls of 5 and 6 count as 4.
+    expect(expectedDamage(1, 4)).toBeCloseTo((5 / 6) * ((1 + 2 + 3 + 4 + 4 + 4) / 6), 6);
+    expect(expectedDamage(3, 4)).toBeLessThan(4);
   });
 });

@@ -58,7 +58,21 @@ export function forecasts(state: GameState): Forecast[] {
   return out;
 }
 
-/** Each bomber survives the complex's air defense 5 times in 6 and rolls one die of damage, capped at twice the territory value. */
+/** Expected raid damage: each bomber survives the complex's air defense 5 times in 6 and rolls one die, and the cap applies to each outcome. */
+export function expectedDamage(bombers: number, cap: number): number {
+  // dist[t] is the chance the surviving bombers roll a total of t.
+  let dist = [1];
+  for (let i = 0; i < bombers; i++) {
+    const next = new Array<number>(dist.length + 6).fill(0);
+    dist.forEach((p, t) => {
+      next[t] = next[t]! + p / 6;
+      for (let d = 1; d <= 6; d++) next[t + d] = next[t + d]! + (p * 5) / 36;
+    });
+    dist = next;
+  }
+  return dist.reduce((e, p, t) => e + p * Math.min(cap, t), 0);
+}
+
 function raidForecasts(state: GameState, started: Set<SpaceId>): Forecast[] {
   const bySpace = new Map<SpaceId, number>();
   for (const u of state.units)
@@ -71,7 +85,7 @@ function raidForecasts(state: GameState, started: Set<SpaceId>): Forecast[] {
       kind: 'sbr' as const,
       win: 1 - (1 / 6) ** n,
       attLoss: (n / 6) * STATS.bomber.cost,
-      defLoss: Math.min(room, n * (5 / 6) * 3.5),
+      defLoss: expectedDamage(n, room),
     };
   });
 }

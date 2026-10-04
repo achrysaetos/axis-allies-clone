@@ -192,7 +192,11 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
     const t = setTimeout(() => setCaptured(new Set()), CAPTURE_MS);
     return () => clearTimeout(t);
   }, [state.owner]);
-  const revealed = useMemo(() => placements.map((p) => p.at), [placements]);
+  const revealed = useMemo(() => {
+    if (placements.length > 0) return placements.map((p) => p.at);
+    if (state.phase !== 'mobilize' || !humanActs || greeting) return [];
+    return [...new Set(state.purchases.flatMap((p) => placementOptions(state, p.type).map((o) => o.at)))];
+  }, [placements, state, humanActs, greeting]);
   const held = useMemo(() => new Set(hand?.kind === 'units' ? hand.units : []), [hand]);
   const odds = useMemo(() => (humanActs ? forecasts(state) : []), [state, humanActs]);
   const tags = useMemo(() => {
@@ -271,12 +275,12 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
     },
   });
 
-  const onPieceDown = (space: SpaceId, key: string, x: number, y: number): boolean => {
+  const onPieceDown = (space: SpaceId, key: string, x: number, y: number, shift: boolean): boolean => {
     if (!humanActs || !moving || state.pending) return false;
     const st = stackAt(state, space, key);
     const picked = st ? grabbable(state, st) : [];
     if (picked.length === 0) return false;
-    const ids = st?.carried ? shipmates(state, picked) : picked;
+    const ids = st?.carried && shift ? shipmates(state, picked) : picked;
     pending.current = { kind: 'units', space, ids };
     drag.begin(x, y);
     return true;

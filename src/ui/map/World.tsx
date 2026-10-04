@@ -60,6 +60,7 @@ function Pieces({ id, x, y, stacks, held }: { id: SpaceId; x: number; y: number;
               <title>
                 {`${style.name} ${UNIT_GLYPH[st.type].name.toLowerCase()} ×${st.units.length}${st.carried ? ' (aboard a transport)' : ''}${st.spent ? ' (done for now)' : ''}`}
               </title>
+              <rect x={-GAP / 2} y={-3} width={w + GAP} height={PIECE_H + 6} fill="transparent" />
               <rect
                 width={w}
                 height={PIECE_H}
@@ -245,17 +246,22 @@ export const World = memo(function World({ state, selected, highlights, held, ta
   );
   return (
     <g>
-      {SHAPES.map((s) => (
-        <path key={s.id} data-space={s.id} d={s.d} fill={fillOf(state, s)} className={s.water ? 'sea' : 'land'} />
-      ))}
-      {SHAPES.filter((s) => highlights.has(s.id)).map((s) => (
-        <path key={`h-${s.id}`} d={s.d} className="highlight" pointerEvents="none" />
-      ))}
-      {SHAPES.filter((s) => captured.has(s.id)).map((s) => (
-        <path key={`c-${s.id}`} d={s.d} className="captured" pointerEvents="none" />
-      ))}
-      {SHAPES.filter((s) => s.id === selected).map((s) => (
-        <path key={`s-${s.id}`} d={s.d} className="selected" pointerEvents="none" />
+      {[true, false].map((water) => (
+        // Sea zones overlap the coasts in the source art, so a sea highlight is drawn before the land covers it.
+        <g key={water ? 'sea' : 'land'}>
+          {SHAPES.filter((s) => s.water === water).map((s) => (
+            <path key={s.id} data-space={s.id} d={s.d} fill={fillOf(state, s)} className={water ? 'sea' : 'land'} />
+          ))}
+          {SHAPES.filter((s) => s.water === water && highlights.has(s.id)).map((s) => (
+            <path key={`h-${s.id}`} d={s.d} className="highlight" pointerEvents="none" />
+          ))}
+          {SHAPES.filter((s) => s.water === water && captured.has(s.id)).map((s) => (
+            <path key={`c-${s.id}`} d={s.d} className="captured" pointerEvents="none" />
+          ))}
+          {SHAPES.filter((s) => s.water === water && s.id === selected).map((s) => (
+            <path key={`s-${s.id}`} d={s.d} className="selected" pointerEvents="none" />
+          ))}
+        </g>
       ))}
       {SHAPES.filter((s) => !s.water).map((s) => (
         <text key={`n-${s.id}`} x={s.center[0]} y={s.center[1] + 3} textAnchor="middle" className="land-label" data-space={s.id}>

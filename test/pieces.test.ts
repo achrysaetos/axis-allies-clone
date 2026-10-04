@@ -106,4 +106,20 @@ describe('pieces on the board', () => {
     expect(r.moves[0]!.units).toEqual(ids(s, 'British', 'transport', '6 Sea Zone'));
     expect(r.moves.at(-1)!.path.at(-1)).toBe(coast);
   });
+
+  it('a stack dropped on a transport loads what fits and leaves the rest ashore', () => {
+    const s = scenario({
+      power: 'British',
+      phase: 'noncombatMove',
+      units: [
+        ['British', 'transport', '6 Sea Zone'],
+        ['British', 'infantry', 'United Kingdom', 3],
+      ],
+    });
+
+    const r = dropMoves(s, ids(s, 'British', 'infantry', 'United Kingdom'), 'United Kingdom', '6 Sea Zone', false);
+
+    if (!r.ok) throw new Error(r.error);
+    expect(r.moves.flatMap((m) => m.units)).toHaveLength(2);
+  });
 });

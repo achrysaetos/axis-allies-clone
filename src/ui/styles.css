@@ -1019,3 +1019,21 @@ path.captured {
   stroke-width: 2.5;
   stroke-linecap: round;
 }
+.hover-owner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 3px;
+}
+.help-unit {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.shortcuts.controls {
+  grid-template-columns: 1fr;
+  margin: 10px 0;
+  padding: 10px 12px;
+  background: var(--panel-2);
+  border-radius: 8px;
+}

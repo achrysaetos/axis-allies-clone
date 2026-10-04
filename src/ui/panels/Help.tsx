@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { STATS, VICTORY_THRESHOLD } from '../../engine/data';
 import type { Options, UnitType } from '../../engine/types';
+import { UnitSvg } from '../icons';
 import { UNIT_GLYPH } from '../theme';
 
 const NOTES: Record<UnitType, string> = {
@@ -19,6 +20,18 @@ const NOTES: Record<UnitType, string> = {
   carrier: 'Carries two fighters.',
   battleship: 'Takes two hits to sink and is repaired after the battle. Bombards the shore before a landing.',
 };
+
+const CONTROLS = [
+  ['Drag a piece', 'Move that whole stack. Units that cannot reach stay behind.'],
+  ['Click a piece', 'Pick up one unit; click again for more. Shift-click takes the stack, right-click puts one back.'],
+  ['Click a space', 'Move what you are holding there. Highlighted spaces are in reach.'],
+  ['Hover an enemy space', 'While holding units, see your chance to win if you attack.'],
+  [
+    'Transports',
+    'Drop land units on a sea zone to load. Drag cargo onto a coast to land it; shift-drag lands everything aboard.',
+  ],
+  ['Purchase and mobilize', 'Click cards to buy, then drag new units from the tray onto a highlighted space.'],
+];
 
 const SHORTCUTS = [
   ['E', 'End the phase'],
@@ -56,6 +69,13 @@ export function Help({ options, onClose }: { options: Options; onClose: () => vo
           play in this order: Soviet Union, Germany, United Kingdom, Japan, United States. After the United States’ turn, the Axis
           win holding {t.Axis} victory cities, or the Allies win holding {t.Allies}.
         </p>
+        <div className="shortcuts controls">
+          {CONTROLS.map(([how, what]) => (
+            <div key={how}>
+              <strong>{how}.</strong> {what}
+            </div>
+          ))}
+        </div>
         <ol>
           <li>
             <strong>Purchase.</strong> Buy units. They wait off the board until Mobilize.
@@ -88,7 +108,10 @@ export function Help({ options, onClose }: { options: Options; onClose: () => vo
           <tbody>
             {(Object.keys(NOTES) as UnitType[]).map((u) => (
               <tr key={u}>
-                <td>{UNIT_GLYPH[u].name}</td>
+                <td className="help-unit">
+                  <UnitSvg type={u} color="var(--text)" size={22} />
+                  {UNIT_GLYPH[u].name}
+                </td>
                 <td>{STATS[u].cost}</td>
                 <td>{u === 'factory' ? '' : STATS[u].attack}</td>
                 <td>{u === 'factory' ? '' : STATS[u].defense}</td>

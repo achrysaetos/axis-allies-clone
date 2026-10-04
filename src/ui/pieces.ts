@@ -128,8 +128,8 @@ export function handReach(state: GameState, hand: UnitId[], from: SpaceId): Set<
 }
 
 /**
- * Moves for dropping a hand of units on `to`. A whole stack is often grabbed with mixed movement left, so when
- * the full hand cannot make it, the units that can go alone still do, as a player would push only those forward.
+ * Moves for dropping a hand of units on `to`. A whole stack is often grabbed with mixed movement left or more
+ * cargo than the ships hold, so when the full hand cannot make it, as many as can go still do.
  */
 export function dropMoves(state: GameState, picked: UnitId[], from: SpaceId, to: SpaceId, sbr: boolean): MoveResolution {
   const hand = withDeckFighters(state, picked, to);
@@ -138,7 +138,9 @@ export function dropMoves(state: GameState, picked: UnitId[], from: SpaceId, to:
   const shipped = viaTransport(state, hand, from, to);
   if (shipped) return shipped;
   if (hand.length === 1) return all;
-  const able = hand.filter((id) => resolveMove(state, { units: [id], sbr }, from, to).ok);
-  if (able.length === 0 || able.length === hand.length) return all;
+  // Take units one at a time while the group still fits, as a player loads a transport until it is full.
+  const able: UnitId[] = [];
+  for (const id of hand) if (resolveMove(state, { units: [...able, id], sbr }, from, to).ok) able.push(id);
+  if (able.length === 0) return all;
   return resolveMove(state, { units: able, sbr }, from, to);
 }

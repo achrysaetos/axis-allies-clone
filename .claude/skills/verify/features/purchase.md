@@ -32,3 +32,4 @@ Preconditions:
 - A right-click needs a `contextmenu` event. With `computer`, use `right_click` on the card. Alt-click also removes one.
 - IPCs are deducted when the phase ends, not as the cards are clicked.
 - No scenario has a damaged complex yet. To check repairs, generate one or report `buy-repair` as unverified.
+- Shift-clicking a card buys as many of that unit as the IPCs left and the production limit allow.

@@ -1,7 +1,7 @@
 import { POWERS, UNIT_TYPES } from '../../engine/types';
 import type { Action, Battle, GameState, Power, Unit, UnitId } from '../../engine/types';
 import type { Controller } from '../session';
-import { SIDE, space } from '../../engine/data';
+import { SIDE, isSea, space } from '../../engine/data';
 import { factoryAt } from '../../engine/queries';
 import { POWER_STYLE, powerName } from '../theme';
 import { Chip, PowerTag } from '../units';
@@ -21,6 +21,7 @@ function lineup(state: GameState, b: Battle): { attackers: UnitId[]; defenders: 
       (u) =>
         u.owner === b.attacker &&
         u.sbr === raid &&
+        !(b.kind === 'land' && isSea(u.type)) &&
         ((u.at === b.space && (u.carriedBy === null || u.type === 'fighter')) || (!raid && u.offloadedTo === b.space)),
     ),
     defenders: raid ? [] : ids((u) => u.at === b.space && u.type !== 'factory' && !areAllied(u.owner, b.attacker)),

@@ -24,7 +24,7 @@ interface Props extends WorldProps {
   onSpace: (id: SpaceId) => void;
   onPiece: (e: PieceEvent) => void;
   /** A press on a piece; returning true means the piece can be dragged, so the map does not pan. */
-  onPieceDown: (space: SpaceId, stack: string, x: number, y: number) => boolean;
+  onPieceDown: (space: SpaceId, stack: string, x: number, y: number, shift: boolean) => boolean;
   onHover: (id: SpaceId | null) => void;
   onBackground: () => void;
   /** Changing this value recenters the map on the space. */
@@ -133,7 +133,7 @@ export function MapView({ onSpace, onPiece, onPieceDown, onHover, onBackground, 
   const onPointerDown = (e: ReactPointerEvent) => {
     if (e.button !== 0) return;
     const p = pieceOf(e.target);
-    if (p && onPieceDown(p.space, p.stack, e.clientX, e.clientY)) {
+    if (p && onPieceDown(p.space, p.stack, e.clientX, e.clientY, e.shiftKey)) {
       drag.current = null;
       return;
     }
@@ -149,7 +149,10 @@ export function MapView({ onSpace, onPiece, onPieceDown, onHover, onBackground, 
     const dx = e.clientX - d.x;
     const dy = e.clientY - d.y;
     if (!d.moved && Math.hypot(dx, dy) < DRAG_SLOP) return;
-    if (!d.moved) (e.currentTarget as Element).setPointerCapture(e.pointerId);
+    if (!d.moved) {
+      (e.currentTarget as Element).setPointerCapture(e.pointerId);
+      if (hovered.current !== null) onHover((hovered.current = null));
+    }
     d.moved = true;
     setView(normalize({ tx: d.tx + dx, ty: d.ty + dy, k: v.k }, size.w, size.h));
   };

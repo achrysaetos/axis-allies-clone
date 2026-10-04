@@ -1,5 +1,6 @@
 import { space } from '../../engine/data';
 import { factoryAt, unitsAt } from '../../engine/queries';
+import { POWERS } from '../../engine/types';
 import type { GameState, SpaceId } from '../../engine/types';
 import { powerName } from '../theme';
 import { PowerTag, UnitChips } from '../units';
@@ -19,7 +20,12 @@ export function SpaceInfo({ state, id }: { state: GameState; id: SpaceId }) {
         {def.capital && <span>Capital of {powerName(def.capital)}</span>}
         {factory && <span>Factory{factory.damage > 0 ? ` (${factory.damage} damage)` : ''}</span>}
       </div>
-      {units.length > 0 && <UnitChips units={units} />}
+      {POWERS.filter((p) => units.some((u) => u.owner === p)).map((p) => (
+        <div key={p} className="hover-owner">
+          <span className="dim">{powerName(p)}</span>
+          <UnitChips units={units.filter((u) => u.owner === p)} />
+        </div>
+      ))}
     </section>
   );
 }
