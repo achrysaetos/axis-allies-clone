@@ -73,6 +73,20 @@ export function planMove(state: GameState, action: MoveAction): Plan | string {
   return 'move land, sea and air units separately';
 }
 
+const aboardMovedCarrier = (state: GameState, u: Unit) =>
+  u.carriedBy !== null && isAir(u.type) && (state.units.find((c) => c.id === u.carriedBy)?.moved ?? 0) > 0;
+
+/** Why a unit cannot start any move right now, or null when some move may be legal. */
+export function moveBlocker(state: GameState, u: Unit): string | null {
+  if (state.phase !== 'combatMove' && state.phase !== 'noncombatMove') return 'units move only in movement phases';
+  if (u.owner !== state.power) return 'not your unit';
+  if (u.type === 'factory') return 'industrial complexes cannot move';
+  if (u.type === 'transport' && u.offloadedTo !== null) return 'transports cannot move after offloading';
+  if (remainingMove(u) === 0) return 'no movement left';
+  if (aboardMovedCarrier(state, u)) return 'stays aboard its carrier this turn';
+  return commonChecks(u, state.phase === 'combatMove');
+}
+
 function commonChecks(u: Unit, combat: boolean): string | null {
   if (u.carriedBy !== null && !isAir(u.type)) return 'cargo moves with its transport';
   if (!combat && !isAir(u.type) && (u.movedInCombat || u.fought || u.retreated))
@@ -143,8 +157,7 @@ function planAir(state: GameState, units: Unit[], path: SpaceId[], combat: boole
   for (const u of units) {
     if (remainingMove(u) < steps) return `${u.type} does not have enough movement`;
     if (!combat && u.sbr && u.moved === 0) return 'bombers on a raid land during noncombat';
-    const carrier = u.carriedBy === null ? undefined : state.units.find((c) => c.id === u.carriedBy);
-    if (carrier && carrier.moved > 0) return 'fighters still aboard a carrier that moved stay aboard this turn';
+    if (aboardMovedCarrier(state, u)) return 'fighters still aboard a carrier that moved stay aboard this turn';
   }
   if (sbr) {
     if (!combat) return 'strategic bombing raids are declared during combat move';

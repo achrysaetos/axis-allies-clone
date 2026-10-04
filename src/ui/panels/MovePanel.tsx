@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { isLand } from '../../engine/data';
+import { moveBlocker } from '../../engine/movement';
 import { cargoOf, remainingMove, unitsAt } from '../../engine/queries';
 import { UNIT_TYPES } from '../../engine/types';
 import type { GameState, SpaceId, Unit, UnitId } from '../../engine/types';
@@ -36,7 +37,9 @@ export function MovePanel({ state, at, selected, sbr, onSelect, onSbr }: Props) 
   const mine = unitsAt(state, at).filter((u) => u.owner === state.power && u.type !== 'factory');
   const free = mine.filter((u) => u.carriedBy === null || !isLand(u.type));
   const transports = free.filter((u) => u.type === 'transport');
-  const spent = free.filter((u) => u.type !== 'transport' && remainingMove(u) === 0);
+  const movable = free.filter((u) => moveBlocker(state, u) === null);
+  const blocked = free.filter((u) => u.type !== 'transport' && moveBlocker(state, u) !== null);
+  const reasons = [...new Set(blocked.map((u) => moveBlocker(state, u)!))];
   const others = unitsAt(state, at).filter((u) => u.owner !== state.power && u.type !== 'factory');
   const chosen = new Set(selected);
   const setGroup = (g: Group, n: number) => {
@@ -56,7 +59,7 @@ export function MovePanel({ state, at, selected, sbr, onSelect, onSbr }: Props) 
     <section className="panel">
       <h3>Move from {at}</h3>
       {mine.length === 0 && <div className="dim">None of your units are here.</div>}
-      {groupsOf(free).map((g) => {
+      {groupsOf(movable).map((g) => {
         const first = g.units[0]!;
         const n = g.units.filter((u) => chosen.has(u.id)).length;
         return (
@@ -77,7 +80,7 @@ export function MovePanel({ state, at, selected, sbr, onSelect, onSbr }: Props) 
         return (
           <div key={t.id} className="transport">
             <label className="row">
-              <input type="checkbox" checked={chosen.has(t.id)} onChange={() => toggle(t.id)} />
+              <input type="checkbox" disabled={moveBlocker(state, t) !== null} checked={chosen.has(t.id)} onChange={() => toggle(t.id)} />
               <Chip owner={t.owner} type="transport" />
               <span className="grow">
                 Transport #{t.id} <span className="dim">· {remainingMove(t)} mv</span>
@@ -102,7 +105,7 @@ export function MovePanel({ state, at, selected, sbr, onSelect, onSbr }: Props) 
       })}
       {mine.length > 0 && (
         <div className="row actions">
-          <button onClick={() => onSelect(free.filter((u) => remainingMove(u) > 0).map((u) => u.id))}>Select all</button>
+          <button onClick={() => onSelect(movable.map((u) => u.id))}>Select all</button>
           <button disabled={selected.length === 0} onClick={() => onSelect([])}>
             Clear
           </button>
@@ -115,11 +118,11 @@ export function MovePanel({ state, at, selected, sbr, onSelect, onSbr }: Props) 
         </label>
       )}
       {selected.length > 0 && <div className="hint">Click a highlighted space to move {selected.length} unit(s).</div>}
-      {spent.length > 0 && (
-        <div className="others">
-          <span className="dim">Already moved:</span> <UnitChips units={spent} />
+      {reasons.map((reason) => (
+        <div key={reason} className="others">
+          <UnitChips units={blocked.filter((u) => moveBlocker(state, u) === reason)} /> <span className="dim">{reason}</span>
         </div>
-      )}
+      ))}
       {others.length > 0 && (
         <div className="others">
           <span className="dim">Also here:</span> <UnitChips units={others} />

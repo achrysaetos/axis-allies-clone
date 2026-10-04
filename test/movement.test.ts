@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { moveBlocker } from '../src/engine/movement';
 import { count, fails, ids, move, ok, scenario } from './helpers';
 
 describe('land movement (p.10-13)', () => {
@@ -39,6 +40,18 @@ describe('land movement (p.10-13)', () => {
   it('antiaircraft artillery cannot move during combat move', () => {
     const s = scenario({ power: 'Germans', units: [['Germans', 'aaGun', 'Germany']] });
     fails(s, { type: 'move', units: ids(s, 'Germans', 'aaGun', 'Germany'), path: ['Germany', 'Poland'] }, /antiaircraft/);
+  });
+
+  it('moveBlocker explains which units cannot move at all right now', () => {
+    let s = scenario({ power: 'Germans', units: [['Germans', 'aaGun', 'West Russia'], ['Germans', 'armour', 'West Russia']] });
+    const [aa, tank] = [ids(s, 'Germans', 'aaGun', 'West Russia')[0]!, ids(s, 'Germans', 'armour', 'West Russia')[0]!];
+    const unit = (id: number) => s.units.find((u) => u.id === id)!;
+    expect(moveBlocker(s, unit(aa))).toMatch(/antiaircraft/);
+    expect(moveBlocker(s, unit(tank))).toBeNull();
+    s = move(s, [tank], ['West Russia', 'Caucasus']);
+    s = ok(s, { type: 'endPhase' });
+    expect(moveBlocker(s, unit(tank))).toMatch(/combat/);
+    expect(moveBlocker(s, unit(aa))).toBeNull();
   });
 
   it('combat moves must end in a hostile space', () => {
