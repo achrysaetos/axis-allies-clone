@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { newGame } from '../src/engine/state';
-import { newSession, parseSession, quickResolve } from '../src/ui/session';
+import { act, newSession, parseSession, quickResolve } from '../src/ui/session';
+import { space } from '../src/engine/data';
 import { sinceLastTurn } from '../src/ui/panels/TurnCard';
 import { POWERS } from '../src/engine/types';
 import { ids, move, ok, scenario } from './helpers';
@@ -78,5 +79,35 @@ describe('turn recap', () => {
     ];
     expect(sinceLastTurn(log, 'Russians')).toEqual([log[2], log[4]]);
     expect(sinceLastTurn(log.slice(0, 1), 'Russians')).toEqual([log[0]]);
+  });
+});
+
+describe('shore bombardment', () => {
+  it('fires the strongest eligible ship without asking, since bombarding never costs anything', () => {
+    const zone = space('France').neighbors.find((n) => space(n).water && space(n).neighbors.includes('United Kingdom'))!;
+    let s = scenario({
+      power: 'British',
+      units: [
+        ['British', 'transport', zone],
+        ['British', 'battleship', zone],
+        ['British', 'cruiser', zone],
+        ['British', 'infantry', 'United Kingdom'],
+        ['Germans', 'infantry', 'France'],
+      ],
+    });
+    s = move(s, ids(s, 'British', 'infantry', 'United Kingdom'), ['United Kingdom', zone]);
+    s = move(s, ids(s, 'British', 'infantry', zone), [zone, 'France']);
+    s = ok(s, { type: 'endPhase' });
+    const battle = s.battles.find((b) => b.space === 'France')!;
+
+    const r = act(newSession(s, Object.fromEntries(POWERS.map((p) => [p, 'human'])) as never), {
+      type: 'startBattle',
+      battle: battle.id,
+    });
+
+    if (!r.ok) throw new Error(r.error);
+    expect(r.session.state.pending?.kind).not.toBe('bombard');
+    const fired = r.session.state.units.filter((u) => u.bombarded).map((u) => u.type);
+    expect(fired).toEqual(['battleship']);
   });
 });

@@ -9,7 +9,7 @@ In the combat phase the player resolves battles in the rulebook's order: strateg
 - `combat-casualties` assigns hits under the rules (air cannot hit subs without a destroyer, transports last, battleships take two hits).
 - `combat-retreat` retreats to a space the attackers came from, or presses on.
 - `combat-submerge` submerges submarines instead of a surprise strike.
-- `combat-bombard` chooses battleships and cruisers to bombard, at most one per seaborne land unit.
+- `combat-bombard` fires battleships and cruisers at the shore automatically, strongest first, at most one per seaborne land unit. There is no prompt.
 - `combat-intercept` chooses defending interceptors when the escorts option is on.
 - `combat-stranded` lands defending fighters whose carrier sank, within one space.
 - `combat-capture` changes territory control and income when the attacker wins with land units.
@@ -20,7 +20,7 @@ In the combat phase the player resolves battles in the rulebook's order: strateg
 - A not-yet-started battle shows both sides, the forecast line, and `Roll dice`, `Fight it out automatically` and `Skip` (optional battles only).
 - A finished battle shows `Next: <space>` or `Back to the map`.
 - The casualty picker lists the side's units as `button.tile` tiles under "In the fight, click to take a hit" with a dashed `Casualty zone · n/m` row below. Clicking a tile in the fight moves one hit into the zone. Clicking a tile in the zone, or right-clicking it, moves it back.
-- The battle dialog's decision area: `Remove casualties`, `Suggest`, `Press on`, retreat destination buttons, and piece tiles (`button.tile`, `aria-pressed`) that toggle submerge, bombard and intercept choices.
+- The battle dialog's decision area: `Remove casualties`, `Suggest`, `Press on`, retreat destination buttons, and piece tiles (`button.tile`, `aria-pressed`) that toggle submerge and intercept choices.
 
 ## Driving it with the browser pane
 
@@ -28,7 +28,7 @@ Preconditions:
 
 - Load the scenario the step names. Unless the scenario is AI-controlled, every power in it is human, so you answer both sides' decisions.
 
-- **Amphibious with bombardment.** Load `amphibious`, offload the cargo into `France` as in movement.md, and press `End phase`. The France dialog opens by itself. Press `Roll dice`. The bombard decision offers the battleship and cruiser with a maximum of 2, the number of seaborne units. Press `Bombard`, then answer casualties and retreat prompts until the dialog shows a winner. The dice log starts with a `bombardment` row. If the British win, the state snippet shows `owner.France: "British"`.
+- **Amphibious with bombardment.** Load `amphibious`, offload the cargo into `France` as in movement.md, and press `End phase`. The France dialog opens by itself. Press `Roll dice`. Both ships bombard at once, since two units are landing. Answer casualties and retreat prompts until the dialog shows a winner. The dice log starts with a `bombardment` row. If the British win, the state snippet shows `owner.France: "British"`.
 - **Surprise strike.** Load `sub-strike`, drag both submarines from `12 Sea Zone` to `13 Sea Zone`, end the phase and press `Roll dice` in the dialog that opens. Answer the submerge prompts. The dialog shows a `surprise strike` dice row, and a British casualty from it never fires back.
 - **Interception.** Load `raid-intercept`, drag the bombers and the fighter from `United Kingdom` onto `data-space="Germany"`, choose `Bomb the industrial complex`, end the phase and press `Roll dice`. Germany's intercept decision appears. The dice log shows `escort fire`, `interceptor fire`, `factory air defense` and `bombing damage`, and the factory badge in Germany shows the damage. Before rolling, the `.map-tag` over Germany reads `~N dmg`.
 - **Order.** In a scenario with a raid and a land battle, click the land battle's space first. The dialog shows `Not yet: <reason>` and no roll buttons.

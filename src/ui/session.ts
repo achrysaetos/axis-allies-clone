@@ -1,6 +1,6 @@
 import { aiAction } from '../ai';
 import { asCombatants, simulate } from '../ai/eval';
-import { isLand } from '../engine/data';
+import { STATS, isLand } from '../engine/data';
 import { autoCasualties } from '../engine/casualties';
 import { battleBlocker } from '../engine/combat';
 import { actingPower, apply } from '../engine/game';
@@ -28,9 +28,23 @@ export function newSession(state: GameState, controllers: Record<Power, Controll
 
 export type Step = { ok: true; session: Session } | { ok: false; error: string };
 
+/**
+ * Bombarding has no cost in this edition, so a player always fires every ship allowed, strongest first; asking
+ * would only add a step the board game never has.
+ */
+function autoBombard(state: GameState): GameState {
+  const d = state.pending;
+  if (d?.kind !== 'bombard') return state;
+  const attack = (id: number) => STATS[state.units.find((u) => u.id === id)!.type].attack;
+  const ships = [...d.ships].sort((a, b) => attack(b) - attack(a)).slice(0, d.max);
+  const r = apply(state, { type: 'bombard', ships });
+  return r.ok ? r.state : state;
+}
+
 export function act(session: Session, action: Action): Step {
-  const r = apply(session.state, action);
-  if (!r.ok) return r;
+  const applied = apply(session.state, action);
+  if (!applied.ok) return applied;
+  const r = { ...applied, state: autoBombard(applied.state) };
   const alive = new Set(r.state.units.map((u) => u.id));
   const died = session.state.units.filter((u) => !alive.has(u.id));
   return {
