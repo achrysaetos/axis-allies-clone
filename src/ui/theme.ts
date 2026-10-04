@@ -49,14 +49,6 @@ export const UNIT_GLYPH: Record<UnitType, UnitGlyph> = {
   battleship: { letter: 'BB', name: 'Battleship' },
 };
 
-export const PHASE_GUIDE = {
-  purchase: 'Buy units with your IPCs. They arrive at your industrial complexes in the Mobilize phase.',
-  combatMove: 'Move units into enemy territory or sea zones to attack. Every planned attack needs a way home for its planes.',
-  combat: 'Fight each battle. Bombing raids go first, then landings from the sea, then everything else.',
-  noncombatMove: 'Move units that did not attack, and land every plane in a friendly territory or on a carrier.',
-  mobilize: 'Place the units you bought at your industrial complexes. Ships go in a sea zone next to one.',
-} as const;
-
 export const PHASE_LABEL = {
   purchase: 'Purchase',
   combatMove: 'Combat move',

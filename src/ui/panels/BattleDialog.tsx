@@ -6,6 +6,26 @@ import { factoryAt } from '../../engine/queries';
 import { POWER_STYLE, powerName } from '../theme';
 import { Chip, PowerTag } from '../units';
 import { DecisionView } from './Decisions';
+import { battleBlocker } from '../../engine/combat';
+import { areAllied } from '../../engine/queries';
+import { oddsClass } from '../odds';
+import type { Forecast } from '../odds';
+
+/** Who would fight if the battle started now; the engine fixes the roster only when it starts. */
+function lineup(state: GameState, b: Battle): { attackers: UnitId[]; defenders: UnitId[] } {
+  if (b.round > 0 || b.resolved || b.attackers.length > 0) return { attackers: b.attackers, defenders: b.defenders };
+  const ids = (f: (u: Unit) => boolean) => state.units.filter(f).map((u) => u.id);
+  const raid = b.kind === 'sbr';
+  return {
+    attackers: ids(
+      (u) =>
+        u.owner === b.attacker &&
+        u.sbr === raid &&
+        ((u.at === b.space && (u.carriedBy === null || u.type === 'fighter')) || (!raid && u.offloadedTo === b.space)),
+    ),
+    defenders: raid ? [] : ids((u) => u.at === b.space && u.type !== 'factory' && !areAllied(u.owner, b.attacker)),
+  };
+}
 
 interface Props {
   state: GameState;
@@ -15,6 +35,10 @@ interface Props {
   act: (a: Action) => boolean;
   onQuick: (battle: number) => void;
   onClose: () => void;
+  forecast: Forecast | undefined;
+  /** The next battle still to fight, offered once this one is over. */
+  next: Battle | undefined;
+  onOpen: (battle: number) => void;
 }
 
 type Status = 'ready' | 'hit' | 'submerged' | 'dead';
@@ -119,10 +143,14 @@ function outcome(state: GameState, b: Battle): string {
     : `${b.space} is cleared, but only aircraft survived, so it cannot be taken`;
 }
 
-export function BattleDialog({ state, battle, fallen, controllers, act, onQuick, onClose }: Props) {
+export function BattleDialog({ state, battle, fallen, controllers, act, onQuick, onClose, forecast, next, onOpen }: Props) {
   const d = state.pending;
   const mine = d && 'battle' in d && d.battle === battle.id ? d : null;
   const waitingOnAi = mine !== null && controllers[mine.power] === 'ai';
+  const fresh = !battle.resolved && battle.round === 0 && state.activeBattle !== battle.id;
+  const blocker = fresh ? battleBlocker(state, battle) : null;
+  const human = controllers[battle.attacker] === 'human';
+  const { attackers, defenders } = lineup(state, battle);
   return (
     <div className="battle-dialog">
       <header>
@@ -135,15 +163,22 @@ export function BattleDialog({ state, battle, fallen, controllers, act, onQuick,
         </button>
       </header>
       <div className="sides">
-        <Side title="Attacker" ids={battle.attackers} state={state} battle={battle} fallen={fallen} />
-        {battle.kind === 'sbr' && battle.defenders.length === 0 ? (
+        <Side title="Attacker" ids={attackers} state={state} battle={battle} fallen={fallen} />
+        {battle.kind === 'sbr' && defenders.length === 0 ? (
           <RaidTarget state={state} battle={battle} />
         ) : (
-          <Side title="Defender" ids={battle.defenders} state={state} battle={battle} fallen={fallen} />
+          <Side title="Defender" ids={defenders} state={state} battle={battle} fallen={fallen} />
         )}
       </div>
       <div className="dice-log">
-        {battle.dice.length === 0 && <div className="dim">No dice rolled yet.</div>}
+        {battle.dice.length === 0 && !fresh && <div className="dim">No dice rolled yet.</div>}
+        {fresh && forecast && (
+          <div className={`forecast ${oddsClass(forecast.win)}`}>
+            {forecast.kind === 'sbr'
+              ? `About ${forecast.defLoss.toFixed(1)} damage expected`
+              : `${Math.round(forecast.win * 100)}% to win · you lose about ${Math.round(forecast.attLoss)} IPCs, the defender about ${Math.round(forecast.defLoss)}`}
+          </div>
+        )}
         {battle.dice.map((r, i) => (
           <div key={i}>
             {(i === 0 || battle.dice[i - 1]!.round !== r.round) && (
@@ -186,6 +221,39 @@ export function BattleDialog({ state, battle, fallen, controllers, act, onQuick,
       </div>
       {battle.resolved && (
         <div className={`result ${battle.winner === 'attacker' ? 'good' : 'bad'}`}>{outcome(state, battle)}</div>
+      )}
+      {fresh && human && (
+        <div className="battle-actions">
+          {blocker ? (
+            <span className="dim grow">Not yet: {blocker}.</span>
+          ) : (
+            <>
+              <button className="primary" autoFocus onClick={() => act({ type: 'startBattle', battle: battle.id })}>
+                Roll dice
+              </button>
+              <button
+                onClick={() => onQuick(battle.id)}
+                title="Each side loses its cheapest units first, and you retreat below a 30% chance to win"
+              >
+                Fight it out automatically
+              </button>
+              {battle.optional && <button onClick={() => act({ type: 'skipBattle', battle: battle.id })}>Skip</button>}
+            </>
+          )}
+        </div>
+      )}
+      {battle.resolved && (
+        <div className="battle-actions">
+          {next ? (
+            <button className="primary" autoFocus onClick={() => onOpen(next.id)}>
+              Next: {next.space}
+            </button>
+          ) : (
+            <button className="primary" autoFocus onClick={onClose}>
+              Back to the map
+            </button>
+          )}
+        </div>
       )}
       {mine &&
         (waitingOnAi ? (

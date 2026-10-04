@@ -1,42 +1,29 @@
 import { memo } from 'react';
 import { space } from '../../engine/data';
-import { POWERS, UNIT_TYPES } from '../../engine/types';
-import type { GameState, Power, SpaceId, Unit, UnitType } from '../../engine/types';
+import type { GameState, SpaceId, Unit, UnitId } from '../../engine/types';
+import { UnitIcon } from '../icons';
+import { stacksAt } from '../pieces';
+import type { Stack } from '../pieces';
 import { NEUTRAL_FILL, POWER_STYLE, SEA_FILL, UNIT_GLYPH } from '../theme';
-import { SHAPES, seaNumber } from './geometry';
+import { CENTER, MAP_WIDTH, SHAPES, seaNumber } from './geometry';
 import type { SpaceShape } from './geometry';
 
 export interface WorldProps {
   state: GameState;
   selected: SpaceId | null;
   highlights: ReadonlySet<SpaceId>;
+  /** Units in the player's hand, counted on the pieces they were lifted from. */
+  held: ReadonlySet<UnitId>;
+  /** Short labels by a space, such as the odds of a planned attack. */
+  tags: ReadonlyMap<SpaceId, { text: string; tone: string }>;
+  /** The route the held units would take to the space under the cursor. */
+  route: SpaceId[] | null;
 }
 
 const GAP = 2;
-const BADGE_H = 15;
+const PIECE_H = 16;
 const PER_ROW = 3;
-
-interface Stack {
-  owner: Power;
-  type: UnitType;
-  count: number;
-  carried: boolean;
-}
-
-function stacksAt(units: Unit[]): Stack[] {
-  const out: Stack[] = [];
-  for (const owner of POWERS)
-    for (const type of UNIT_TYPES) {
-      if (type === 'factory') continue;
-      for (const carried of [false, true]) {
-        const count = units.filter(
-          (u) => u.owner === owner && u.type === type && (u.carriedBy !== null && type !== 'fighter') === carried,
-        ).length;
-        if (count > 0) out.push({ owner, type, count, carried });
-      }
-    }
-  return out;
-}
+const ICON_W = 20;
 
 function fillOf(state: GameState, s: SpaceShape): string {
   if (s.water) return SEA_FILL;
@@ -44,42 +31,96 @@ function fillOf(state: GameState, s: SpaceShape): string {
   return o ? POWER_STYLE[o].color : 'url(#neutral)';
 }
 
-const label = (st: Stack) => (st.count > 1 ? `${st.count} ${UNIT_GLYPH[st.type].letter}` : UNIT_GLYPH[st.type].letter);
-const widthOf = (text: string) => 6 + text.length * 6.2;
+const widthOf = (st: Stack) => 4 + ICON_W + (st.units.length > 1 ? 3 + String(st.units.length).length * 6.5 : 2);
 
-function Badges({ id, x, y, units }: { id: SpaceId; x: number; y: number; units: Unit[] }) {
-  const stacks = stacksAt(units);
+function Pieces({ id, x, y, stacks, held }: { id: SpaceId; x: number; y: number; stacks: Stack[]; held: ReadonlySet<UnitId> }) {
   if (stacks.length === 0) return null;
   const rows: Stack[][] = [];
   for (let i = 0; i < stacks.length; i += PER_ROW) rows.push(stacks.slice(i, i + PER_ROW));
   return (
-    <g data-space={id} className="badges">
+    <g data-space={id} className="pieces">
       {rows.flatMap((row, r) => {
-        const widths = row.map((st) => widthOf(label(st)));
+        const widths = row.map(widthOf);
         let bx = x - (widths.reduce((a, w) => a + w, 0) + GAP * (row.length - 1)) / 2;
         return row.map((st, i) => {
           const w = widths[i]!;
           const style = POWER_STYLE[st.owner];
           const at = bx;
           bx += w + GAP;
+          const picked = st.units.filter((u) => held.has(u.id)).length;
           return (
-            <g key={`${st.owner}-${st.type}-${st.carried}`} transform={`translate(${at},${y + r * (BADGE_H + 2)})`}>
+            <g
+              key={st.key}
+              data-stack={st.key}
+              className={st.spent ? 'piece spent' : 'piece'}
+              transform={`translate(${at},${y + r * (PIECE_H + 2)})`}
+            >
+              <title>
+                {`${style.name} ${UNIT_GLYPH[st.type].name.toLowerCase()} ×${st.units.length}${st.carried ? ' (aboard a transport)' : ''}${st.spent ? ' (done moving)' : ''}`}
+              </title>
               <rect
                 width={w}
-                height={BADGE_H}
+                height={PIECE_H}
                 rx={3}
                 fill={style.color}
-                stroke={st.carried ? '#fff' : '#111'}
-                strokeDasharray={st.carried ? '3 2' : undefined}
-                strokeWidth={1}
+                stroke={picked > 0 ? '#ffe27a' : st.carried ? '#fff' : '#111'}
+                strokeDasharray={st.carried && picked === 0 ? '3 2' : undefined}
+                strokeWidth={picked > 0 ? 2.2 : 1}
               />
-              <text x={w / 2} y={11} textAnchor="middle" fill={style.ink} className="badge-text">
-                {label(st)}
-              </text>
+              <UnitIcon type={st.type} x={2} y={2} fill={style.ink} />
+              {st.units.length > 1 && (
+                <text x={ICON_W + 4} y={12} fill={style.ink} className="piece-count">
+                  {st.units.length}
+                </text>
+              )}
+              {picked > 0 && (
+                <g transform={`translate(${w - 4},-5)`}>
+                  <circle r={6.5} fill="#ffe27a" stroke="#3a2c00" strokeWidth={0.8} />
+                  <text y={3.2} textAnchor="middle" className="picked-count">
+                    {picked}
+                  </text>
+                </g>
+              )}
             </g>
           );
         });
       })}
+    </g>
+  );
+}
+
+/** Center points along a route, unwrapped across the date line so the arrow takes the short way. */
+function routePoints(route: SpaceId[]): [number, number][] {
+  const pts: [number, number][] = [];
+  for (const id of route) {
+    const [x, y] = CENTER.get(id) ?? [0, 0];
+    const prev = pts[pts.length - 1];
+    const shift = prev ? Math.round((prev[0] - x) / MAP_WIDTH) * MAP_WIDTH : 0;
+    pts.push([x + shift, y]);
+  }
+  return pts;
+}
+
+function Route({ route }: { route: SpaceId[] }) {
+  const pts = routePoints(route);
+  return (
+    <g className="route" pointerEvents="none">
+      <polyline points={pts.map((p) => p.join(',')).join(' ')} />
+      {pts.slice(1).map(([x, y], i) => (
+        <circle key={i} cx={x} cy={y} r={i === pts.length - 2 ? 6 : 3.5} />
+      ))}
+    </g>
+  );
+}
+
+function Tag({ x, y, text, tone }: { x: number; y: number; text: string; tone: string }) {
+  const w = 8 + text.length * 6.4;
+  return (
+    <g transform={`translate(${x - w / 2},${y})`} className={`map-tag ${tone}`} pointerEvents="none">
+      <rect width={w} height={15} rx={7.5} />
+      <text x={w / 2} y={11} textAnchor="middle">
+        {text}
+      </text>
     </g>
   );
 }
@@ -153,7 +194,7 @@ export function NeutralPattern() {
   );
 }
 
-export const World = memo(function World({ state, selected, highlights }: WorldProps) {
+export const World = memo(function World({ state, selected, highlights, held, tags, route }: WorldProps) {
   const byAt = new Map<SpaceId, Unit[]>();
   const factories = new Map<SpaceId, Unit>();
   for (const u of state.units) {
@@ -169,9 +210,7 @@ export const World = memo(function World({ state, selected, highlights }: WorldP
   return (
     <g>
       {SHAPES.map((s) => (
-        <path key={s.id} data-space={s.id} d={s.d} fill={fillOf(state, s)} className={s.water ? 'sea' : 'land'}>
-          <title>{s.id}</title>
-        </path>
+        <path key={s.id} data-space={s.id} d={s.d} fill={fillOf(state, s)} className={s.water ? 'sea' : 'land'} />
       ))}
       {SHAPES.filter((s) => highlights.has(s.id)).map((s) => (
         <path key={`h-${s.id}`} d={s.d} className="highlight" pointerEvents="none" />
@@ -188,8 +227,19 @@ export const World = memo(function World({ state, selected, highlights }: WorldP
         <Marks key={`m-${s.id}`} s={s} factory={factories.get(s.id)} battle={battles.has(s.id)} />
       ))}
       {SHAPES.map((s) => (
-        <Badges key={`b-${s.id}`} id={s.id} x={s.center[0]} y={s.center[1] + (s.water ? -2 : 8)} units={byAt.get(s.id) ?? []} />
+        <Pieces
+          key={`b-${s.id}`}
+          id={s.id}
+          x={s.center[0]}
+          y={s.center[1] + (s.water ? -2 : 8)}
+          stacks={stacksAt(state, byAt.get(s.id) ?? [])}
+          held={held}
+        />
       ))}
+      {SHAPES.filter((s) => tags.has(s.id)).map((s) => (
+        <Tag key={`t-${s.id}`} x={s.center[0]} y={s.center[1] - (s.water ? 30 : 44)} {...tags.get(s.id)!} />
+      ))}
+      {route && route.length > 1 && <Route route={route} />}
     </g>
   );
 });

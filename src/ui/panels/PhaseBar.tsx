@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { VICTORY_THRESHOLD } from '../../engine/data';
 import { income, victoryCities } from '../../engine/queries';
 import type { GameState, Phase, Power } from '../../engine/types';
@@ -14,11 +15,13 @@ interface Props {
   onExport: () => void;
   onMenu: () => void;
   onHelp: () => void;
+  onLog: () => void;
 }
 
 const PHASES: Phase[] = ['purchase', 'combatMove', 'combat', 'noncombatMove', 'mobilize'];
 
-export function PhaseBar({ state, controllers, canUndo, onEndPhase, onUndo, onExport, onMenu, onHelp }: Props) {
+export function PhaseBar({ state, controllers, canUndo, onEndPhase, onUndo, onExport, onMenu, onHelp, onLog }: Props) {
+  const [menu, setMenu] = useState(false);
   const style = POWER_STYLE[state.power];
   const t = VICTORY_THRESHOLD[state.options.victory];
   const human = controllers[state.pending?.power ?? state.power] === 'human';
@@ -55,13 +58,19 @@ export function PhaseBar({ state, controllers, canUndo, onEndPhase, onUndo, onEx
       <button onClick={onUndo} disabled={!canUndo} title="Undo last move (Ctrl+Z)">
         Undo
       </button>
-      <button onClick={onExport} title="Download this game as JSON">
-        Export
-      </button>
-      <button onClick={onHelp} title="How to play (?)">
-        ?
-      </button>
-      <button onClick={onMenu}>Menu</button>
+      <span className="menu-anchor">
+        <button onClick={() => setMenu((m) => !m)} title="Menu" aria-label="Menu">
+          ☰
+        </button>
+        {menu && (
+          <div className="menu" onClick={() => setMenu(false)}>
+            <button onClick={onLog}>Game log (L)</button>
+            <button onClick={onHelp}>How to play (?)</button>
+            <button onClick={onExport}>Export save</button>
+            <button onClick={onMenu}>Main menu</button>
+          </div>
+        )}
+      </span>
       <button className="primary end" onClick={onEndPhase} disabled={!human || state.pending !== null} title="End phase (E)">
         {state.phase === 'mobilize' ? 'End turn' : 'End phase'}
       </button>

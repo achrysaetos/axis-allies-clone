@@ -1,27 +1,30 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { CAPITAL_OF } from '../engine/data';
+import { CAPITAL_OF, isAir } from '../engine/data';
+import { battleBlocker } from '../engine/combat';
 import { actingPower } from '../engine/game';
-import { remainingMove } from '../engine/queries';
-import type { Action, SpaceId, UnitId, UnitType } from '../engine/types';
+import { areAllied, factoryAt } from '../engine/queries';
+import type { Action, Battle, GameState, SpaceId, UnitId, UnitType } from '../engine/types';
 import { MapView } from './map/MapView';
+import type { PieceEvent } from './map/MapView';
 import { BattleDialog } from './panels/BattleDialog';
-import { CombatPanel } from './panels/CombatPanel';
 import { DecisionView } from './panels/Decisions';
 import { LogPanel } from './panels/LogPanel';
-import { MobilizePanel, placementOptions } from './panels/MobilizePanel';
-import { MovePanel } from './panels/MovePanel';
 import { PhaseBar } from './panels/PhaseBar';
-import { PurchasePanel } from './panels/PurchasePanel';
 import { SetupScreen } from './panels/SetupScreen';
 import { SpaceInfo } from './panels/SpaceInfo';
 import { TurnCard } from './panels/TurnCard';
 import { Help } from './panels/Help';
-import { AttackPlan } from './panels/AttackPlan';
-import { forecasts } from './odds';
+import { BuyTray, PlaceTray, placementOptions } from './panels/Tray';
+import { forecasts, oddsClass } from './odds';
 import { ConfirmEnd } from './panels/ConfirmEnd';
 import { endPhaseWarnings } from './warnings';
-import { PHASE_GUIDE, powerName } from './theme';
-import { reachable, resolveMove } from './paths';
+import { powerName } from './theme';
+import { reachable } from './paths';
+import { dropMoves, grabbable, stackAt } from './pieces';
+import type { Hand } from './pieces';
+import { useDrag } from './drag';
+import { UnitSvg } from './icons';
+import { POWER_STYLE } from './theme';
 import { act as step, aiBurst, autosave, downloadSave, loadAutosave, quickResolve, undo } from './session';
 import type { Session } from './session';
 
@@ -35,20 +38,43 @@ export function App() {
   return <Game session={session} setSession={setSession} onMenu={() => setSession(null)} />;
 }
 
+const byOrder = (a: Battle, b: Battle) => a.tier - b.tier || a.id - b.id;
+
+/** The battle a player would naturally fight next: the first one the rules allow, in the rulebook's order. */
+function nextBattle(state: GameState, except?: number): Battle | undefined {
+  return [...state.battles].sort(byOrder).find((b) => b.id !== except && !b.resolved && battleBlocker(state, b) === null);
+}
+
+/** Bombers dropped on an enemy industrial complex may either raid it or join the attack, so the player picks. */
+function raidPossible(state: GameState, ids: UnitId[], to: SpaceId): boolean {
+  if (state.phase !== 'combatMove') return false;
+  const f = factoryAt(state, to);
+  if (!f || areAllied(f.owner, state.power)) return false;
+  const units = ids.map((id) => state.units.find((u) => u.id === id)!);
+  const raiders = state.options.sbrEscortsInterceptors ? ['bomber', 'fighter'] : ['bomber'];
+  return units.some((u) => u.type === 'bomber') && units.every((u) => raiders.includes(u.type) && isAir(u.type));
+}
+
+const HINT: Partial<Record<GameState['phase'], string>> = {
+  combatMove: 'Drag pieces into enemy spaces to attack. Click a piece to pick up one at a time; shift-click takes the stack.',
+  noncombatMove: 'Move units that did not attack, and land every plane on friendly ground or a carrier.',
+};
+
 function Game({ session, setSession, onMenu }: { session: Session; setSession: (s: Session) => void; onMenu: () => void }) {
   const current = useRef(session);
   current.current = session;
-  const [inspect, setInspect] = useState<SpaceId | null>(null);
-  const [selected, setSelected] = useState<UnitId[]>([]);
-  const [sbr, setSbr] = useState(false);
-  const [placeType, setPlaceType] = useState<UnitType | null>(null);
+  const [hand, setHand] = useState<Hand | null>(null);
+  const [hover, setHover] = useState<SpaceId | null>(null);
+  const [raidChoice, setRaidChoice] = useState<{ units: UnitId[]; from: SpaceId; to: SpaceId; x: number; y: number } | null>(
+    null,
+  );
   const [battleView, setBattleView] = useState<number | null>(null);
   const [toast, setToast] = useState<{ text: string; id: number; info?: boolean } | null>(null);
   const [aiRetry, setAiRetry] = useState(0);
   const [focus, setFocus] = useState<{ id: SpaceId; nonce: number } | null>(null);
   const [greeted, setGreeted] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<string[] | null>(null);
-  const [help, setHelp] = useState(false);
+  const [overlay, setOverlay] = useState<'help' | 'log' | null>(null);
   const { state, controllers } = session;
   const turnKey = `${state.round}:${state.power}`;
   const greeting = controllers[state.power] === 'human' && greeted !== turnKey && !state.winner;
@@ -107,54 +133,130 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
   }, [state.pending, state.activeBattle]);
 
   useEffect(() => {
-    setSelected([]);
-    setSbr(false);
-    if (state.phase !== 'combat') setBattleView(null);
+    setHand(null);
+    setRaidChoice(null);
+    const first =
+      state.phase === 'combat' && controllers[state.power] === 'human' ? nextBattle(current.current.state) : undefined;
+    setBattleView(first?.id ?? null);
+    // Opening the first battle is a reaction to the phase changing, not to every state update.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.phase, state.power]);
 
-  useEffect(() => {
-    if (state.phase !== 'mobilize') return;
-    if (!placeType || !state.purchases.some((p) => p.type === placeType)) setPlaceType(state.purchases[0]?.type ?? null);
-  }, [state.phase, state.purchases, placeType]);
-
-  const intent = useMemo(() => ({ units: selected, sbr }), [selected, sbr]);
   const reach = useMemo(
-    () => (moving && inspect && selected.length > 0 ? reachable(state, intent, inspect) : new Set<SpaceId>()),
-    [moving, inspect, selected.length, state, intent],
+    () => (hand?.kind === 'units' && moving ? reachable(state, { units: hand.units, sbr: false }, hand.from) : null),
+    [hand, moving, state],
   );
-  const odds = useMemo(() => (humanActs ? forecasts(state) : []), [state, humanActs]);
   const placements = useMemo(
-    () => (state.phase === 'mobilize' && placeType && humanActs ? placementOptions(state, placeType) : []),
-    [state, placeType, humanActs],
+    () => (hand?.kind === 'new' && state.phase === 'mobilize' ? placementOptions(state, hand.type) : []),
+    [hand, state],
   );
-  const highlights = useMemo(
-    () => (state.phase === 'mobilize' ? new Set(placements.map((p) => p.at)) : reach),
-    [state.phase, placements, reach],
+  const highlights = useMemo(() => reach ?? new Set(placements.map((p) => p.at)), [reach, placements]);
+  const route = useMemo(() => {
+    if (hand?.kind !== 'units' || !hover || !reach?.has(hover)) return null;
+    const r = dropMoves(state, hand.units, hand.from, hover, false);
+    return r.ok ? r.moves[0]!.path : null;
+  }, [hand, hover, reach, state]);
+  const held = useMemo(() => new Set(hand?.kind === 'units' ? hand.units : []), [hand]);
+  const odds = useMemo(() => (humanActs ? forecasts(state) : []), [state, humanActs]);
+  const tags = useMemo(() => {
+    const out = new Map<SpaceId, { text: string; tone: string }>();
+    for (const f of odds)
+      if (f.kind === 'sbr') out.set(f.space, out.get(f.space) ?? { text: `~${f.defLoss.toFixed(1)} dmg`, tone: 'good' });
+      else out.set(f.space, { text: `${Math.round(f.win * 100)}%`, tone: oddsClass(f.win) });
+    return out;
+  }, [odds]);
+
+  const moveHand = useCallback(
+    (units: UnitId[], from: SpaceId, to: SpaceId, sbr: boolean): boolean => {
+      const r = dropMoves(current.current.state, units, from, to, sbr);
+      if (!r.ok) {
+        showError(r.error);
+        return false;
+      }
+      for (const m of r.moves) if (!act({ type: 'move', ...m })) return false;
+      const moved = r.moves.reduce((n, m) => n + m.units.length, 0);
+      if (moved < units.length)
+        setToast({ text: `${units.length - moved} could not reach ${to} and stayed behind`, id: Date.now(), info: true });
+      setHand(null);
+      return true;
+    },
+    [act, showError],
   );
 
-  const inspectSpace = (id: SpaceId | null) => {
-    setInspect(id);
-    setSelected([]);
-    setSbr(false);
+  const playHand = (hand: Hand, to: SpaceId, x: number, y: number) => {
+    if (hand.kind === 'new') {
+      const opt = placementOptions(state, hand.type).find((p) => p.at === to);
+      if (!opt) return showError(`A new ${hand.type === 'factory' ? 'industrial complex' : hand.type} cannot be placed in ${to}`);
+      if (act({ type: 'place', unitType: hand.type, at: to, count: Math.min(hand.count, opt.max) })) setHand(null);
+      return;
+    }
+    if (to === hand.from) return setHand(null);
+    if (raidPossible(state, hand.units, to)) return setRaidChoice({ units: hand.units, from: hand.from, to, x, y });
+    moveHand(hand.units, hand.from, to, false);
+  };
+
+  const last = useRef({ x: 0, y: 0 });
+  useEffect(() => {
+    const at = (e: PointerEvent) => (last.current = { x: e.clientX, y: e.clientY });
+    window.addEventListener('pointerdown', at);
+    return () => window.removeEventListener('pointerdown', at);
+  }, []);
+  const pending = useRef<{ kind: 'units'; space: SpaceId; ids: UnitId[] } | { kind: 'new'; type: UnitType } | null>(null);
+  const dragged = useRef<Hand | null>(null);
+  const drag = useDrag({
+    onStart: () => {
+      const p = pending.current;
+      if (!p) return false;
+      const left = p.kind === 'new' ? (state.purchases.find((x) => x.type === p.type)?.count ?? 0) : 0;
+      const h: Hand =
+        p.kind === 'new'
+          ? hand?.kind === 'new' && hand.type === p.type
+            ? hand
+            : { kind: 'new', type: p.type, count: left }
+          : hand?.kind === 'units' && hand.from === p.space && hand.units.some((id) => p.ids.includes(id))
+            ? hand
+            : { kind: 'units', from: p.space, units: p.ids };
+      dragged.current = h;
+      setHand(h);
+      return true;
+    },
+    onOver: setHover,
+    onDrop: (to) => {
+      const h = dragged.current;
+      pending.current = null;
+      dragged.current = null;
+      if (!h || !to || (h.kind === 'units' && to === h.from)) return setHand(null);
+      playHand(h, to, drag.at?.x ?? 0, drag.at?.y ?? 0);
+    },
+  });
+
+  const onPieceDown = (space: SpaceId, key: string, x: number, y: number): boolean => {
+    if (!humanActs || !moving || state.pending) return false;
+    const st = stackAt(state, space, key);
+    const ids = st ? grabbable(state, st) : [];
+    if (ids.length === 0) return false;
+    pending.current = { kind: 'units', space, ids };
+    drag.begin(x, y);
+    return true;
+  };
+
+  const onPiece = (e: PieceEvent) => {
+    const st = humanActs && moving && !state.pending ? stackAt(state, e.space, e.stack) : undefined;
+    const ids = st ? grabbable(state, st) : [];
+    const elsewhere = hand?.kind === 'units' && hand.from !== e.space;
+    if (ids.length === 0 || (elsewhere && reach?.has(e.space))) return onSpace(e.space);
+    const mine = hand?.kind === 'units' && hand.from === e.space ? hand.units : [];
+    const inStack = mine.filter((id) => ids.includes(id));
+    const others = mine.filter((id) => !ids.includes(id));
+    const count = e.all ? (e.putBack ? 0 : ids.length) : Math.max(0, Math.min(ids.length, inStack.length + (e.putBack ? -1 : 1)));
+    const next = [...others, ...ids.slice(0, count)];
+    setHand(next.length > 0 ? { kind: 'units', from: e.space, units: next } : null);
   };
 
   const onSpace = (id: SpaceId) => {
-    if (humanActs && state.phase === 'mobilize' && placeType && highlights.has(id)) {
-      act({ type: 'place', unitType: placeType, at: id, count: 1 });
-      return;
-    }
-    if (humanActs && moving && inspect && selected.length > 0 && id !== inspect) {
-      const r = resolveMove(state, intent, inspect, id);
-      if (!r.ok) return showError(r.error);
-      for (const m of r.moves) if (!act({ type: 'move', ...m })) return;
-      const after = current.current.state;
-      const left = after.units.some(
-        (u) => u.at === inspect && u.owner === after.power && u.type !== 'factory' && remainingMove(u) > 0,
-      );
-      inspectSpace(left ? inspect : id);
-      return;
-    }
-    if (id !== inspect) inspectSpace(id);
+    if (humanActs && hand) return playHand(hand, id, last.current.x, last.current.y);
+    const b = state.battles.find((x) => x.space === id && !x.resolved) ?? state.battles.find((x) => x.space === id);
+    if (state.phase === 'combat' && b) return setBattleView(b.id);
   };
 
   const quick = useCallback(
@@ -169,20 +271,19 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
 
   const startTurn = useCallback(() => {
     setGreeted(turnKey);
-    setInspect(CAPITAL_OF[state.power]);
     setFocus({ id: CAPITAL_OF[state.power], nonce: Date.now() });
   }, [turnKey, state.power]);
 
   const onUndo = useCallback(() => {
     if (current.current.undo.length === 0) return;
     commit(undo(current.current));
-    setSelected([]);
+    setHand(null);
     setToast({ text: 'Last move undone', id: Date.now(), info: true });
   }, [commit]);
 
   const endPhase = useCallback(() => {
     setWarnings(null);
-    if (act({ type: 'endPhase' })) setSelected([]);
+    if (act({ type: 'endPhase' })) setHand(null);
   }, [act]);
 
   const onEndPhase = useCallback(() => {
@@ -197,8 +298,11 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
       if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
         e.preventDefault();
         onUndo();
-      } else if (e.key === 'Escape') setSelected([]);
-      else if (e.key === '?') setHelp(true);
+      } else if (e.key === 'Escape') {
+        setHand(null);
+        setRaidChoice(null);
+      } else if (e.key === '?') setOverlay('help');
+      else if (e.key === 'l' && !e.metaKey && !e.ctrlKey) setOverlay((o) => (o === 'log' ? null : 'log'));
       else if (e.key === 'e' && !e.metaKey && !e.ctrlKey && endable) onEndPhase();
     };
     window.addEventListener('keydown', onKey);
@@ -207,10 +311,17 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
 
   const viewed = battleView !== null ? state.battles.find((b) => b.id === battleView) : undefined;
   const stranded = state.pending?.kind === 'landStranded' ? state.pending : null;
-  const focusOn = (id: SpaceId) => {
-    setInspect(id);
-    setFocus({ id, nonce: Date.now() });
-  };
+  const openBattles = state.battles.some((b) => !b.resolved);
+  const hint = !humanActs
+    ? `${powerName(actingPower(state))} (computer) is playing…`
+    : hand?.kind === 'units'
+      ? 'Drop on a highlighted space. Click a piece for one more, right-click to put one back, Esc to let go.'
+      : state.phase === 'combat'
+        ? openBattles
+          ? 'Click a ⚔ to fight that battle.'
+          : 'Every battle is fought. End the phase.'
+        : HINT[state.phase];
+  const style = POWER_STYLE[state.power];
 
   return (
     <div className="app">
@@ -222,37 +333,70 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
         onUndo={onUndo}
         onExport={() => downloadSave(session)}
         onMenu={onMenu}
-        onHelp={() => setHelp(true)}
+        onHelp={() => setOverlay('help')}
+        onLog={() => setOverlay('log')}
       />
       <div className="main">
         <MapView
           state={state}
-          selected={inspect}
+          selected={hand?.kind === 'units' ? hand.from : null}
           highlights={highlights}
+          held={held}
+          tags={tags}
+          route={route}
           onSpace={onSpace}
-          onBackground={() => inspectSpace(null)}
+          onPiece={onPiece}
+          onPieceDown={onPieceDown}
+          onHover={setHover}
+          onBackground={() => setHand(null)}
           focus={focus}
         />
-        <aside className="sidebar">
-          {!humanActs && !state.winner && (
-            <section className="panel thinking">{powerName(actingPower(state))} (computer) is playing…</section>
-          )}
-          {humanActs && !state.winner && <section className="panel guide">{PHASE_GUIDE[state.phase]}</section>}
-          {humanActs && state.phase === 'purchase' && <PurchasePanel state={state} act={act} />}
-          {humanActs && state.phase === 'combatMove' && <AttackPlan forecasts={odds} onFocus={focusOn} />}
-          {state.phase === 'combat' && (
-            <CombatPanel state={state} odds={odds} act={act} onQuick={quick} onView={setBattleView} onFocus={focusOn} />
-          )}
-          {humanActs && state.phase === 'mobilize' && (
-            <MobilizePanel state={state} type={placeType} options={placements} onType={setPlaceType} act={act} />
-          )}
-          {humanActs && moving && !stranded && inspect && (
-            <MovePanel state={state} at={inspect} selected={selected} sbr={sbr} onSelect={setSelected} onSbr={setSbr} />
-          )}
-          {humanActs && moving && !inspect && <section className="panel hint">Click a space to pick units to move.</section>}
-          {inspect && !(humanActs && moving) && <SpaceInfo state={state} id={inspect} />}
-          <LogPanel lines={state.log} />
-        </aside>
+        {hover && !drag.at && !viewed && <SpaceInfo state={state} id={hover} />}
+        {hint && !viewed && <div className="hint-line">{hint}</div>}
+        {humanActs && state.phase === 'purchase' && !greeting && <BuyTray state={state} act={act} />}
+        {humanActs && state.phase === 'mobilize' && !greeting && (
+          <PlaceTray
+            state={state}
+            hand={hand}
+            onPick={(type, count) => setHand(count > 0 ? { kind: 'new', type, count } : null)}
+            onDragStart={(type, x, y) => {
+              pending.current = { kind: 'new', type };
+              drag.begin(x, y);
+            }}
+          />
+        )}
+        {drag.at && hand && (
+          <div className="ghost" style={{ left: drag.at.x, top: drag.at.y }}>
+            <UnitSvg
+              type={hand.kind === 'new' ? hand.type : (state.units.find((u) => u.id === hand.units[0])?.type ?? 'infantry')}
+              color={style.color}
+              size={30}
+            />
+            <span>{hand.kind === 'new' ? hand.count : hand.units.length}</span>
+          </div>
+        )}
+        {raidChoice && (
+          <div className="choice" style={{ left: raidChoice.x, top: raidChoice.y }}>
+            <button
+              className="primary"
+              autoFocus
+              onClick={() => {
+                setRaidChoice(null);
+                moveHand(raidChoice.units, raidChoice.from, raidChoice.to, true);
+              }}
+            >
+              Bomb the industrial complex
+            </button>
+            <button
+              onClick={() => {
+                setRaidChoice(null);
+                moveHand(raidChoice.units, raidChoice.from, raidChoice.to, false);
+              }}
+            >
+              Attack {raidChoice.to}
+            </button>
+          </div>
+        )}
         {viewed && (
           <BattleDialog
             state={state}
@@ -262,6 +406,13 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
             act={act}
             onQuick={quick}
             onClose={() => setBattleView(null)}
+            forecast={odds.find((f) => f.space === viewed.space && f.kind === viewed.kind)}
+            next={nextBattle(state, viewed.id)}
+            onOpen={(id) => {
+              setBattleView(id);
+              const b = state.battles.find((x) => x.id === id);
+              if (b) setFocus({ id: b.space, nonce: Date.now() });
+            }}
           />
         )}
         {stranded && controllers[stranded.power] === 'human' && (
@@ -274,8 +425,9 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
             {toast.text}
           </div>
         )}
-        {greeting && !help && <TurnCard state={state} onStart={startTurn} />}
-        {help && <Help options={state.options} onClose={() => setHelp(false)} />}
+        {greeting && !overlay && <TurnCard state={state} onStart={startTurn} />}
+        {overlay === 'help' && <Help options={state.options} onClose={() => setOverlay(null)} />}
+        {overlay === 'log' && <LogPanel lines={state.log} onClose={() => setOverlay(null)} />}
         {warnings && <ConfirmEnd warnings={warnings} onConfirm={endPhase} onCancel={() => setWarnings(null)} />}
         {state.winner && (
           <div className="winner">

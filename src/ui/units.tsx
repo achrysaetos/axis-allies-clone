@@ -1,5 +1,6 @@
 import { POWERS, UNIT_TYPES } from '../engine/types';
 import type { Power, Unit, UnitType } from '../engine/types';
+import { UnitSvg } from './icons';
 import { POWER_STYLE, UNIT_GLYPH } from './theme';
 
 export function Chip({ owner, type, count, muted }: { owner: Power; type: UnitType; count?: number; muted?: boolean }) {
@@ -10,8 +11,8 @@ export function Chip({ owner, type, count, muted }: { owner: Power; type: UnitTy
       style={{ background: style.color, color: style.ink }}
       title={`${POWER_STYLE[owner].name} ${UNIT_GLYPH[type].name}`}
     >
-      {count !== undefined && count > 1 ? `${count}×` : ''}
-      {UNIT_GLYPH[type].letter}
+      <UnitSvg type={type} color={style.ink} size={18} />
+      {count !== undefined && count > 1 ? count : ''}
     </span>
   );
 }

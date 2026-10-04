@@ -11,8 +11,21 @@ interface View {
   k: number;
 }
 
+export interface PieceEvent {
+  space: SpaceId;
+  stack: string;
+  /** Take or drop the whole stack rather than one piece. */
+  all: boolean;
+  /** Put a piece back instead of taking one. */
+  putBack: boolean;
+}
+
 interface Props extends WorldProps {
   onSpace: (id: SpaceId) => void;
+  onPiece: (e: PieceEvent) => void;
+  /** A press on a piece; returning true means the piece can be dragged, so the map does not pan. */
+  onPieceDown: (space: SpaceId, stack: string, x: number, y: number) => boolean;
+  onHover: (id: SpaceId | null) => void;
   onBackground: () => void;
   /** Changing this value recenters the map on the space. */
   focus: { id: SpaceId; nonce: number } | null;
@@ -20,6 +33,7 @@ interface Props extends WorldProps {
 
 const MAX_ZOOM = 4;
 const DRAG_SLOP = 4;
+const START_ZOOM = 1.35;
 
 function normalize(v: View, w: number, h: number): View {
   const minK = Math.max(w / MAP_WIDTH, h / MAP_HEIGHT, 0.05);
@@ -35,7 +49,14 @@ function centeredOn(id: SpaceId, k: number, w: number, h: number): View {
   return normalize({ tx: w / 2 - x * k, ty: h / 2 - y * k, k }, w, h);
 }
 
-export function MapView({ state, selected, highlights, onSpace, onBackground, focus }: Props) {
+function pieceOf(target: EventTarget): { space: SpaceId; stack: string } | null {
+  const el = (target as Element).closest('[data-stack]');
+  const space = el?.closest('[data-space]')?.getAttribute('data-space');
+  const stack = el?.getAttribute('data-stack');
+  return space && stack ? { space, stack } : null;
+}
+
+export function MapView({ onSpace, onPiece, onPieceDown, onHover, onBackground, focus, ...world }: Props) {
   const box = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 1000, h: 700 });
   const [view, setView] = useState<View | null>(null);
@@ -52,10 +73,10 @@ export function MapView({ state, selected, highlights, onSpace, onBackground, fo
 
   useEffect(() => {
     if (!focus) return;
-    setView((v) => centeredOn(focus.id, v?.k ?? 0.9, size.w, size.h));
+    setView((v) => centeredOn(focus.id, v?.k ?? START_ZOOM, size.w, size.h));
   }, [focus, size.w, size.h]);
 
-  const v = normalize(view ?? centeredOn('Germany', 0.9, size.w, size.h), size.w, size.h);
+  const v = normalize(view ?? centeredOn('Germany', START_ZOOM, size.w, size.h), size.w, size.h);
 
   const zoomAt = (factor: number, px: number, py: number) =>
     setView((cur) => {
@@ -79,13 +100,23 @@ export function MapView({ state, selected, highlights, onSpace, onBackground, fo
     return () => el.removeEventListener('wheel', onWheel);
   }, []);
 
+  const hovered = useRef<SpaceId | null>(null);
   const onPointerDown = (e: ReactPointerEvent) => {
     if (e.button !== 0) return;
+    const p = pieceOf(e.target);
+    if (p && onPieceDown(p.space, p.stack, e.clientX, e.clientY)) {
+      drag.current = null;
+      return;
+    }
     drag.current = { x: e.clientX, y: e.clientY, tx: v.tx, ty: v.ty, moved: false };
   };
   const onPointerMove = (e: ReactPointerEvent) => {
     const d = drag.current;
-    if (!d || (e.buttons & 1) === 0) return;
+    if (!d || (e.buttons & 1) === 0) {
+      const id = (e.target as Element).closest('[data-space]')?.getAttribute('data-space') ?? null;
+      if (id !== hovered.current) onHover((hovered.current = id));
+      return;
+    }
     const dx = e.clientX - d.x;
     const dy = e.clientY - d.y;
     if (!d.moved && Math.hypot(dx, dy) < DRAG_SLOP) return;
@@ -97,15 +128,35 @@ export function MapView({ state, selected, highlights, onSpace, onBackground, fo
     const moved = drag.current?.moved ?? false;
     drag.current = null;
     if (moved) return;
+    const p = pieceOf(e.target);
+    if (p) return onPiece({ ...p, all: e.shiftKey || e.detail === 2, putBack: e.altKey });
     const hit = (e.target as Element).closest('[data-space]');
     const id = hit?.getAttribute('data-space');
     if (id) onSpace(id);
     else onBackground();
   };
 
-  const world = <World state={state} selected={selected} highlights={highlights} />;
+  const onContextMenu = (e: ReactMouseEvent) => {
+    const p = pieceOf(e.target);
+    if (!p) return;
+    e.preventDefault();
+    onPiece({ ...p, all: e.shiftKey, putBack: true });
+  };
+  const onLeave = () => {
+    if (hovered.current !== null) onHover((hovered.current = null));
+  };
+
+  const content = <World {...world} />;
   return (
-    <div ref={box} className="map" onPointerDown={onPointerDown} onPointerMove={onPointerMove} onClick={onClick}>
+    <div
+      ref={box}
+      className="map"
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerLeave={onLeave}
+      onClick={onClick}
+      onContextMenu={onContextMenu}
+    >
       <svg width={size.w} height={size.h}>
         <defs>
           <NeutralPattern />
@@ -114,7 +165,7 @@ export function MapView({ state, selected, highlights, onSpace, onBackground, fo
         <g transform={`translate(${v.tx},${v.ty}) scale(${v.k})`}>
           {[0, MAP_WIDTH, 2 * MAP_WIDTH].map((dx) => (
             <g key={dx} transform={`translate(${dx},0)`}>
-              {world}
+              {content}
             </g>
           ))}
         </g>
