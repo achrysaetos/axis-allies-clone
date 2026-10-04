@@ -3,6 +3,8 @@ import { POWERS } from '../../engine/types';
 import type { Power } from '../../engine/types';
 import type { RoomConnection } from '../../net/client';
 import { NAME_MAX } from '../../net/protocol';
+import { usePush } from '../../net/push';
+import type { Bell } from '../../net/push';
 import type { RoomView } from '../../net/protocol';
 import { POWER_STYLE, powerName } from '../theme';
 
@@ -14,18 +16,21 @@ interface Props {
   onInfo: (text: string) => void;
 }
 
-function askToNotify() {
-  if ('Notification' in window && Notification.permission === 'default') void Notification.requestPermission();
-}
+const BELL_TITLE: Record<Bell, string> = {
+  on: "Notify me when it's my move: on",
+  off: "Notify me when it's my move",
+  blocked: "Notify me when it's my move: blocked in this browser's site settings",
+};
 
 /** Who holds each power; clicking a seat takes, reclaims or releases it. */
 export function SeatStrip({ room, me, status, send, onInfo }: Props) {
   const [asking, setAsking] = useState<{ power: Power; release: boolean } | null>(null);
   const holder = (p: Power) => room.players.find((x) => x.id === room.seats[p]);
+  const push = usePush(me, send);
 
   const take = (power: Power) => {
     setAsking(null);
-    askToNotify();
+    if ('Notification' in window && Notification.permission === 'default') void push.enable();
     send({ t: 'seat', power, take: true });
   };
 
@@ -71,6 +76,23 @@ export function SeatStrip({ room, me, status, send, onInfo }: Props) {
       <button className="link" onClick={copyInvite}>
         Copy invite link
       </button>
+      {me && push.bell && (
+        <button
+          className={`bell ${push.bell}`}
+          title={BELL_TITLE[push.bell]}
+          aria-pressed={push.bell === 'on'}
+          onClick={() => {
+            if (push.bell === 'blocked')
+              onInfo("This browser blocks this site's notifications. Allow them in the site settings.");
+            else void (push.bell === 'on' ? push.disable() : push.enable());
+          }}
+        >
+          <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden>
+            <path d="M8 1.5a4.5 4.5 0 0 0-4.5 4.5v3L2 11.5h12L12.5 9V6A4.5 4.5 0 0 0 8 1.5zM6.2 13a1.8 1.8 0 0 0 3.6 0z" />
+            {push.bell !== 'on' && <path d="M2 2l12 12" strokeWidth="1.6" />}
+          </svg>
+        </button>
+      )}
       {status !== 'open' && <span className="reconnecting">Reconnecting…</span>}
       {asking && (
         <div className="seat-ask">

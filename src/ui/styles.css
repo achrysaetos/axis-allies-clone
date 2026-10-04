@@ -1090,6 +1090,19 @@ button.seat.mine {
 .dot.on {
   background: var(--good);
 }
+button.bell {
+  display: inline-flex;
+  padding: 3px 5px;
+}
+button.bell svg {
+  fill: var(--accent);
+  stroke: var(--accent);
+}
+button.bell.off svg,
+button.bell.blocked svg {
+  fill: var(--dim);
+  stroke: var(--dim);
+}
 .reconnecting {
   padding: 2px 8px;
   border-radius: 10px;
