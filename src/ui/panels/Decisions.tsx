@@ -183,7 +183,7 @@ function UnitChecklist({
   max: number;
   initial: UnitId[];
   title: string;
-  confirm: string;
+  confirm: string | ((chosen: number) => string);
   onConfirm: (ids: UnitId[]) => void;
 }) {
   const [on, setOn] = useState<UnitId[]>(initial);
@@ -215,7 +215,7 @@ function UnitChecklist({
       <div className="row actions">
         <span className="dim grow">Click pieces to choose them.</span>
         <button className="primary" onClick={() => onConfirm(on)}>
-          {confirm}
+          {typeof confirm === 'string' ? confirm : confirm(on.length)}
         </button>
       </div>
     </div>
@@ -272,7 +272,7 @@ export function DecisionView({ state, d, act }: { state: GameState; d: Decision;
           max={d.subs.length}
           initial={[]}
           title={`${powerName(d.power)}: submerge submarines? Chosen subs leave the battle.`}
-          confirm="Confirm"
+          confirm={(n) => (n === 0 ? 'Keep fighting' : `Submerge ${n}`)}
           onConfirm={(units) => act({ type: 'submerge', units })}
         />
       );
