@@ -169,7 +169,7 @@ const PHASE_HINT: typeof HINT = TOUCH
     }
   : HINT;
 const HAND_HINT = TOUCH
-  ? 'Tap a highlighted space to drop. Tap a piece for one more.'
+  ? 'Tap a highlighted space to move there, or the space they came from to put them back. Tap a piece for one more.'
   : 'Drop on a highlighted space. Click a piece for one more, right-click to put one back, Esc to let go.';
 
 type Online = RoomConnection & { room: NonNullable<RoomConnection['room']> };
