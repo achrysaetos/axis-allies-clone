@@ -88,7 +88,7 @@ export function MovePanel({ state, at, selected, sbr, onSelect, onSbr }: Props) 
                 />
                 <Chip owner={c.owner} type={c.type} />
                 <span className="grow">{UNIT_GLYPH[c.type].name}</span>
-                <span className="dim">{c.owner === state.power ? 'offload' : 'allied'}</span>
+                <span className="dim">{c.owner !== state.power ? 'allied' : c.offloadedTo ? `→ ${c.offloadedTo}` : 'offload'}</span>
               </label>
             ))}
           </div>

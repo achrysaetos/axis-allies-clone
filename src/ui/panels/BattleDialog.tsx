@@ -16,7 +16,7 @@ interface Props {
 
 type Status = 'ready' | 'hit' | 'submerged' | 'dead';
 
-const DICE_LABEL: Record<string, string> = { any: 'fire', notAir: 'submarines fire', notSub: 'air fire (cannot hit subs)', aa: 'antiaircraft fire' };
+const DICE_LABEL: Record<string, string> = { any: 'fire', notAir: 'submarines fire', notSub: 'air fire', aa: 'antiaircraft fire' };
 
 const STATUS_ORDER: Status[] = ['ready', 'hit', 'submerged', 'dead'];
 const STATUS_LABEL: Record<Status, string> = { ready: '', hit: 'hit, fires back', submerged: 'submerged', dead: 'lost' };

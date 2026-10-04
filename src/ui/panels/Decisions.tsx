@@ -219,7 +219,7 @@ export function DecisionView({ state, d, act }: { state: GameState; d: Decision;
             </button>
             {d.options.map((o) => (
               <button key={o} onClick={() => act({ type: 'retreat', to: o })}>
-                Retreat to {o}
+                {o === state.battles.find((b) => b.id === d.battle)?.space ? 'Withdraw air units' : `Retreat to ${o}`}
               </button>
             ))}
           </div>
