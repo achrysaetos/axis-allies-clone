@@ -66,7 +66,7 @@ export function CombatPanel({ state, odds, act, onQuick, onView, onFocus }: Prop
                 </button>
                 <button
                   disabled={blocker !== null}
-                  title="Fight it out with the default choices for both sides"
+                  title="Fight automatically: each side loses its cheapest units first, and the attacker retreats if its chance to win drops below 30%"
                   onClick={() => onQuick(b.id)}
                 >
                   Quick

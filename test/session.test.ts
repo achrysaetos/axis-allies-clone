@@ -26,6 +26,17 @@ describe('saved games', () => {
 });
 
 describe('quick resolve', () => {
+  it('retreats an attack whose chance has fallen below the threshold', () => {
+    let s = scenario({ units: [['Germans', 'armour', 'West Russia'], ['Russians', 'infantry', 'Archangel', 6]], dice: [6, 6, 6, 6, 6, 6, 6] });
+    s = move(s, ids(s, 'Germans', 'armour', 'West Russia'), ['West Russia', 'Archangel']);
+    s = ok(s, { type: 'endPhase' });
+    const session = newSession(s, Object.fromEntries(POWERS.map((p) => [p, 'human'])) as Parameters<typeof newSession>[1]);
+    const r = quickResolve(session, s.battles[0]!.id);
+    if (!r.ok) throw new Error(r.error);
+    expect(r.session.state.units.find((u) => u.type === 'armour')!.at).toBe('West Russia');
+    expect(r.session.state.battles[0]!.round).toBe(1);
+  });
+
   it('fights a battle to the end with default choices for both sides', () => {
     let s = scenario({
       units: [

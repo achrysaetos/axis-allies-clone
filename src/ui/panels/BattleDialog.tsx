@@ -186,7 +186,7 @@ export function BattleDialog({ state, battle, fallen, controllers, act, onQuick,
           <>
             <DecisionView state={state} d={mine} act={act} />
             <button className="link" onClick={() => onQuick(battle.id)}>
-              Finish this battle automatically
+              Finish this battle automatically (retreats below 30%)
             </button>
           </>
         ))}
