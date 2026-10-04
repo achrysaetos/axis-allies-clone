@@ -34,17 +34,17 @@ export interface UnitGlyph {
 }
 
 export const UNIT_GLYPH: Record<UnitType, UnitGlyph> = {
-  infantry: { letter: 'I', name: 'Infantry' },
-  artillery: { letter: 'Ar', name: 'Artillery' },
-  armour: { letter: 'T', name: 'Tank' },
-  aaGun: { letter: 'AA', name: 'AA gun' },
+  infantry: { letter: 'INF', name: 'Infantry' },
+  artillery: { letter: 'ART', name: 'Artillery' },
+  armour: { letter: 'TNK', name: 'Tank' },
+  aaGun: { letter: 'AAA', name: 'Antiaircraft gun' },
   factory: { letter: 'IC', name: 'Industrial complex' },
-  fighter: { letter: 'F', name: 'Fighter' },
-  bomber: { letter: 'B', name: 'Bomber' },
-  transport: { letter: 'Tr', name: 'Transport' },
-  submarine: { letter: 'S', name: 'Submarine' },
-  destroyer: { letter: 'D', name: 'Destroyer' },
-  cruiser: { letter: 'C', name: 'Cruiser' },
+  fighter: { letter: 'FTR', name: 'Fighter' },
+  bomber: { letter: 'BMR', name: 'Bomber' },
+  transport: { letter: 'TRN', name: 'Transport' },
+  submarine: { letter: 'SUB', name: 'Submarine' },
+  destroyer: { letter: 'DD', name: 'Destroyer' },
+  cruiser: { letter: 'CA', name: 'Cruiser' },
   carrier: { letter: 'CV', name: 'Carrier' },
   battleship: { letter: 'BB', name: 'Battleship' },
 };

@@ -12,7 +12,7 @@ export interface WorldProps {
   highlights: ReadonlySet<SpaceId>;
 }
 
-const BADGE_W = 30;
+const GAP = 2;
 const BADGE_H = 15;
 const PER_ROW = 3;
 
@@ -44,34 +44,41 @@ function fillOf(state: GameState, s: SpaceShape): string {
   return o ? POWER_STYLE[o].color : 'url(#neutral)';
 }
 
+const label = (st: Stack) => (st.count > 1 ? `${st.count} ${UNIT_GLYPH[st.type].letter}` : UNIT_GLYPH[st.type].letter);
+const widthOf = (text: string) => 6 + text.length * 6.2;
+
 function Badges({ id, x, y, units }: { id: SpaceId; x: number; y: number; units: Unit[] }) {
   const stacks = stacksAt(units);
   if (stacks.length === 0) return null;
-  const rows = Math.ceil(stacks.length / PER_ROW);
+  const rows: Stack[][] = [];
+  for (let i = 0; i < stacks.length; i += PER_ROW) rows.push(stacks.slice(i, i + PER_ROW));
   return (
     <g data-space={id} className="badges">
-      {stacks.map((st, i) => {
-        const row = Math.floor(i / PER_ROW);
-        const inRow = row === rows - 1 ? stacks.length - row * PER_ROW : PER_ROW;
-        const bx = x + ((i % PER_ROW) - (inRow - 1) / 2) * (BADGE_W + 2) - BADGE_W / 2;
-        const by = y + row * (BADGE_H + 2);
-        const style = POWER_STYLE[st.owner];
-        return (
-          <g key={`${st.owner}-${st.type}-${st.carried}`} transform={`translate(${bx},${by})`}>
-            <rect
-              width={BADGE_W}
-              height={BADGE_H}
-              rx={3}
-              fill={style.color}
-              stroke={st.carried ? '#fff' : '#111'}
-              strokeDasharray={st.carried ? '3 2' : undefined}
-              strokeWidth={1}
-            />
-            <text x={BADGE_W / 2} y={11} textAnchor="middle" fill={style.ink} className="badge-text">
-              {st.count > 1 ? `${st.count}${UNIT_GLYPH[st.type].letter}` : UNIT_GLYPH[st.type].letter}
-            </text>
-          </g>
-        );
+      {rows.flatMap((row, r) => {
+        const widths = row.map((st) => widthOf(label(st)));
+        let bx = x - (widths.reduce((a, w) => a + w, 0) + GAP * (row.length - 1)) / 2;
+        return row.map((st, i) => {
+          const w = widths[i]!;
+          const style = POWER_STYLE[st.owner];
+          const at = bx;
+          bx += w + GAP;
+          return (
+            <g key={`${st.owner}-${st.type}-${st.carried}`} transform={`translate(${at},${y + r * (BADGE_H + 2)})`}>
+              <rect
+                width={w}
+                height={BADGE_H}
+                rx={3}
+                fill={style.color}
+                stroke={st.carried ? '#fff' : '#111'}
+                strokeDasharray={st.carried ? '3 2' : undefined}
+                strokeWidth={1}
+              />
+              <text x={w / 2} y={11} textAnchor="middle" fill={style.ink} className="badge-text">
+                {label(st)}
+              </text>
+            </g>
+          );
+        });
       })}
     </g>
   );

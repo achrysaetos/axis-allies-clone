@@ -168,6 +168,7 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
 
   const startTurn = useCallback(() => {
     setGreeted(turnKey);
+    setInspect(CAPITAL_OF[state.power]);
     setFocus({ id: CAPITAL_OF[state.power], nonce: Date.now() });
   }, [turnKey, state.power]);
 
