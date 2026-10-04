@@ -59,8 +59,10 @@ function raidPossible(state: GameState, ids: UnitId[], to: SpaceId): boolean {
 }
 
 const HINT: Partial<Record<GameState['phase'], string>> = {
+  purchase: 'Click units in the chart below to buy them; shift-click buys as many as you can afford. They arrive at Mobilize.',
   combatMove: 'Drag pieces into enemy spaces to attack. Click a piece to pick up one at a time; shift-click takes the stack.',
   noncombatMove: 'Move units that did not attack, and land every plane on friendly ground or a carrier.',
+  mobilize: 'Drag new units from the tray onto a highlighted space. Anything left unplaced is refunded.',
 };
 
 function Game({ session, setSession, onMenu }: { session: Session; setSession: (s: Session) => void; onMenu: () => void }) {

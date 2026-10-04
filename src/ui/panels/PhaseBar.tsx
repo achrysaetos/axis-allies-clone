@@ -72,7 +72,7 @@ export function PhaseBar({ state, controllers, canUndo, onEndPhase, onUndo, onEx
         )}
       </span>
       <button className="primary end" onClick={onEndPhase} disabled={!human || state.pending !== null} title="End phase (E)">
-        {state.phase === 'mobilize' ? 'End turn' : 'End phase'}
+        {state.phase === 'mobilize' ? 'End turn' : `Next: ${PHASE_LABEL[PHASES[PHASES.indexOf(state.phase) + 1]!]}`}
       </button>
     </header>
   );

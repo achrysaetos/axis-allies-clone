@@ -139,11 +139,7 @@ export function PlaceTray({
   if (rows.length === 0) return null;
   return (
     <div className="tray">
-      <div className="tray-head dim">
-        {state.purchases.length === 0
-          ? 'Everything is placed.'
-          : 'Drag new units onto a highlighted space. Anything left unplaced is refunded.'}
-      </div>
+      {state.purchases.length === 0 && <div className="tray-head dim">Everything is placed. End the turn.</div>}
       <div className="tray-cards">
         {rows.map(({ type, left }) => {
           const held = hand?.kind === 'new' && hand.type === type ? hand.count : 0;
