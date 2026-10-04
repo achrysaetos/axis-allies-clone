@@ -146,6 +146,17 @@ const SCENARIOS: Record<string, Scenario> = {
       return s;
     },
   },
+  'no-capital': {
+    summary: 'Soviet purchase with Russia held by Germany, so the Soviet Union cannot buy.',
+    build: () => {
+      const s = board('Russians', 'purchase', [
+        ['Russians', 'infantry', 'Karelia S.S.R.'],
+        ['Germans', 'infantry', 'Russia'],
+      ]);
+      s.owner['Russia'] = 'Germans';
+      return s;
+    },
+  },
   blitz: {
     summary:
       'German combat move: a tank in Belorussia next to an empty Soviet West Russia, with one Soviet infantry in Russia beyond it.',

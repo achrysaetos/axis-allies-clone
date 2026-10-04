@@ -19,3 +19,4 @@ when	what	why	evidence	result
 2026-10-04	Carrier fighters launch into attacks, cargo unloads together, transports auto-sail to a dropped coast	second play-test: dragging a carrier lost its fighters' attack; landings took several drags	unit tests in test/pieces.test.ts	adopted
 2026-10-04	Shore bombardment fires automatically, strongest ships first	bombarding has no cost in 1942 2E, so the prompt was a pure extra step	test/session.test.ts	adopted
 2026-10-04	one-drop-one-undo	A drop that moves several groups is one atomic step and one Undo, in hotseat and online (act carries actions[])	kept: browser shift-drag Poland->Belorussia moved 7 units, one Undo restored all; 2 new room tests
+2026-10-04	fallen-capital-tray	Purchase tray says the capital has fallen instead of showing cards that error on click	kept: no-capital scenario shows message, 0 cards, no contradicting hint

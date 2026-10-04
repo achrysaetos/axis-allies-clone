@@ -7,7 +7,7 @@ In the purchase phase the player buys units with IPCs, limited by the treasury a
 - `buy-units` buys and removes units with tray cards and shows IPCs left and units against capacity. Shift-click buys as many as fit.
 - `buy-limit` disables cards the player cannot afford or has no production room for (FAQ rule).
 - `buy-repair` repairs a damaged complex at 1 IPC per damage point.
-- `buy-no-capital` refuses purchases from a power whose capital is held by the enemy, with an error toast.
+- `buy-no-capital` replaces the purchase chart with `<capital> has fallen, so nothing can be bought or repaired until it is freed.` for a power whose capital the enemy holds, and the hint line is hidden. Reach it with the `no-capital` scenario.
 
 ## How to get to it (user POV)
 

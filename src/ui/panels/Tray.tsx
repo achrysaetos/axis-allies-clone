@@ -1,6 +1,7 @@
 import type { MouseEvent as ReactMouseEvent } from 'react';
-import { STATS, isSea, space } from '../../engine/data';
+import { CAPITAL_OF, STATS, isSea, space } from '../../engine/data';
 import { apply, productionCapacity } from '../../engine/game';
+import { capitalHeld } from '../../engine/queries';
 import { UNIT_TYPES } from '../../engine/types';
 import type { Action, GameState, Purchase, SpaceId, UnitType } from '../../engine/types';
 import { UnitSvg } from '../icons';
@@ -54,6 +55,16 @@ export function BuyTray({ state, act }: { state: GameState; act: (a: Action) => 
     act({ type: 'buy', purchases: next });
   };
   const damaged = state.units.filter((u) => u.type === 'factory' && u.owner === power && u.damage > 0);
+  if (!capitalHeld(state, power))
+    return (
+      <div className="tray">
+        <div className="tray-head">
+          <span>
+            {CAPITAL_OF[power]} has fallen, so nothing can be bought or repaired until it is freed. End the phase to fight on.
+          </span>
+        </div>
+      </div>
+    );
   return (
     <div className="tray">
       <div className="tray-head">

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CAPITAL_OF, isAir } from '../engine/data';
 import { battleBlocker } from '../engine/combat';
 import { actingPower } from '../engine/game';
-import { areAllied, factoryAt } from '../engine/queries';
+import { areAllied, capitalHeld, factoryAt } from '../engine/queries';
 import { POWERS } from '../engine/types';
 import type { Action, Battle, GameState, Power, SpaceId, UnitId, UnitType } from '../engine/types';
 import { MapView } from './map/MapView';
@@ -489,7 +489,9 @@ function Game({
           ? openBattles
             ? 'Click a ⚔ to fight that battle.'
             : 'Every battle is fought. End the phase.'
-          : HINT[state.phase];
+          : state.phase === 'purchase' && !capitalHeld(state, state.power)
+            ? undefined
+            : HINT[state.phase];
   const style = POWER_STYLE[state.power];
 
   return (
