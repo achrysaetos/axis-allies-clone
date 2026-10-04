@@ -57,7 +57,7 @@ export function TurnCard({ state, onStart }: { state: GameState; onStart: () => 
           </div>
         )}
         <button className="primary wide" onClick={onStart} autoFocus>
-          Start turn
+          {state.phase === 'purchase' ? 'Start turn' : 'Continue turn'}
         </button>
       </div>
     </div>

@@ -137,7 +137,7 @@ function rollGroup(s: GameState, b: Battle, side: 'attacker' | 'defender', label
   if (values.length === 0) return 0;
   const rolls = roll(s, values.length);
   const hits = rolls.filter((r, i) => r <= values[i]!).length;
-  b.dice.push({ side, label, rolls, hits });
+  b.dice.push({ round: b.round, side, label, rolls, targets: values, hits });
   return hits;
 }
 
@@ -432,7 +432,7 @@ function bomb(s: GameState, b: Battle): void {
   for (const u of liveAttackers(s, b)) if (u.type === 'fighter') u.retreated = true;
   const bombers = liveAttackers(s, b).filter((u) => u.type === 'bomber');
   const aaRolls = roll(s, bombers.length);
-  b.dice.push({ side: 'defender', label: 'factory air defense', rolls: aaRolls, hits: aaRolls.filter((r) => r === 1).length });
+  b.dice.push({ round: 0, side: 'defender', label: 'factory air defense', rolls: aaRolls, targets: aaRolls.map(() => 1), hits: aaRolls.filter((r) => r === 1).length });
   const shotDown = bombers.filter((_, i) => aaRolls[i] === 1).map((u) => u.id);
   removeUnits(s, shotDown);
   const survivors = bombers.length - shotDown.length;
@@ -441,7 +441,7 @@ function bomb(s: GameState, b: Battle): void {
   const cap = 2 * space(b.space).ipc;
   const applied = Math.min(total, cap - factory.damage);
   factory.damage += applied;
-  b.dice.push({ side: 'attacker', label: 'bombing damage', rolls: dmgRolls, hits: applied });
+  b.dice.push({ round: 0, side: 'attacker', label: 'bombing damage', rolls: dmgRolls, targets: [], hits: applied });
   s.log.push(`Raid on ${b.space}: ${shotDown.length} bombers lost, ${applied} damage`);
   finish(s, b, survivors > 0 ? 'attacker' : 'defender');
 }

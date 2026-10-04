@@ -24,7 +24,7 @@ describe('general combat (p.16-19)', () => {
     });
     s = move(s, [...ids(s, 'Germans', 'infantry', 'West Russia'), ...ids(s, 'Germans', 'artillery', 'West Russia')], ['West Russia', 'Archangel']);
     s = fight(s, 'Archangel');
-    expect(battleIn(s, 'Archangel').dice[0]).toMatchObject({ side: 'attacker', rolls: [2, 2, 6], hits: 1 });
+    expect(battleIn(s, 'Archangel').dice[0]).toMatchObject({ side: 'attacker', rolls: [2, 2, 6], targets: [2, 1, 2], hits: 1 });
     expect(s.owner['Archangel']).toBe('Germans');
   });
 

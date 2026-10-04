@@ -150,6 +150,7 @@ export function parseSession(text: string): Session | string {
     options: { ...DEFAULT_OPTIONS, ...s.options },
     hostileSeaAtTurnStart: s.hostileSeaAtTurnStart ?? [],
     mobilized: s.mobilized ?? [],
+    battles: s.battles.map((b) => ({ ...b, dice: b.dice.map((d) => ({ ...d, round: d.round ?? 1, targets: d.targets ?? [] })) })),
   };
   return newSession(state, controllers);
 }

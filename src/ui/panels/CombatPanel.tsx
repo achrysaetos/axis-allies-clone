@@ -12,7 +12,6 @@ interface Props {
 }
 
 const KIND_LABEL: Record<Battle['kind'], string> = { land: 'Land', sea: 'Sea', sbr: 'Bombing raid' };
-const TIER_LABEL: Record<Battle['tier'], string> = { 0: 'SBR', 1: 'Amphibious', 2: 'General' };
 
 function outcome(b: Battle): string {
   if (b.skipped) return 'skipped';
@@ -38,7 +37,7 @@ export function CombatPanel({ state, odds, act, onView, onFocus }: Props) {
               {b.space}
             </button>
             <span className="tag">{KIND_LABEL[b.kind]}</span>
-            <span className="tag dim">{TIER_LABEL[b.tier]}</span>
+            {b.tier === 1 && b.kind === 'land' && <span className="tag dim">Amphibious</span>}
             {b.optional && !b.resolved && <span className="tag">optional</span>}
             {forecast && state.activeBattle !== b.id && <OddsTag f={forecast} />}
             {state.activeBattle === b.id ? (

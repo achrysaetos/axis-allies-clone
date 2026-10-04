@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { STATS } from '../../engine/data';
+import { SIDE, STATS } from '../../engine/data';
 import { assignable, autoCasualties } from '../../engine/casualties';
 import type { Action, Decision, GameState, HitCategory, Unit, UnitId } from '../../engine/types';
 import { casualtyPool, unreachable } from '../session';
@@ -13,9 +13,9 @@ const unitOf = (state: GameState, id: UnitId) => state.units.find((u) => u.id ==
 
 const CATEGORY_LABEL: Record<HitCategory, string> = {
   any: 'any unit',
-  notAir: 'not air units',
-  notSub: 'not submarines',
-  air: 'air units only',
+  notAir: 'a ship or land unit (submarines cannot hit planes)',
+  notSub: 'anything but a submarine (planes need a destroyer to hit subs)',
+  air: 'a plane',
 };
 
 const REASON_LABEL = { aa: 'Antiaircraft fire', bombard: 'Shore bombardment', subStrike: 'Surprise strike', fire: 'Combat fire' };
@@ -58,8 +58,9 @@ export function CasualtyPicker({ state, d, act }: { state: GameState; d: Of<'cas
   return (
     <div className="decision">
       <div className="decision-title">
-        {REASON_LABEL[d.reason]}: assign {need} hit{need === 1 ? '' : 's'} to {powerName(d.power)}
+        {powerName(d.power)} ({SIDE[d.power]} player): choose {need} casualt{need === 1 ? 'y' : 'ies'}
       </div>
+      <div className="dim">{REASON_LABEL[d.reason]}</div>
       <div className="dim">{d.groups.map((g) => `${g.hits} × ${CATEGORY_LABEL[g.category]}`).join(', ')}</div>
       {buckets.map((bk) => (
         <div key={bk.key} className="row">

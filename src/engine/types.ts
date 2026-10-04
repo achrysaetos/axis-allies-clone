@@ -112,7 +112,8 @@ export interface Battle {
   /** Adjacent spaces attacking land or sea units entered from. */
   origins: SpaceId[];
   queue: PendingHits[];
-  dice: { side: 'attacker' | 'defender'; label: string; rolls: number[]; hits: number }[];
+  /** Each roll hits when it is at or below its target; damage rolls have no targets. */
+  dice: { round: number; side: 'attacker' | 'defender'; label: string; rolls: number[]; targets: number[]; hits: number }[];
   resolved: boolean;
   skipped: boolean;
   winner: 'attacker' | 'defender' | 'none' | null;

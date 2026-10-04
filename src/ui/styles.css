@@ -649,3 +649,15 @@ table.buy tr.picked td {
   font-size: 11px;
   margin-top: 6px;
 }
+.die.hit {
+  background: #e5634d;
+  color: #fff;
+  font-weight: 700;
+}
+.dice-round {
+  margin: 6px 0 2px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--dim);
+}

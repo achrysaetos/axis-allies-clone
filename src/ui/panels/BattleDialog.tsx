@@ -16,12 +16,29 @@ interface Props {
 
 type Status = 'ready' | 'hit' | 'submerged' | 'dead';
 
-const DICE_LABEL: Record<string, string> = { any: 'fire', notAir: 'submarines fire', notSub: 'air fire', aa: 'antiaircraft fire' };
+const DICE_LABEL: Record<string, string> = {
+  any: 'fire',
+  notAir: 'submarines fire',
+  notSub: 'air fire',
+  aa: 'antiaircraft fire',
+};
 
 const STATUS_ORDER: Status[] = ['ready', 'hit', 'submerged', 'dead'];
 const STATUS_LABEL: Record<Status, string> = { ready: '', hit: 'hit, fires back', submerged: 'submerged', dead: 'lost' };
 
-function Side({ title, ids, state, battle, fallen }: { title: string; ids: UnitId[]; state: GameState; battle: Battle; fallen: Unit[] }) {
+function Side({
+  title,
+  ids,
+  state,
+  battle,
+  fallen,
+}: {
+  title: string;
+  ids: UnitId[];
+  state: GameState;
+  battle: Battle;
+  fallen: Unit[];
+}) {
   const rows: { status: Status; unit: Unit }[] = [];
   for (const id of ids) {
     const live = state.units.find((u) => u.id === id);
@@ -41,7 +58,10 @@ function Side({ title, ids, state, battle, fallen }: { title: string; ids: UnitI
   return (
     <div className="side">
       <div className="side-title">
-        {title} {owners.map((p) => <PowerTag key={p} power={p} />)}
+        {title}{' '}
+        {owners.map((p) => (
+          <PowerTag key={p} power={p} />
+        ))}
       </div>
       {STATUS_ORDER.map((status) => {
         const here = rows.filter((r) => r.status === status);
@@ -51,7 +71,8 @@ function Side({ title, ids, state, battle, fallen }: { title: string; ids: UnitI
             {POWERS.flatMap((owner) =>
               UNIT_TYPES.map((type) => {
                 const n = here.filter((r) => r.unit.owner === owner && r.unit.type === type).length;
-                const damaged = status === 'ready' && here.some((r) => r.unit.owner === owner && r.unit.type === type && r.unit.damage > 0);
+                const damaged =
+                  status === 'ready' && here.some((r) => r.unit.owner === owner && r.unit.type === type && r.unit.damage > 0);
                 return n > 0 ? (
                   <span key={`${owner}-${type}`} title={damaged ? 'damaged' : undefined}>
                     <Chip owner={owner} type={type} count={n} muted={status === 'dead'} />
@@ -90,29 +111,52 @@ export function BattleDialog({ state, battle, fallen, controllers, act, onClose 
       <div className="dice-log">
         {battle.dice.length === 0 && <div className="dim">No dice rolled yet.</div>}
         {battle.dice.map((r, i) => (
-          <div key={i} className={`dice-row ${r.side}`}>
-            <span className="dice-label">
-              {r.side === 'attacker' ? battle.attacker : 'Defender'} · {DICE_LABEL[r.label] ?? r.label}
-            </span>
-            <span className="dice">
-              {r.rolls.map((v, j) => (
-                <span key={j} className="die" style={{ borderColor: r.side === 'attacker' ? POWER_STYLE[battle.attacker].color : '#666' }}>
-                  {v}
-                </span>
-              ))}
-            </span>
-            <span className="hits">
-              {r.hits} {r.label === 'bombing damage' ? 'damage' : r.hits === 1 ? 'hit' : 'hits'}
-            </span>
+          <div key={i}>
+            {(i === 0 || battle.dice[i - 1]!.round !== r.round) && (
+              <div className="dice-round">{r.round === 0 ? 'Before the battle' : `Round ${r.round}`}</div>
+            )}
+            <div className={`dice-row ${r.side}`}>
+              <span className="dice-label">
+                {r.side === 'attacker' ? powerName(battle.attacker) : 'Defender'} · {DICE_LABEL[r.label] ?? r.label}
+              </span>
+              <span className="dice">
+                {r.rolls.map((v, j) => {
+                  const target = r.targets[j];
+                  const hit = target !== undefined && v <= target;
+                  return (
+                    <span
+                      key={j}
+                      className={hit ? 'die hit' : 'die'}
+                      title={target !== undefined ? `needed ${target} or less` : undefined}
+                      style={{ borderColor: r.side === 'attacker' ? POWER_STYLE[battle.attacker].color : '#666' }}
+                    >
+                      {v}
+                    </span>
+                  );
+                })}
+              </span>
+              <span className="hits">
+                {r.hits} {r.label === 'bombing damage' ? 'damage' : r.hits === 1 ? 'hit' : 'hits'}
+              </span>
+            </div>
           </div>
         ))}
       </div>
       {battle.resolved && (
         <div className={`result ${battle.winner === 'attacker' ? 'good' : 'bad'}`}>
-          {battle.winner === 'attacker' ? `${battle.attacker} win` : battle.winner === 'defender' ? 'Defender holds' : 'No decision'}
+          {battle.winner === 'attacker'
+            ? `${powerName(battle.attacker)} wins`
+            : battle.winner === 'defender'
+              ? 'The defender holds'
+              : 'No decision'}
         </div>
       )}
-      {mine && (waitingOnAi ? <div className="dim">Waiting for {powerName(mine.power)} (computer)…</div> : <DecisionView state={state} d={mine} act={act} />)}
+      {mine &&
+        (waitingOnAi ? (
+          <div className="dim">Waiting for {powerName(mine.power)} (computer)…</div>
+        ) : (
+          <DecisionView state={state} d={mine} act={act} />
+        ))}
     </div>
   );
 }
