@@ -28,7 +28,7 @@ const spaces = territories.map((t) => {
   const o = att ? options(att) : {};
   const water = t.water === 'true';
   return {
-    id: t.name,
+    id: t.name!,
     water,
     ipc: Number(o.production ?? 0),
     originalOwner: ownerOf.get(t.name) ?? null,
@@ -39,8 +39,8 @@ const spaces = territories.map((t) => {
 });
 const byId = new Map(spaces.map((s) => [s.id, s]));
 for (const c of connections) {
-  const a = byId.get(c.t1);
-  const b = byId.get(c.t2);
+  const a = byId.get(c.t1!);
+  const b = byId.get(c.t2!);
   if (!a || !b) throw new Error(`bad connection ${c.t1} - ${c.t2}`);
   if (!a.neighbors.includes(b.id)) a.neighbors.push(b.id);
   if (!b.neighbors.includes(a.id)) b.neighbors.push(a.id);
@@ -50,7 +50,7 @@ for (const s of spaces) s.neighbors.sort();
 const canalGroups = new Map<string, { name: string; seaZones: string[]; landTerritories: string[] }>();
 for (const a of attachments.filter((x) => x.javaClass?.endsWith('CanalAttachment'))) {
   const o = options(a);
-  const g = canalGroups.get(o.canalName!) ?? { name: o.canalName!, seaZones: [], landTerritories: o.landTerritories!.split(':') };
+  const g = canalGroups.get(o.canalName!) ?? { name: o.canalName!, seaZones: [] as string[], landTerritories: o.landTerritories!.split(':') };
   g.seaZones.push(a.attachTo!);
   canalGroups.set(o.canalName!, g);
 }
