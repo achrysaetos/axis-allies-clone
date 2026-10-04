@@ -630,3 +630,8 @@ table.buy tr.picked td {
   stroke-width: 2.5px;
   letter-spacing: 0.2px;
 }
+.panel.guide {
+  color: var(--dim);
+  line-height: 1.45;
+  border-left: 3px solid var(--accent);
+}

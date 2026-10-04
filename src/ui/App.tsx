@@ -15,7 +15,7 @@ import { PurchasePanel } from './panels/PurchasePanel';
 import { SetupScreen } from './panels/SetupScreen';
 import { SpaceInfo } from './panels/SpaceInfo';
 import { TurnCard } from './panels/TurnCard';
-import { powerName } from './theme';
+import { PHASE_GUIDE, powerName } from './theme';
 import { reachable, resolveMove } from './paths';
 import { act as step, aiBurst, autosave, downloadSave, loadAutosave, undo } from './session';
 import type { Session } from './session';
@@ -206,6 +206,7 @@ function Game({ initial, onMenu }: { initial: Session; onMenu: () => void }) {
           {!humanActs && !state.winner && (
             <section className="panel thinking">{powerName(actingPower(state))} (computer) is playing…</section>
           )}
+          {humanActs && !state.winner && <section className="panel guide">{PHASE_GUIDE[state.phase]}</section>}
           {humanActs && state.phase === 'purchase' && <PurchasePanel state={state} act={act} />}
           {state.phase === 'combat' && <CombatPanel state={state} act={act} onView={setBattleView} onFocus={focusOn} />}
           {humanActs && state.phase === 'mobilize' && (
