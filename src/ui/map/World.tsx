@@ -101,10 +101,10 @@ function routePoints(route: SpaceId[]): [number, number][] {
   return pts;
 }
 
-function Route({ route }: { route: SpaceId[] }) {
+function Route({ route, className = 'route' }: { route: SpaceId[]; className?: string }) {
   const pts = routePoints(route);
   return (
-    <g className="route" pointerEvents="none">
+    <g className={className} pointerEvents="none">
       <polyline points={pts.map((p) => p.join(',')).join(' ')} />
       {pts.slice(1).map(([x, y], i) => (
         <circle key={i} cx={x} cy={y} r={i === pts.length - 2 ? 6 : 3.5} />
@@ -207,6 +207,11 @@ export const World = memo(function World({ state, selected, highlights, held, ta
     else byAt.set(u.at, [u]);
   }
   const battles = new Set(state.battles.filter((b) => !b.resolved).map((b) => b.space));
+  const landings = new Set(
+    state.units
+      .filter((u) => u.carriedBy !== null && u.offloadedTo !== null && u.at !== u.offloadedTo)
+      .map((u) => `${u.at}>${u.offloadedTo}`),
+  );
   return (
     <g>
       {SHAPES.map((s) => (
@@ -238,6 +243,9 @@ export const World = memo(function World({ state, selected, highlights, held, ta
       ))}
       {SHAPES.filter((s) => tags.has(s.id)).map((s) => (
         <Tag key={`t-${s.id}`} x={s.center[0]} y={s.center[1] - (s.water ? 30 : 44)} {...tags.get(s.id)!} />
+      ))}
+      {[...landings].map((l) => (
+        <Route key={l} route={l.split('>')} className="route landing" />
       ))}
       {route && route.length > 1 && <Route route={route} />}
     </g>

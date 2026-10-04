@@ -40,4 +40,24 @@ describe('pieces on the board', () => {
     expect(stacks.map((st) => [st.units.length, st.spent])).toEqual([[3, true]]);
     expect(grabbable(s, stacks[0]!)).toEqual([]);
   });
+
+  it('cargo aboard a transport can be picked up and dropped on a coast to land it', () => {
+    let s = scenario({
+      power: 'British',
+      phase: 'noncombatMove',
+      units: [
+        ['British', 'transport', '6 Sea Zone'],
+        ['British', 'infantry', 'United Kingdom'],
+      ],
+    });
+    s = move(s, ids(s, 'British', 'infantry', 'United Kingdom'), ['United Kingdom', '6 Sea Zone']);
+    const cargo = stacksAt(
+      s,
+      s.units.filter((u) => u.at === '6 Sea Zone'),
+    ).find((st) => st.carried)!;
+
+    expect(cargo.spent).toBe(false);
+    const r = dropMoves(s, grabbable(s, cargo), '6 Sea Zone', 'United Kingdom', false);
+    expect(r.ok).toBe(true);
+  });
 });

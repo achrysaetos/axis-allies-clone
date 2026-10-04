@@ -1,3 +1,4 @@
+import { space } from '../engine/data';
 import { moveBlocker } from '../engine/movement';
 import { POWERS, UNIT_TYPES } from '../engine/types';
 import type { GameState, Power, SpaceId, Unit, UnitId, UnitType } from '../engine/types';
@@ -20,9 +21,17 @@ export type Hand = { kind: 'units'; from: SpaceId; units: UnitId[] } | { kind: '
 
 const isCarried = (u: Unit) => u.carriedBy !== null && u.type !== 'fighter';
 
+/** Cargo cannot sail on its own, but the player can still lift it off the transport onto a coast. */
+const offloadable = (state: GameState, u: Unit) =>
+  u.owner === state.power && isCarried(u) && u.offloadedTo === null && space(u.at).water;
+
+/** Whether the moving power can pick this unit up right now. */
+export const pickable = (state: GameState, u: Unit) =>
+  (state.phase === 'combatMove' || state.phase === 'noncombatMove') && (moveBlocker(state, u) === null || offloadable(state, u));
+
 export function stacksAt(state: GameState, units: Unit[]): Stack[] {
   const moving = state.phase === 'combatMove' || state.phase === 'noncombatMove';
-  const spent = (u: Unit) => moving && u.owner === state.power && moveBlocker(state, u) !== null;
+  const spent = (u: Unit) => moving && u.owner === state.power && !pickable(state, u);
   const out: Stack[] = [];
   for (const owner of POWERS)
     for (const type of UNIT_TYPES) {
@@ -48,7 +57,7 @@ export function stackAt(state: GameState, at: SpaceId, key: string): Stack | und
 
 /** Units the moving power may pick up from a stack; empty when the stack is not theirs to move. */
 export function grabbable(state: GameState, s: Stack): UnitId[] {
-  return s.units.filter((u) => moveBlocker(state, u) === null).map((u) => u.id);
+  return s.units.filter((u) => pickable(state, u)).map((u) => u.id);
 }
 
 /**

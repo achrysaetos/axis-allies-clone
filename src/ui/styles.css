@@ -928,3 +928,11 @@ kbd {
   margin: 8px 0 4px;
   font-size: 11px;
 }
+.route.landing polyline {
+  stroke: #ffffff;
+  stroke-width: 2.5;
+  opacity: 0.8;
+}
+.route.landing circle {
+  fill: #ffffff;
+}
