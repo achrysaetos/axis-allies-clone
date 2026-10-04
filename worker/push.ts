@@ -97,6 +97,26 @@ export async function encrypt(plaintext: Uint8Array, to: PushSubscriptionKeys['k
   return concat(e.salt, rs, Uint8Array.of(asPublic.length), asPublic, new Uint8Array(ciphertext));
 }
 
+/** The browser's side of `encrypt` (RFC 8291 section 3), given the subscription's private key; for tests and verify scripts. */
+export async function decrypt(body: Bytes, ua: CryptoKeyPair, auth: Bytes): Promise<string> {
+  const salt = body.slice(0, 16);
+  const idlen = body[20]!;
+  const asPublic = body.slice(21, 21 + idlen);
+  const uaPublic = new Uint8Array((await crypto.subtle.exportKey('raw', ua.publicKey)) as ArrayBuffer);
+  const as = await crypto.subtle.importKey('raw', asPublic, { name: 'ECDH', namedCurve: 'P-256' }, false, []);
+  const agreement = { name: 'ECDH', public: as };
+  const ecdh = new Uint8Array(await crypto.subtle.deriveBits(agreement, ua.privateKey, 256));
+  const ikm = await hkdf(auth, ecdh, concat(utf8('WebPush: info\0'), uaPublic, asPublic), 32);
+  const cek = await hkdf(salt, ikm, utf8('Content-Encoding: aes128gcm\0'), 16);
+  const iv = await hkdf(salt, ikm, utf8('Content-Encoding: nonce\0'), 12);
+  const key = await crypto.subtle.importKey('raw', cek, 'AES-GCM', false, ['decrypt']);
+  const padded = new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, body.slice(21 + idlen)));
+  let end = padded.length - 1;
+  while (padded[end] === 0) end--;
+  if (padded[end] !== 2) throw new Error('the record does not end with the 0x02 delimiter');
+  return new TextDecoder().decode(padded.slice(0, end));
+}
+
 export async function pushRequest(
   to: PushSubscriptionKeys,
   payload: string,

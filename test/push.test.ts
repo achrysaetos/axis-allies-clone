@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { b64url, encrypt, fromB64url, loadVapid, pushRequest, vapidAuthorization } from '../worker/push';
+import { b64url, decrypt, encrypt, fromB64url, loadVapid, pushRequest, vapidAuthorization } from '../worker/push';
 import type { Ephemeral } from '../worker/push';
 import type { PushPayload, PushSubscriptionKeys } from '../src/net/protocol';
 
-type Bytes = Uint8Array<ArrayBuffer>;
 const ECDH = { name: 'ECDH', namedCurve: 'P-256' } as const;
 const ES256 = { name: 'ECDSA', namedCurve: 'P-256', hash: 'SHA-256' } as const;
 const encoder = new TextEncoder();
@@ -27,31 +26,6 @@ async function rfcEphemeral(): Promise<Ephemeral> {
   const privateKey = await crypto.subtle.importKey('jwk', jwk, ECDH, true, ['deriveBits']);
   const publicKey = await crypto.subtle.importKey('raw', raw, ECDH, true, []);
   return { salt: fromB64url(RFC.salt), keys: { privateKey, publicKey } };
-}
-
-async function hkdf(salt: Bytes, ikm: Bytes, info: string | Bytes, bytes: number): Promise<Bytes> {
-  const key = await crypto.subtle.importKey('raw', ikm, 'HKDF', false, ['deriveBits']);
-  const i = typeof info === 'string' ? encoder.encode(info) : info;
-  return new Uint8Array(await crypto.subtle.deriveBits({ name: 'HKDF', hash: 'SHA-256', salt, info: i }, key, bytes * 8));
-}
-
-/** What the browser does on receipt (RFC 8291 section 3), with the subscription's private key. */
-async function decrypt(body: Bytes, ua: CryptoKeyPair, auth: Bytes): Promise<string> {
-  const salt = body.slice(0, 16);
-  const idlen = body[20]!;
-  const asPublic = body.slice(21, 21 + idlen);
-  const uaPublic = new Uint8Array(await crypto.subtle.exportKey('raw', ua.publicKey));
-  const as = await crypto.subtle.importKey('raw', asPublic, ECDH, false, []);
-  const ecdh = new Uint8Array(await crypto.subtle.deriveBits({ name: 'ECDH', public: as }, ua.privateKey, 256));
-  const ikm = await hkdf(auth, ecdh, new Uint8Array([...encoder.encode('WebPush: info\0'), ...uaPublic, ...asPublic]), 32);
-  const cek = await hkdf(salt, ikm, 'Content-Encoding: aes128gcm\0', 16);
-  const iv = await hkdf(salt, ikm, 'Content-Encoding: nonce\0', 12);
-  const key = await crypto.subtle.importKey('raw', cek, 'AES-GCM', false, ['decrypt']);
-  const padded = new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, body.slice(21 + idlen)));
-  let end = padded.length - 1;
-  while (padded[end] === 0) end--;
-  expect(padded[end], 'the last record ends with the 0x02 delimiter').toBe(2);
-  return text(padded.slice(0, end));
 }
 
 async function newVapidEnv() {
