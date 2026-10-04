@@ -6,14 +6,17 @@
   "scripts": {
     "gen": "tsx scripts/gen-data.ts",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p worker",
     "fuzz": "tsx scripts/fuzz.ts",
     "dev": "vite",
     "build": "vite build",
-    "format": "prettier --write src test scripts",
-    "format:check": "prettier --check src test scripts"
+    "dev:worker": "wrangler dev --port 8787",
+    "deploy": "vite build && wrangler deploy",
+    "format": "prettier --write src test scripts worker",
+    "format:check": "prettier --check src test scripts worker"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261004.1",
     "@types/node": "^26.6.4",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
@@ -23,7 +26,8 @@
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
     "vite": "^8.3.2",
-    "vitest": "^5.0.3"
+    "vitest": "^5.0.3",
+    "wrangler": "^4.147.0"
   },
   "dependencies": {
     "react": "^19.3.0",
