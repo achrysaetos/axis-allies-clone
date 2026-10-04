@@ -414,6 +414,8 @@ function Game({
     if (humanActs && hand) return playHand(hand, id, last.current.x, last.current.y);
     const b = state.battles.find((x) => x.space === id && !x.resolved) ?? state.battles.find((x) => x.space === id);
     if (state.phase === 'combat' && b) return setBattleView(b.id);
+    // A touch screen has no hover, so a tap is how a player reads a space.
+    setHover(id);
   };
 
   const quick = useCallback(
