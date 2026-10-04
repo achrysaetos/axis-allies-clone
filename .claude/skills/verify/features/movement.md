@@ -11,7 +11,7 @@ In the combat move and noncombat move phases the player drags pieces from a terr
 - `move-load` loads land units by dragging them onto the sea zone.
 - `move-offload` offloads cargo by dragging the cargo piece (dashed outline) onto land, as an amphibious assault in combat move or into friendly land in noncombat.
 - `move-raid-choice` asks "Bomb the industrial complex" or "Attack <space>" when bombers are dropped on an enemy industrial complex in combat move.
-- `move-undo` reverts the last engine move of the current phase, with the toast `Last move undone`. One drag can make several engine moves (planes, then land units, or a transport sailing, then its cargo landing), and each one is its own Undo.
+- `move-undo` reverts the last engine move of the current phase, with the toast `Last move undone`. One drag is one Undo, even when it moves planes and land units or sails a transport and lands its cargo.
 - `move-refuse` rejects an illegal drop with an error toast naming the reason, and rejects ending combat move while a unit sits in friendly territory.
 
 ## How to get to it (user POV)
@@ -30,7 +30,7 @@ Preconditions:
 - For `move-blitz`, the `blitz` scenario is loaded (German tank in Belorussia, empty Soviet West Russia, one Soviet infantry in Russia). Pan the map so Russia is on screen.
 
 - **Mixed attack.** Shift-drag a `[data-space="Karelia S.S.R."] [data-stack]` piece onto Belorussia with synthetic shift `PointerEvent`s (see SKILL.md). Karelia's infantry, artillery and fighter appear in Belorussia, and a `.map-tag` near `98%` appears over it.
-- **Undo.** Press `Undo`. The toast reads `Last move undone` and only the fighter is still in Belorussia. Press `Undo` again and everything is back in `Karelia S.S.R.`.
+- **Undo.** Press `Undo` once. The toast reads `Last move undone`, everything is back in `Karelia S.S.R.`, and `Undo` is disabled.
 - **Blitz.** In `blitz`, `left_click_drag` the tank from Belorussia onto the Soviet infantry in Russia. The tank ends in Russia with `blitzed: true`, `owner["West Russia"]` becomes `Germans`, and the log reads `Germans captures West Russia`.
 - **Amphibious offload.** In `amphibious`, find the cargo piece in `data-space="8 Sea Zone"` (a `data-stack` whose third field is `1`, drawn with a dashed outline) and shift-drag it onto France to land everything aboard, or plain-drag to land only that type. The cargo stays aboard with `offloadedTo: "France"` until the battle, and a white landing arrow (`.route.landing`) runs to the beach. Ending combat move opens the France battle.
 - **Pick up.** Click a piece in `Russia`. One unit is held (a gold `1` badge, `.picked-count`), reachable spaces get yellow dashed highlights (`path.highlight`), and the hint reads `Drop on a highlighted space…`. Press Esc and the highlights and badge clear.
