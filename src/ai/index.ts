@@ -27,10 +27,10 @@ function remember(d: Draft): void {
   plans.set(fingerprint(d.state), { type: 'endPhase' });
 }
 
-function planned(s: GameState, planner: (s: GameState) => Draft): Action {
+function planned(s: GameState, planner: (s: GameState) => Draft, fresh = false): Action {
   const key = fingerprint(s);
-  const cached = plans.get(key);
-  if (cached && apply(s, cached).ok) return cached;
+  const cached = fresh ? undefined : plans.get(key);
+  if (cached) return cached;
   remember(planner(s));
   return plans.get(key) ?? { type: 'endPhase' };
 }
@@ -61,17 +61,17 @@ function fallback(s: GameState): Action {
   }
 }
 
-function choose(s: GameState): Action {
+function choose(s: GameState, fresh = false): Action {
   if (s.pending) return decide(s, s.pending);
   switch (s.phase) {
     case 'purchase':
       return purchaseAction(s);
     case 'combatMove':
-      return planned(s, planCombatMove);
+      return planned(s, planCombatMove, fresh);
     case 'combat':
       return nextBattle(s);
     case 'noncombatMove':
-      return planned(s, planNoncombat);
+      return planned(s, planNoncombat, fresh);
     case 'mobilize':
       return mobilizeAction(s);
   }
@@ -82,6 +82,8 @@ export function aiAction(state: GameState): Action {
   if (state.winner) throw new Error('the game is over');
   const a = choose(state);
   if (ok(state, a)) return a;
+  const replanned = choose(state, true);
+  if (ok(state, replanned)) return replanned;
   const f = fallback(state);
   if (ok(state, f)) return f;
   throw new Error(`AI found no legal action for ${state.power} in ${state.phase}: ${JSON.stringify(a)}`);

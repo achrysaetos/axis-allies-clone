@@ -36,6 +36,8 @@ interface Outcome {
   aiCalls: number;
   aiMs: number;
   slowest: number;
+  /** Aircraft of AI-controlled powers lost for lack of a landing. */
+  crashed: number;
 }
 
 const VICTORY = new Set(VICTORY_CITIES);
@@ -54,10 +56,11 @@ function play(seed: number, aiSide: Side | 'both'): Outcome {
   let aiMs = 0;
   let slowest = 0;
   let steps = 0;
+  let crashed = 0;
   const recent: Action[] = [];
   let phaseStart = s;
   while (!s.winner && s.round <= maxRounds) {
-    if (++steps > 200000) return { seed, rounds: s.round, winner: null, leader: leaderOf(s), failure: 'no progress', aiCalls, aiMs, slowest };
+    if (++steps > 200000) return { seed, rounds: s.round, winner: null, leader: leaderOf(s), failure: 'no progress', aiCalls, aiMs, slowest, crashed };
     const actor = actingPower(s);
     const byAi = aiSide === 'both' || SIDE[actor] === aiSide;
     let a: Action;
@@ -66,7 +69,7 @@ function play(seed: number, aiSide: Side | 'both'): Outcome {
       try {
         a = aiAction(s);
       } catch (e) {
-        return { seed, rounds: s.round, winner: null, leader: leaderOf(s), failure: `AI threw: ${(e as Error).message}`, aiCalls, aiMs, slowest };
+        return { seed, rounds: s.round, winner: null, leader: leaderOf(s), failure: `AI threw: ${(e as Error).message}`, aiCalls, aiMs, slowest, crashed };
       }
       const ms = performance.now() - t0;
       aiCalls++;
@@ -84,17 +87,22 @@ function play(seed: number, aiSide: Side | 'both'): Outcome {
         }
       }
       const who = byAi ? 'AI' : 'random';
-      return { seed, rounds: s.round, winner: null, leader: leaderOf(s), failure: `${who} illegal ${JSON.stringify(a)}: ${r.error} (${s.power} ${s.phase})\nrecent: ${JSON.stringify(recent.slice(-5))}`, aiCalls, aiMs, slowest };
+      return { seed, rounds: s.round, winner: null, leader: leaderOf(s), failure: `${who} illegal ${JSON.stringify(a)}: ${r.error} (${s.power} ${s.phase})\nrecent: ${JSON.stringify(recent.slice(-5))}`, aiCalls, aiMs, slowest, crashed };
     }
     const before = s;
     s = r.state;
+    const aiTurn = aiSide === 'both' || SIDE[before.power] === aiSide;
+    if (aiTurn && a.type === 'endPhase' && before.phase === 'mobilize') {
+      const line = s.log.slice(-4).find((l) => l.includes(`${before.power} air units had nowhere to land`));
+      if (line) crashed += Number(line.split(' ')[0]);
+    }
     recent.push(a);
     if (s.phase === 'combatMove' && before.phase !== 'combatMove') phaseStart = s;
     const v = checkInvariants(s);
     if (v.length > 0)
-      return { seed, rounds: s.round, winner: null, leader: leaderOf(s), failure: `invariant after ${JSON.stringify(a)} (${before.power} ${before.phase}): ${v.slice(0, 3).join('; ')}`, aiCalls, aiMs, slowest };
+      return { seed, rounds: s.round, winner: null, leader: leaderOf(s), failure: `invariant after ${JSON.stringify(a)} (${before.power} ${before.phase}): ${v.slice(0, 3).join('; ')}`, aiCalls, aiMs, slowest, crashed };
   }
-  return { seed, rounds: Math.min(s.round, maxRounds), winner: s.winner, leader: leaderOf(s), aiCalls, aiMs, slowest };
+  return { seed, rounds: Math.min(s.round, maxRounds), winner: s.winner, leader: leaderOf(s), aiCalls, aiMs, slowest, crashed };
 }
 
 function report(label: string, aiSide: Side | 'both'): void {
@@ -110,11 +118,12 @@ function report(label: string, aiSide: Side | 'both'): void {
   }
   const calls = outcomes.reduce((n, o) => n + o.aiCalls, 0);
   const ms = outcomes.reduce((n, o) => n + o.aiMs, 0);
+  const crashed = outcomes.reduce((n, o) => n + o.crashed, 0);
   const avgRounds = outcomes.reduce((n, o) => n + o.rounds, 0) / outcomes.length;
   console.log(
     `${label}: games=${games} wins=${JSON.stringify(wins)} undecidedLeader=${JSON.stringify(leads)} avgRounds=${avgRounds.toFixed(1)} ` +
       `aiCalls=${calls} avgMsPerAiAction=${(ms / Math.max(1, calls)).toFixed(2)} slowestMs=${Math.max(...outcomes.map((o) => o.slowest)).toFixed(0)} ` +
-      `failures=${failures.length} seconds=${((Date.now() - started) / 1000).toFixed(1)}`,
+      `aiAircraftCrashed=${crashed} failures=${failures.length} seconds=${((Date.now() - started) / 1000).toFixed(1)}`,
   );
   for (const f of failures.slice(0, 3)) console.log(`  seed ${f.seed} round ${f.rounds}: ${f.failure}`);
   if (failures.length > 0) process.exitCode = 1;

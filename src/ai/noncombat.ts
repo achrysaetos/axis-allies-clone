@@ -177,11 +177,17 @@ function landAir(d: Draft): void {
       return -Math.abs(f - 1) + (ownFactories(s, s.power).includes(at) ? 0.5 : 0);
     };
     const options = [...reach].filter(([at]) => safeLanding(s, u, at)).sort((a, b) => score(b[0]) - score(a[0]) || a[1].length - b[1].length);
+    const risky: SpaceId[][] = [];
+    let landed = false;
     for (const [at, path] of options) {
       if (here && score(at) <= score(u.at)) break;
-      if (!space(at).water && dangerAt(s, at, s.power).win > 0.5 && options.length > 1) continue;
-      if (d.try({ type: 'move', units: [u.id], path })) break;
+      if (!space(at).water && dangerAt(s, at, s.power).win > 0.5) {
+        risky.push(path);
+        continue;
+      }
+      if ((landed = d.try({ type: 'move', units: [u.id], path }))) break;
     }
+    if (!landed && !here) for (const path of risky) if (d.try({ type: 'move', units: [u.id], path })) break;
   }
 }
 

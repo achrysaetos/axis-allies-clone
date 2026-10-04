@@ -4,7 +4,7 @@ import { canLandAir, enemyUnitsAt, isHostileSea, seaPassageOpen } from '../engin
 import type { Action, GameState, Power, SpaceId, Unit, UnitId } from '../engine/types';
 import { Draft, enemiesAt, isEnemyLand, isFriendly, mine, ownFactories } from './board';
 import { type Combatant, asCombatants, dangerAt, simulate } from './eval';
-import { airDist, paths } from './geo';
+import { airDist, landDist, paths, seaDist } from './geo';
 
 /** One self-contained way to commit force to a target: a unit walking or flying in, or a loaded transport. */
 interface Option {
@@ -56,12 +56,20 @@ function garrison(s: GameState): UnitId[] {
     const home = s.units
       .filter((u) => u.at === f && u.owner === s.power && isLand(u.type))
       .sort((a, b) => STATS[a.type].cost / STATS[a.type].defense - STATS[b.type].cost / STATS[b.type].defense);
-    const keep = new Set<UnitId>();
-    for (const u of home) {
-      if (dangerAt(s, f, s.power, [], (x) => x.owner !== s.power || !isLand(x.type) || keep.has(x.id)).win < GARRISON_DANGER) break;
-      keep.add(u.id);
+    // Danger falls as the garrison grows, so binary-search the smallest safe prefix of `home`.
+    const safeWith = (k: number) => {
+      const keep = new Set(home.slice(0, k).map((u) => u.id));
+      return dangerAt(s, f, s.power, [], (x) => x.owner !== s.power || !isLand(x.type) || keep.has(x.id)).win < GARRISON_DANGER;
+    };
+    let lo = 0;
+    let hi = home.length;
+    if (!safeWith(hi)) lo = hi;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (safeWith(mid)) hi = mid;
+      else lo = mid + 1;
     }
-    kept.push(...keep);
+    kept.push(...home.slice(0, lo).map((u) => u.id));
   }
   return kept;
 }
@@ -77,14 +85,14 @@ function targets(s: GameState): Target[] {
   }
   const zones = new Set(s.units.filter((u) => space(u.at).water && enemiesAt(s, u.at, power).length > 0).map((u) => u.at));
   for (const at of zones) out.push({ at, kind: 'sea', gain: 0 });
-  const worth = (t: Target) => t.gain + enemiesAt(s, t.at, power).reduce((n, u) => n + STATS[u.type].cost, 0) / 2;
-  return out.sort((a, b) => worth(b) - worth(a));
+  const worth = new Map(out.map((t) => [t, t.gain + enemiesAt(s, t.at, power).reduce((n, u) => n + STATS[u.type].cost, 0) / 2]));
+  return out.sort((a, b) => worth.get(b)! - worth.get(a)!);
 }
 
 /** Add options cheapest-first until the attack wins often enough and is worth its expected losses. */
 function assemble(s: GameState, t: Target, used: Set<UnitId>): Option[] | null {
   const defenders = asCombatants(enemiesAt(s, t.at, s.power));
-  const options = optionsFor(s, t, used).sort((a, b) => a.order - b.order);
+  const options = optionsFor(s, t, used, landable(s)).sort((a, b) => a.order - b.order);
   if (t.kind === 'land' && defenders.length === 0) {
     const walker = options.find((o) => o.land && o.units.every((u) => isLand(u.type) || u.type === 'transport'));
     return walker ? [walker] : null;
@@ -110,11 +118,10 @@ function assemble(s: GameState, t: Target, used: Set<UnitId>): Option[] | null {
 
 const landable = (s: GameState) => Object.keys(s.owner).filter((id) => canLandAir(s, id, s.power));
 
-function optionsFor(s: GameState, t: Target, used: Set<UnitId>): Option[] {
+function optionsFor(s: GameState, t: Target, used: Set<UnitId>, landing: SpaceId[]): Option[] {
   const power = s.power;
   const out: Option[] = [];
   const free = mine(s).filter((u) => !used.has(u.id) && u.type !== 'factory' && u.type !== 'aaGun' && u.moved < STATS[u.type].move);
-  const landing = landable(s);
   const homeDist = Math.min(99, ...landing.map((l) => airDist(t.at, l)));
 
   for (const u of free) {
@@ -126,6 +133,7 @@ function optionsFor(s: GameState, t: Target, used: Set<UnitId>): Option[] {
       const route = paths(u.at, there, (_p, n) => !isNeutral(n), (n) => !isNeutral(n)).get(t.at);
       if (route) out.push({ units: [u], fighters: asCombatants([u]), actions: [{ type: 'move', units: [u.id], path: route }], order: ORDER[u.type]! + there / 10, land: false });
     } else if (isLand(u.type) && t.kind === 'land' && !space(u.at).water) {
+      if (landDist(u.at, t.at) > left) continue;
       const blitzer = u.type === 'armour';
       const route = paths(
         u.at,
@@ -135,6 +143,7 @@ function optionsFor(s: GameState, t: Target, used: Set<UnitId>): Option[] {
       ).get(t.at);
       if (route) out.push({ units: [u], fighters: asCombatants([u]), actions: [{ type: 'move', units: [u.id], path: route }], order: ORDER[u.type]!, land: true });
     } else if (isSea(u.type) && t.kind === 'sea' && u.type !== 'transport' && u.type !== 'carrier') {
+      if (seaDist(u.at, t.at) > left) continue;
       const route = paths(u.at, left, (p, n) => space(n).water && seaPassageOpen(s, p, n, power), (n) => !isHostileSea(s, n, power)).get(t.at);
       if (route) out.push({ units: [u], fighters: asCombatants([u]), actions: [{ type: 'move', units: [u.id], path: route }], order: ORDER[u.type]!, land: false });
     }

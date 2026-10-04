@@ -13,15 +13,19 @@ export function mobilizeAction(s: GameState): Action {
   for (const p of order) {
     const spots = STATS[p.type].domain === 'sea' ? seaSpots(s, factories) : landSpots(s, factories);
     for (const at of spots) {
-      const room = STATS[p.type].domain === 'sea' ? p.count : Math.min(p.count, productionLeft(s, at));
-      for (let n = room; n >= 1; n--) {
-        const a: Action = { type: 'place', unitType: p.type, at, count: n };
-        if (apply(s, a).ok) return a;
-      }
+      const room = STATS[p.type].domain === 'sea' ? seaRoom(s, at) : productionLeft(s, at);
+      const n = Math.min(p.count, room);
+      if (n < 1) continue;
+      const a: Action = { type: 'place', unitType: p.type, at, count: n };
+      if (apply(s, a).ok) return a;
+      if (n > 1 && apply(s, { ...a, count: 1 }).ok) return { ...a, count: 1 };
     }
   }
   return { type: 'endPhase' };
 }
+
+const seaRoom = (s: GameState, zone: SpaceId) =>
+  space(zone).neighbors.filter((n) => ownFactories(s, s.power).includes(n)).reduce((k, f) => k + productionLeft(s, f), 0);
 
 function seaSpots(s: GameState, factories: SpaceId[]): SpaceId[] {
   const zones = [...new Set(factories.flatMap((f) => space(f).neighbors.filter((n) => space(n).water)))];

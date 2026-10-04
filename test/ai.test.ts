@@ -98,6 +98,22 @@ describe('AI', () => {
     }
   });
 
+  it('still lands an aircraft when every landing in reach is threatened', () => {
+    const s = scenario({
+      power: 'Germans',
+      phase: 'noncombatMove',
+      owners: { Poland: 'Russians', 'Baltic States': 'Russians', 'Northwestern Europe': 'Russians', Finland: 'Russians', Norway: 'Russians' },
+      units: [
+        ['Germans', 'bomber', '5 Sea Zone'],
+        ['Russians', 'armour', 'Poland', 12],
+      ],
+    });
+    s.units[0]!.moved = 5;
+    const end = runUntil(s, (x) => x.phase === 'mobilize');
+    const bomber = end.units.find((u) => u.type === 'bomber');
+    expect(bomber && canLandAir(end, bomber.at, 'Germans')).toBe(true);
+  });
+
   it('spends its treasury on a legal purchase and places what it bought', () => {
     const s = newGame(5);
     const bought = runUntil(s, (x) => x.phase === 'combatMove');

@@ -7,7 +7,11 @@ import type { Action, GameState, Power, SpaceId, Unit } from '../engine/types';
 export class Draft {
   readonly states: GameState[] = [];
   readonly actions: Action[] = [];
-  constructor(public state: GameState) {}
+  public state: GameState;
+  /** The scratch copy drops the log: apply clones the whole state, and plans never read it. */
+  constructor(state: GameState) {
+    this.state = { ...state, log: [] };
+  }
 
   try(a: Action): boolean {
     const r = apply(this.state, a);
