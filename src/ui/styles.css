@@ -982,3 +982,13 @@ kbd {
     animation: none;
   }
 }
+.ghost-part {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.map-tag.preview rect {
+  stroke: #ffe27a;
+  stroke-width: 1.5;
+  stroke-dasharray: 3 2;
+}

@@ -47,3 +47,4 @@ Preconditions:
 - Dragging a cargo piece lifts everything aboard the same transports. Dropping it on a coast the transport has not reached sails the transport to an adjacent sea zone first, then lands the cargo. The route arrow shows both legs.
 - Dragging a carrier into a hostile sea zone during combat move launches its own fighters so they fight. In noncombat they ride along as cargo.
 - A failed drop shows the reason and releases the held units. A drop off the board shows `Dropped off the board, so nothing moved`.
+- While units are held during combat move, hovering an enemy space shows `N% if you go` above it, the odds that attack would have with the held units added.

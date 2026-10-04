@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CAPITAL_OF, isAir } from '../engine/data';
 import { battleBlocker } from '../engine/combat';
-import { actingPower } from '../engine/game';
+import { actingPower, apply } from '../engine/game';
 import { areAllied, factoryAt } from '../engine/queries';
 import type { Action, Battle, GameState, SpaceId, UnitId, UnitType } from '../engine/types';
 import { MapView } from './map/MapView';
@@ -23,6 +23,7 @@ import { dropMoves, grabbable, handReach, shipmates, stackAt } from './pieces';
 import type { Hand } from './pieces';
 import { useDrag } from './drag';
 import { UnitSvg } from './icons';
+import { tally } from './units';
 import { POWER_STYLE } from './theme';
 import { act as step, aiBurst, autosave, downloadSave, loadAutosave, quickResolve, undo } from './session';
 import type { Session } from './session';
@@ -158,13 +159,22 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
     () => reach ?? new Set(retreat ? retreat.options : placements.map((p) => p.at)),
     [reach, retreat, placements],
   );
-  const route = useMemo(() => {
+  /** Where the held units would go if dropped on the hovered space, and the odds of the attack they would make. */
+  const preview = useMemo(() => {
     if (hand?.kind !== 'units' || !hover || !reach?.has(hover)) return null;
     const r = dropMoves(state, hand.units, hand.from, hover, false);
-    return r.ok
-      ? r.moves.flatMap((m, i) => (i === 0 ? m.path : m.path.slice(1))).filter((id, i, all) => id !== all[i - 1])
-      : null;
+    if (!r.ok) return null;
+    const route = r.moves.flatMap((m, i) => (i === 0 ? m.path : m.path.slice(1))).filter((id, i, all) => id !== all[i - 1]);
+    let after = state;
+    for (const m of r.moves) {
+      const next = apply(after, { type: 'move', ...m });
+      if (!next.ok) return { route, odds: undefined };
+      after = next.state;
+    }
+    const odds = state.phase === 'combatMove' ? forecasts(after).find((f) => f.space === hover && f.kind !== 'sbr') : undefined;
+    return { route, odds };
   }, [hand, hover, reach, state]);
+  const route = preview?.route ?? null;
   const revealed = useMemo(() => placements.map((p) => p.at), [placements]);
   const held = useMemo(() => new Set(hand?.kind === 'units' ? hand.units : []), [hand]);
   const odds = useMemo(() => (humanActs ? forecasts(state) : []), [state, humanActs]);
@@ -173,8 +183,10 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
     for (const f of odds)
       if (f.kind === 'sbr') out.set(f.space, out.get(f.space) ?? { text: `~${f.defLoss.toFixed(1)} dmg`, tone: 'good' });
       else out.set(f.space, { text: `${Math.round(f.win * 100)}%`, tone: oddsClass(f.win) });
+    const p = preview?.odds;
+    if (p) out.set(p.space, { text: `${Math.round(p.win * 100)}% if you go`, tone: `${oddsClass(p.win)} preview` });
     return out;
-  }, [odds]);
+  }, [odds, preview]);
 
   const moveHand = useCallback(
     (units: UnitId[], from: SpaceId, to: SpaceId, sbr: boolean, dropped = false): boolean => {
@@ -382,12 +394,19 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
         )}
         {drag.at && hand && (
           <div className="ghost" style={{ left: drag.at.x, top: drag.at.y }}>
-            <UnitSvg
-              type={hand.kind === 'new' ? hand.type : (state.units.find((u) => u.id === hand.units[0])?.type ?? 'infantry')}
-              color={style.color}
-              size={30}
-            />
-            <span>{hand.kind === 'new' ? hand.count : hand.units.length}</span>
+            {hand.kind === 'new' ? (
+              <>
+                <UnitSvg type={hand.type} color={style.color} size={30} />
+                <span>{hand.count}</span>
+              </>
+            ) : (
+              tally(state.units.filter((u) => held.has(u.id))).map((t) => (
+                <span key={t.type} className="ghost-part">
+                  <UnitSvg type={t.type} color={style.color} size={26} />
+                  {t.count > 1 && t.count}
+                </span>
+              ))
+            )}
           </div>
         )}
         {raidChoice && (
