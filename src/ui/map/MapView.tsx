@@ -28,7 +28,7 @@ interface Props extends Omit<WorldProps, 'captured'> {
   onHover: (id: SpaceId | null) => void;
   onBackground: () => void;
   /** Changing this value recenters the map on the space. */
-  focus: { id: SpaceId; nonce: number; inset?: number } | null;
+  focus: { id: SpaceId; nonce: number; inset?: Inset } | null;
   /** Spaces the player now needs to see; the map pans to the nearest one only if none is on screen. */
   reveal: readonly SpaceId[];
 }
@@ -52,6 +52,8 @@ function useCaptured(owner: GameState['owner']): ReadonlySet<SpaceId> {
 }
 const DRAG_SLOP = 4;
 const START_ZOOM = 1.35;
+/** Smaller screens open zoomed out in proportion, but not so far that pieces become too small to touch. */
+const startZoom = (w: number, h: number) => START_ZOOM * Math.max(0.6, Math.min(1, w / 1440, h / 840));
 
 function normalize(v: View, w: number, h: number): View {
   const minK = Math.max(w / MAP_WIDTH, h / MAP_HEIGHT, 0.05);
@@ -62,10 +64,16 @@ function normalize(v: View, w: number, h: number): View {
   return { tx, ty, k };
 }
 
-/** Center a space in the part of the map left of `inset` pixels covered on the right. */
-function centeredOn(id: SpaceId, k: number, w: number, h: number, inset = 0): View {
+/** Pixels a dialog covers on the right or along the bottom of the map. */
+export interface Inset {
+  right?: number;
+  bottom?: number;
+}
+
+/** Center a space in the part of the map a dialog leaves uncovered. */
+function centeredOn(id: SpaceId, k: number, w: number, h: number, inset: Inset = {}): View {
   const [x, y] = CENTER.get(id) ?? [MAP_WIDTH / 2, MAP_HEIGHT / 2];
-  return normalize({ tx: (w - inset) / 2 - x * k, ty: h / 2 - y * k, k }, w, h);
+  return normalize({ tx: (w - (inset.right ?? 0)) / 2 - x * k, ty: (h - (inset.bottom ?? 0)) / 2 - y * k, k }, w, h);
 }
 
 const NEAR_PX = 14;
@@ -105,14 +113,14 @@ export function MapView({ onSpace, onPiece, onPieceDown, onHover, onBackground, 
 
   useEffect(() => {
     if (!focus) return;
-    setView((v) => centeredOn(focus.id, v?.k ?? START_ZOOM, size.w, size.h, focus.inset));
+    setView((v) => centeredOn(focus.id, v?.k ?? startZoom(size.w, size.h), size.w, size.h, focus.inset));
   }, [focus, size.w, size.h]);
 
   const revealKey = reveal.join('|');
   useEffect(() => {
     if (reveal.length === 0) return;
     setView((cur) => {
-      const base = normalize(cur ?? centeredOn('Germany', START_ZOOM, size.w, size.h), size.w, size.h);
+      const base = normalize(cur ?? centeredOn('Germany', startZoom(size.w, size.h), size.w, size.h), size.w, size.h);
       const span = MAP_WIDTH * base.k;
       const onScreen = (id: SpaceId) => {
         const [x, y] = CENTER.get(id) ?? [0, 0];
@@ -134,7 +142,7 @@ export function MapView({ onSpace, onPiece, onPieceDown, onHover, onBackground, 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [revealKey, size.w, size.h]);
 
-  const v = normalize(view ?? centeredOn('Germany', START_ZOOM, size.w, size.h), size.w, size.h);
+  const v = normalize(view ?? centeredOn('Germany', startZoom(size.w, size.h), size.w, size.h), size.w, size.h);
 
   const zoomAt = (factor: number, px: number, py: number) =>
     setView((cur) => {

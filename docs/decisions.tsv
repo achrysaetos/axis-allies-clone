@@ -26,3 +26,4 @@ when	what	why	evidence	result
 2026-10-04	narrow-topbar	Top bar keeps Undo, menu and end button on screen at tablet widths: only the current phase shows below 1600px and info text shrinks first	kept: 1024px end button right edge 1012 (was off-screen); 1440 with 5 to-place chips nothing clipped
 2026-10-04	pinch-zoom	Two-finger pinch zooms the map about the fingers' midpoint on touch screens	kept: synthetic touch pinch 100->300px scaled 1.35->4 with the midpoint fixed
 2026-10-04	tap-to-inspect	Tapping a space with nothing in hand shows its info card, since touch screens cannot hover	kept: click on Archangel with no hover showed its card
+2026-10-04	phone-layout	Phones: cards fit, bar keeps controls, battle dialog is a bottom sheet with the battle centered above, touch hints, opening zoom scales with screen (floor 0.6x)	kept: 375x812 tap-tap attack Poland->Belorussia and battle sheet; 1440 dialog still docked right

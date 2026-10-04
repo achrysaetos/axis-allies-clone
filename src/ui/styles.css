@@ -1142,3 +1142,61 @@ button.seat.mine {
 .phase-bar > .power {
   flex-shrink: 0;
 }
+
+/* Phones: friends open invite links wherever they are, so every card fits the width and the map keeps the rest. */
+@media (max-width: 640px) {
+  .setup-card,
+  .turn-card {
+    width: auto;
+    max-width: calc(100vw - 32px);
+    margin: 16px;
+  }
+  .setup {
+    align-items: flex-start;
+  }
+  .setup-card .sides {
+    grid-template-columns: 1fr;
+  }
+  .setup-card .row {
+    flex-wrap: wrap;
+  }
+  .phase-bar {
+    gap: 6px;
+    padding: 6px 8px;
+  }
+  .phase-bar > .round,
+  .phase-bar > .phases,
+  .phase-bar > .money,
+  .phase-bar > .to-place,
+  .phase-bar > .vcs {
+    display: none;
+  }
+  .seats {
+    overflow-x: auto;
+  }
+  .hint-line {
+    white-space: normal;
+    width: calc(100% - 24px);
+    text-align: center;
+    font-size: 12px;
+  }
+  .battle-dialog {
+    left: 8px;
+    right: 8px;
+    top: auto;
+    bottom: 8px;
+    width: auto;
+    max-height: 50%;
+  }
+  .tray {
+    left: 8px;
+    right: 8px;
+    max-width: none;
+    transform: none;
+  }
+  .hover-card {
+    left: 8px;
+    top: auto;
+    bottom: 8px;
+  }
+}

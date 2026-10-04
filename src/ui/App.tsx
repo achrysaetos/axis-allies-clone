@@ -6,7 +6,7 @@ import { areAllied, capitalHeld, factoryAt } from '../engine/queries';
 import { POWERS } from '../engine/types';
 import type { Action, Battle, GameState, Power, SpaceId, UnitId, UnitType } from '../engine/types';
 import { MapView } from './map/MapView';
-import type { PieceEvent } from './map/MapView';
+import type { Inset, PieceEvent } from './map/MapView';
 import { BattleDialog } from './panels/BattleDialog';
 import { DecisionView } from './panels/Decisions';
 import { LogPanel } from './panels/LogPanel';
@@ -39,8 +39,8 @@ import { NamePrompt, SeatStrip } from './panels/Seats';
 const AI_DELAY_MS = 120;
 const AI_BUDGET_MS = 30;
 const TOAST_MS = 4500;
-/** Width the battle dialog covers on the right, kept clear when the map centers on a battle. */
-const BATTLE_DIALOG_W = 590;
+/** Width the battle dialog covers on the right, kept clear when the map centers on a battle; phones show it as a bottom sheet. */
+const dialogInset = (): Inset => (window.innerWidth > 640 ? { right: 590 } : { bottom: window.innerHeight * 0.5 });
 
 function roomInHash(): string | null {
   const id = location.hash.match(/^#\/g\/([^/]+)$/)?.[1];
@@ -158,6 +158,20 @@ const HINT: Partial<Record<GameState['phase'], string>> = {
   mobilize: 'Drag new units from the tray onto a highlighted space. Anything left unplaced is refunded.',
 };
 
+/** A finger has no shift key, right button or Esc, so touch screens get the gestures they can make. */
+const TOUCH = typeof matchMedia !== 'undefined' && matchMedia('(pointer: coarse)').matches;
+const PHASE_HINT: typeof HINT = TOUCH
+  ? {
+      ...HINT,
+      purchase: 'Tap units in the chart below to buy them. They arrive at Mobilize.',
+      combatMove:
+        'Drag pieces into enemy spaces to attack. Tap a piece to pick up one at a time, or double-tap to take them all.',
+    }
+  : HINT;
+const HAND_HINT = TOUCH
+  ? 'Tap a highlighted space to drop. Tap a piece for one more.'
+  : 'Drop on a highlighted space. Click a piece for one more, right-click to put one back, Esc to let go.';
+
 type Online = RoomConnection & { room: NonNullable<RoomConnection['room']> };
 
 function Game({
@@ -181,7 +195,7 @@ function Game({
   const [battleView, setBattleView] = useState<number | null>(null);
   const [toast, setToast] = useState<{ text: string; id: number; info?: boolean } | null>(null);
   const [aiRetry, setAiRetry] = useState(0);
-  const [focus, setFocus] = useState<{ id: SpaceId; nonce: number; inset?: number } | null>(null);
+  const [focus, setFocus] = useState<{ id: SpaceId; nonce: number; inset?: Inset } | null>(null);
   const [greeted, setGreeted] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<string[] | null>(null);
   const [overlay, setOverlay] = useState<'help' | 'log' | null>(null);
@@ -299,7 +313,7 @@ function Game({
   const route = preview?.route ?? null;
   const viewedSpace = state.battles.find((b) => b.id === battleView)?.space;
   useEffect(() => {
-    if (viewedSpace) setFocus({ id: viewedSpace, nonce: Date.now(), inset: BATTLE_DIALOG_W });
+    if (viewedSpace) setFocus({ id: viewedSpace, nonce: Date.now(), inset: dialogInset() });
   }, [viewedSpace]);
   const revealed = useMemo(() => {
     if (placements.length > 0) return placements.map((p) => p.at);
@@ -441,7 +455,7 @@ function Game({
     setGreeted(turnKey);
     setFocus(
       viewedSpace
-        ? { id: viewedSpace, nonce: Date.now(), inset: BATTLE_DIALOG_W }
+        ? { id: viewedSpace, nonce: Date.now(), inset: dialogInset() }
         : { id: CAPITAL_OF[state.power], nonce: Date.now() },
     );
   }, [turnKey, state.power, viewedSpace]);
@@ -498,14 +512,14 @@ function Game({
         ? `Nobody holds ${powerName(actingPower(state))} yet. Take the seat, or copy the invite link for a friend.`
         : `${playing(actingPower(state))} is playing…`
       : hand?.kind === 'units'
-        ? 'Drop on a highlighted space. Click a piece for one more, right-click to put one back, Esc to let go.'
+        ? HAND_HINT
         : state.phase === 'combat'
           ? openBattles
             ? 'Click a ⚔ to fight that battle.'
             : 'Every battle is fought. End the phase.'
           : state.phase === 'purchase' && !capitalHeld(state, state.power)
             ? undefined
-            : HINT[state.phase];
+            : PHASE_HINT[state.phase];
   const style = POWER_STYLE[state.power];
 
   return (
