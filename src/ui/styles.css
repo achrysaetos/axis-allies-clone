@@ -1014,3 +1014,8 @@ path.captured {
     fill-opacity: 0;
   }
 }
+.trails line {
+  stroke: rgba(255, 255, 255, 0.55);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}

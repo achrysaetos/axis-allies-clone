@@ -115,6 +115,35 @@ function Route({ route, className = 'route' }: { route: SpaceId[]; className?: s
   );
 }
 
+/** Faint arrows from where the moving power's pieces began the turn, so the turn's moves can be reviewed at a glance. */
+function MoveTrails({ state }: { state: GameState }) {
+  if (state.phase !== 'combatMove' && state.phase !== 'combat' && state.phase !== 'noncombatMove') return null;
+  const trails = new Set(
+    state.units
+      .filter((u) => u.owner === state.power && u.turnStart !== u.at && u.carriedBy === null)
+      .map((u) => `${u.turnStart}>${u.at}`),
+  );
+  return (
+    <g className="trails" pointerEvents="none">
+      {[...trails].map((t) => {
+        const [[x1, y1], [x2, y2]] = routePoints(t.split('>')) as [[number, number], [number, number]];
+        const len = Math.hypot(x2 - x1, y2 - y1) || 1;
+        const pull = Math.min(22, len / 3);
+        const [ex, ey] = [x2 - ((x2 - x1) / len) * pull, y2 - ((y2 - y1) / len) * pull];
+        return <line key={t} x1={x1} y1={y1} x2={ex} y2={ey} markerEnd="url(#trail-head)" />;
+      })}
+    </g>
+  );
+}
+
+export function TrailHead() {
+  return (
+    <marker id="trail-head" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
+      <path d="M0 0 10 5 0 10z" fill="rgba(255,255,255,0.75)" />
+    </marker>
+  );
+}
+
 function Tag({ x, y, text, tone }: { x: number; y: number; text: string; tone: string }) {
   const w = 8 + text.length * 6.4;
   return (
@@ -249,6 +278,7 @@ export const World = memo(function World({ state, selected, highlights, held, ta
       {SHAPES.filter((s) => tags.has(s.id)).map((s) => (
         <Tag key={`t-${s.id}`} x={s.center[0]} y={s.center[1] - (s.water ? 30 : 44)} {...tags.get(s.id)!} />
       ))}
+      <MoveTrails state={state} />
       {[...landings].map((l) => (
         <Route key={l} route={l.split('>')} className="route landing" />
       ))}

@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent, MouseEvent as ReactMouseEvent } from 'react';
 import type { SpaceId } from '../../engine/types';
 import { CENTER, MAP_HEIGHT, MAP_WIDTH } from './geometry';
-import { NeutralPattern, World } from './World';
+import { NeutralPattern, TrailHead, World } from './World';
 import type { WorldProps } from './World';
 
 interface View {
@@ -189,6 +189,7 @@ export function MapView({ onSpace, onPiece, onPieceDown, onHover, onBackground, 
       <svg width={size.w} height={size.h}>
         <defs>
           <NeutralPattern />
+          <TrailHead />
         </defs>
         <rect width={size.w} height={size.h} className="ocean" />
         <g transform={`translate(${v.tx},${v.ty}) scale(${v.k})`}>
