@@ -11,3 +11,6 @@ when	what	why	evidence	result
 2026-10-04	Escape from a start-hostile zone is legal with no combat; escaping transports are not attacking	p.12 lists leave and conduct no combat as an option	fuzz contradiction seeds 2001..2058 resolved	adopted
 2026-10-04	Merge heuristic AI (Monte Carlo battle odds, per-phase planners, plan cache with apply() validation)	competent opponent for all five powers	AI vs random 40/40; AI vs AI 40 games 0 illegal actions, 0 invariant failures	adopted; known weakness: Allies never win AI vs AI
 2026-10-04	Fighters aboard a carrier that moved stay aboard for the turn (both phases)	p.26 cargo rule; closes carrier-distance-plus-4 loophole the AI agent found	test + 12 AI games + 60 fuzz games clean	adopted
+2026-10-04	Scope: two-human hotseat MVP; AI work paused (user)	user request	-	adopted
+2026-10-04	UX iterations from play-testing: nation names, two-player setup, turn card with recap, territory labels, phase guide, movable-unit filter, win odds, dice clarity, end-phase guards, quick resolve	each friction item seen in a real play-test	verified in browser per item; 125 tests	adopted
+2026-10-04	App owns the single session state	Game private copy reset on remount and autosave overwrote progress	reproduced twice; fixed state survives hot reload	adopted
