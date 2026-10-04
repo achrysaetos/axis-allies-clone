@@ -1,7 +1,7 @@
 import { apply } from '../src/engine/game';
 import { checkInvariants } from '../src/engine/invariants';
 import { newGame } from '../src/engine/state';
-import { randomAction } from '../src/ai/random';
+import { escapeLoneTransport, randomAction } from '../src/ai/random';
 import type { Action, GameState } from '../src/engine/types';
 
 const games = Number(process.argv[2] ?? 200);
@@ -68,6 +68,11 @@ function play(seed: number): Outcome {
     if (!r.ok) {
       if (a.type === 'endPhase' && s.phase === 'combatMove' && !s.pending) {
         s = phaseStart;
+        for (let escape = escapeLoneTransport(s); escape; escape = escapeLoneTransport(s)) {
+          const r2 = apply(s, escape);
+          if (!r2.ok) break;
+          s = r2.state;
+        }
         const retry = apply(s, a);
         if (!retry.ok) return { seed, rounds: s.round, actions, winner: null, failure: `cannot end untouched combat move: ${retry.error}` };
         r = retry;

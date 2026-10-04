@@ -3,7 +3,7 @@ import { UNIT_TYPES } from '../engine/types';
 import { apply } from '../engine/game';
 import { autoCasualties } from '../engine/casualties';
 import { battleBlocker } from '../engine/combat';
-import { areAllied, canLandAir, enemyUnitsAt, factoryAt, remainingMove } from '../engine/queries';
+import { areAllied, canLandAir, enemyUnitsAt, factoryAt, isHostileSea, remainingMove } from '../engine/queries';
 import type { Action, GameState, SpaceId, Unit, UnitType } from '../engine/types';
 
 export type Rand = () => number;
@@ -65,7 +65,7 @@ export function randomAction(s: GameState, rand: Rand = Math.random): Action {
     case 'purchase':
       return s.purchases.length === 0 && rand() < 0.9 ? randomPurchase(s, rand) : { type: 'endPhase' };
     case 'combatMove':
-      return rand() < 0.85 ? randomMove(s, rand, true) : { type: 'endPhase' };
+      return escapeLoneTransport(s) ?? (rand() < 0.85 ? randomMove(s, rand, true) : { type: 'endPhase' });
     case 'noncombatMove':
       return landAir(s, rand) ?? (rand() < 0.8 ? randomMove(s, rand, false) : { type: 'endPhase' });
     case 'combat': {
@@ -165,6 +165,19 @@ function placementFor(s: GameState, type: UnitType, rand: Rand): Action | null {
   for (const at of [...spots].sort(() => rand() - 0.5)) {
     const action: Action = { type: 'place', unitType: type, at, count: 1 };
     if (legal(s, action)) return action;
+  }
+  return null;
+}
+
+/** Unescorted transports that start beside enemy warships must sail away before combat. */
+export function escapeLoneTransport(s: GameState): Action | null {
+  for (const t of s.units) {
+    if (t.owner !== s.power || t.type !== 'transport' || t.moved > 0 || !isHostileSea(s, t.at, s.power)) continue;
+    if (s.units.some((u) => u.at === t.at && u.owner === s.power && STATS[u.type].attack > 0 && u.carriedBy === null)) continue;
+    for (const n of space(t.at).neighbors) {
+      const action: Action = { type: 'move', units: [t.id], path: [t.at, n] };
+      if (space(n).water && !isHostileSea(s, n, s.power) && legal(s, action)) return action;
+    }
   }
   return null;
 }

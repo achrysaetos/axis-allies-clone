@@ -197,7 +197,7 @@ export function retreatOptions(s: GameState, b: Battle): SpaceId[] {
 
 function finish(s: GameState, b: Battle, winner: Battle['winner']): void {
   const att = liveAttackers(s, b);
-  if (b.kind === 'land' && winner === 'attacker' && att.some((u) => isLand(u.type)) && s.owner[b.space] !== undefined)
+  if (b.kind === 'land' && winner === 'attacker' && att.some((u) => isLand(u.type) && u.type !== 'aaGun') && s.owner[b.space] !== undefined)
     if (!areAllied(s.owner[b.space]!, b.attacker)) captureTerritory(s, b.space, b.attacker);
   for (const u of [...alive(s, b.attackers), ...alive(s, b.defenders)]) {
     u.fought = true;

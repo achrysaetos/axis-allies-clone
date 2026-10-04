@@ -122,6 +122,7 @@ function buy(s: GameState, purchases: Purchase[]): string | null {
 
 function repair(s: GameState, factory: UnitId, amount: number): string | null {
   if (s.phase !== 'purchase') return 'repairs happen in the purchase phase';
+  if (!capitalHeld(s, s.power)) return 'a power without its capital skips purchasing and repairs';
   const f = s.units.find((u) => u.id === factory);
   if (!f || f.type !== 'factory' || f.owner !== s.power) return 'not your industrial complex';
   if (!Number.isInteger(amount) || amount < 1 || amount > f.damage) return 'invalid repair amount';
@@ -235,9 +236,11 @@ function place(s: GameState, type: UnitType, at: SpaceId, count: number): string
     const room = sources.reduce((n, f) => n + productionLeft(s, f), 0);
     if (room < count) return `no industrial complex next to ${at} can mobilize ${count} more units`;
     if (type === 'fighter') {
-      const carriers = unitsAt(s, at).filter((u) => u.type === 'carrier' && u.owner === power).length;
-      const fighters = unitsAt(s, at).filter((u) => u.type === 'fighter' && u.owner === power).length;
-      if (carriers * CARRIER_CAPACITY - fighters < count) return 'new fighters need room on your own carriers';
+      const own = unitsAt(s, at).filter((u) => u.type === 'carrier' && u.owner === power).map((u) => u.id);
+      const aboard = unitsAt(s, at).filter(
+        (u) => u.type === 'fighter' && ((u.owner === power && u.carriedBy === null) || (u.carriedBy !== null && own.includes(u.carriedBy))),
+      ).length;
+      if (own.length * CARRIER_CAPACITY - aboard < count) return 'new fighters need room on your own carriers';
     }
     let left = count;
     for (const f of [...sources].sort((a, b) => productionLeft(s, b) - productionLeft(s, a))) {

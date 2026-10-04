@@ -7,3 +7,5 @@ when	what	why	evidence	result
 2026-10-04	Scripted dice queue in state ahead of seeded RNG	tests and replays need exact rolls	design	adopted
 2026-10-04	Implement optional SBR escorts/interceptors (p.14) behind options.sbrEscortsInterceptors	full parity includes the rulebook optional rules; default off like the printed game	test + OPTIONAL=1 fuzz 40 games, 7 intercept decisions, 0 failures	adopted
 2026-10-04	Mutation testing script with 22 rule mutants	prove the suite detects rule defects, not just passes	22/22 killed after adding 3 tests	adopted
+2026-10-04	Fix 12 audit discrepancies (tank stops at infrastructure, split blitz, AA never attacks, escape rules, carrier cargo take-off, carrier room in landing checks, repairs need capital, guest fighters use slots, lone transports)	independent auditor proved each with a failing rulebook test	110/110 tests; fuzz 100 games 0 failures	adopted
+2026-10-04	Escape from a start-hostile zone is legal with no combat; escaping transports are not attacking	p.12 lists leave and conduct no combat as an option	fuzz contradiction seeds 2001..2058 resolved	adopted

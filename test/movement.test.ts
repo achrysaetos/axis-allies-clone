@@ -141,8 +141,10 @@ describe('air movement (p.13, 26-27)', () => {
   });
 
   it('air units without a landing space at end of turn are destroyed', () => {
-    let s = scenario({ power: 'Germans', phase: 'noncombatMove', units: [['Germans', 'fighter', 'Germany']] });
+    let s = scenario({ power: 'Germans', phase: 'noncombatMove', units: [['Germans', 'fighter', 'Germany'], ['Germans', 'carrier', '5 Sea Zone']] });
     s = move(s, ids(s, 'Germans', 'fighter', 'Germany'), ['Germany', '5 Sea Zone']);
+    s = move(s, ids(s, 'Germans', 'carrier', '5 Sea Zone'), ['5 Sea Zone', '6 Sea Zone']);
+    expect(count(s, 'Germans', 'fighter', '5 Sea Zone')).toBe(1);
     s = ok(s, { type: 'endPhase' });
     s = ok(s, { type: 'endPhase' });
     expect(count(s, 'Germans', 'fighter', '5 Sea Zone')).toBe(0);
