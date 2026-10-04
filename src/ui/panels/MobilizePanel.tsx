@@ -1,5 +1,6 @@
 import { space } from '../../engine/data';
 import { apply } from '../../engine/game';
+import { UNIT_TYPES } from '../../engine/types';
 import type { Action, GameState, SpaceId, UnitType } from '../../engine/types';
 import { UNIT_GLYPH } from '../theme';
 import { Chip } from '../units';
@@ -31,6 +32,16 @@ export function placementOptions(state: GameState, type: UnitType): PlacementOpt
   return out;
 }
 
+/** Every type bought this turn, in a stable order, so rows do not jump as units are placed. */
+function bought(state: GameState): { type: UnitType; left: number; placed: number }[] {
+  const placed = state.units.filter((u) => state.mobilized.includes(u.id));
+  return UNIT_TYPES.map((t) => ({
+    type: t,
+    left: state.purchases.find((p) => p.type === t)?.count ?? 0,
+    placed: placed.filter((u) => u.type === t).length,
+  })).filter((r) => r.left + r.placed > 0);
+}
+
 interface Props {
   state: GameState;
   type: UnitType | null;
@@ -48,12 +59,12 @@ export function MobilizePanel({ state, type, options, onType, act }: Props) {
       ) : (
         <div className="dim">Pick a unit, then click a highlighted space or use a button below. Unplaced units are refunded.</div>
       )}
-      {state.purchases.map((p) => (
-        <label key={p.type} className={p.type === type ? 'row picked' : 'row'}>
-          <input type="radio" name="place-type" checked={p.type === type} onChange={() => onType(p.type)} />
-          <Chip owner={state.power} type={p.type} />
-          <span className="grow">{UNIT_GLYPH[p.type].name}</span>
-          <span>× {p.count}</span>
+      {bought(state).map(({ type: t, left, placed }) => (
+        <label key={t} className={t === type ? 'row picked' : left === 0 ? 'row dim' : 'row'}>
+          <input type="radio" name="place-type" disabled={left === 0} checked={t === type} onChange={() => onType(t)} />
+          <Chip owner={state.power} type={t} />
+          <span className="grow">{UNIT_GLYPH[t].name}</span>
+          <span>{left === 0 ? `all ${placed} placed` : `${left} left`}</span>
         </label>
       ))}
       {type && options.length === 0 && state.purchases.some((p) => p.type === type) && (
