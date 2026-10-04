@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { handle, newRoom, parseClientMsg, view } from '../worker/room';
+import { PUSHES_PER_PLAYER, handle, newRoom, parseClientMsg, view, whoToNotify } from '../worker/room';
 import type { RoomRecord } from '../worker/room';
-import type { ClientMsg, PlayerId } from '../src/net/protocol';
+import type { ClientMsg, PlayerId, PushSubscriptionKeys } from '../src/net/protocol';
 import type { Action } from '../src/engine/types';
 import { ids, move, ok, scenario } from './helpers';
 
@@ -191,5 +191,98 @@ describe('messages from the wire', () => {
     expect(parseClientMsg(JSON.stringify({ t: 'seat', power: 'Italians', take: true }))).toBeNull();
     expect(parseClientMsg(JSON.stringify({ t: 'act', version: '1', actions: [{ type: 'endPhase' }] }))).toBeNull();
     expect(parseClientMsg(JSON.stringify({ t: 'undo', version: 3 }))).toEqual({ t: 'undo', version: 3 });
+  });
+});
+
+/** Bea ends the Soviet turn, so Germany is up. */
+function endSovietTurn(r: RoomRecord, bea: PlayerId): RoomRecord {
+  while (r.session.state.power === 'Russians')
+    r = accepted(r, bea, { t: 'act', version: r.version, actions: [{ type: 'endPhase' }] });
+  return r;
+}
+
+describe('who hears about a change by push', () => {
+  it('the player whose turn starts hears who handed it over', () => {
+    const { r, alex, bea } = twoPlayers();
+    const after = endSovietTurn(r, bea);
+    expect(whoToNotify(r, after, new Set([bea]))).toEqual([
+      { player: alex, title: 'Your move: Germany', body: 'Round 1 · Bea finished the Soviet turn' },
+    ]);
+  });
+
+  it('a player with the game open hears nothing, since the tab alerts them', () => {
+    const { r, alex, bea } = twoPlayers();
+    expect(whoToNotify(r, endSovietTurn(r, bea), new Set([alex, bea]))).toEqual([]);
+  });
+
+  it('nobody hears about their own move, even when their next power is up', () => {
+    const { r: base, bea } = twoPlayers();
+    const r = accepted(base, bea, { t: 'seat', power: 'Germans', take: true }, new Set([bea]));
+    expect(whoToNotify(r, endSovietTurn(r, bea), nobody)).toEqual([]);
+  });
+
+  it('a defender hears that a battle needs their decision', () => {
+    const { r: base, alex, bea } = twoPlayers();
+    let s = scenario({
+      units: [
+        ['Germans', 'armour', 'West Russia', 3],
+        ['Russians', 'infantry', 'Archangel', 2],
+        ['Russians', 'artillery', 'Archangel', 2],
+      ],
+      dice: [1, 1, 1],
+    });
+    s = move(s, ids(s, 'Germans', 'armour', 'West Russia'), ['West Russia', 'Archangel']);
+    s = ok(s, { type: 'endPhase' });
+    const r: RoomRecord = { ...base, session: { state: s, fallen: [] } };
+    const after = accepted(r, alex, { t: 'resolve', version: r.version, battle: s.battles[0]!.id });
+    expect(whoToNotify(r, after, new Set([alex]))).toEqual([
+      { player: bea, title: 'Your move: Soviet Union', body: 'Soviet Union must choose casualties in Archangel' },
+    ]);
+  });
+
+  it('everyone away hears once that the game is won', () => {
+    const { r, alex, bea } = twoPlayers();
+    const won: RoomRecord = { ...r, session: { ...r.session, state: { ...r.session.state, winner: 'Allies' } } };
+    expect(whoToNotify(r, won, new Set([bea]))).toEqual([
+      { player: alex, title: 'The Allies win', body: 'Round 1 · Bea finished the game' },
+    ]);
+    expect(whoToNotify(won, { ...won, version: won.version + 1 }, nobody)).toEqual([]);
+  });
+});
+
+const sub = (n: number): PushSubscriptionKeys => ({
+  endpoint: `https://push.example/send/${n}`,
+  keys: { p256dh: 'B'.repeat(87), auth: 'a'.repeat(22) },
+});
+
+describe('push subscriptions', () => {
+  it('stores one entry per endpoint, moving a shared browser to whoever subscribed last', () => {
+    const { r, alex, bea } = twoPlayers();
+    const once = accepted(r, alex, { t: 'subscribe', subscription: sub(1) });
+    expect(once.pushes).toEqual([{ player: alex, ...sub(1) }]);
+    expect(once.version).toBe(r.version);
+    expect(accepted(once, alex, { t: 'subscribe', subscription: sub(1) })).toBe(once);
+    expect(accepted(once, bea, { t: 'subscribe', subscription: sub(1) }).pushes).toEqual([{ player: bea, ...sub(1) }]);
+  });
+
+  it('needs a joined player and keeps only the newest few browsers per player', () => {
+    let { r, alex, bea } = twoPlayers();
+    expect(send(r, null, { t: 'subscribe', subscription: sub(1) }).error).toMatch(/name/);
+    r = accepted(r, bea, { t: 'subscribe', subscription: sub(0) });
+    for (let n = 1; n <= PUSHES_PER_PLAYER + 2; n++) r = accepted(r, alex, { t: 'subscribe', subscription: sub(n) });
+    expect(r.pushes.filter((x) => x.player === alex).map((x) => x.endpoint)).toEqual(
+      Array.from({ length: PUSHES_PER_PLAYER }, (_, i) => sub(i + 3).endpoint),
+    );
+    expect(r.pushes.filter((x) => x.player === bea)).toHaveLength(1);
+  });
+
+  it('accepts only an https endpoint with base64url keys of the right length', () => {
+    const parse = (subscription: unknown) => parseClientMsg(JSON.stringify({ t: 'subscribe', subscription }));
+    expect(parse(sub(1))).toEqual({ t: 'subscribe', subscription: sub(1) });
+    expect(parse({ ...sub(1), endpoint: 'http://push.example/x' })).toBeNull();
+    expect(parse({ ...sub(1), endpoint: 'not a url' })).toBeNull();
+    expect(parse({ ...sub(1), keys: { p256dh: 'B'.repeat(86) + '=', auth: 'a'.repeat(22) } })).toBeNull();
+    expect(parse({ ...sub(1), keys: { p256dh: 'B'.repeat(87), auth: 'a'.repeat(23) } })).toBeNull();
+    expect(parse({ endpoint: sub(1).endpoint })).toBeNull();
   });
 });

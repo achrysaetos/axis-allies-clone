@@ -20,13 +20,20 @@ export interface RoomView {
   canUndo: boolean;
 }
 
+/** A browser's Web Push subscription, as `PushSubscription.toJSON()` gives it, with base64url keys. */
+export interface PushSubscriptionKeys {
+  endpoint: string;
+  keys: { p256dh: string; auth: string };
+}
+
 export type ClientMsg =
   | { t: 'hello'; token: string | null }
   | { t: 'join'; name: string }
   | { t: 'seat'; power: Power; take: boolean }
   | { t: 'act'; version: number; actions: Action[] }
   | { t: 'resolve'; version: number; battle: number }
-  | { t: 'undo'; version: number };
+  | { t: 'undo'; version: number }
+  | { t: 'subscribe'; subscription: PushSubscriptionKeys };
 
 export type ServerMsg =
   | { t: 'welcome'; player: PlayerId | null; token: string | null }
@@ -39,6 +46,18 @@ export interface CreateRoomRequest {
 
 export interface CreateRoomResponse {
   id: string;
+}
+
+export interface PushKeyResponse {
+  /** The VAPID public key, or null when this server sends no pushes. */
+  key: string | null;
+}
+
+/** What the service worker receives; `url` is relative to the app's origin. */
+export interface PushPayload {
+  title: string;
+  body: string;
+  url: string;
 }
 
 export const ROOM_ID = /^[a-z2-7]{10}$/;

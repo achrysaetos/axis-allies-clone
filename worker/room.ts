@@ -1,9 +1,10 @@
 import { actingPower } from '../src/engine/game';
 import { newGame } from '../src/engine/state';
 import { POWERS } from '../src/engine/types';
-import type { Action, GameState, Options, Power, Unit } from '../src/engine/types';
+import type { Action, Decision, GameState, Options, Power, Unit } from '../src/engine/types';
 import { NAME_MAX } from '../src/net/protocol';
-import type { ClientMsg, PlayerId, RoomView, ServerMsg } from '../src/net/protocol';
+import type { ClientMsg, PlayerId, PushSubscriptionKeys, RoomView, ServerMsg } from '../src/net/protocol';
+import { powerName } from '../src/ui/theme';
 import { actAll, quickResolve } from '../src/ui/session';
 import type { Controller, Session } from '../src/ui/session';
 
@@ -16,6 +17,8 @@ export interface RoomRecord {
   /** The state before the first move of the current phase; undo replays `moves` from here, one drop at a time. */
   phaseStart: GameState | null;
   moves: Action[][];
+  /** Unique by endpoint. */
+  pushes: ({ player: PlayerId } & PushSubscriptionKeys)[];
 }
 
 export interface Outcome {
@@ -33,6 +36,7 @@ export function newRoom(id: string, seed: number, options: Partial<Options>): Ro
     session: { state: newGame(seed, options), fallen: [] },
     phaseStart: null,
     moves: [],
+    pushes: [],
   };
 }
 
@@ -119,11 +123,85 @@ export function handle(r: RoomRecord, me: PlayerId | null, msg: ClientMsg, onlin
         },
       };
     }
+    case 'subscribe': {
+      if (!me) return refuse('pick a name first');
+      const sub = { player: me, ...msg.subscription };
+      const same = r.pushes.find((x) => x.endpoint === sub.endpoint);
+      if (same && JSON.stringify(same) === JSON.stringify(sub)) return { record: r };
+      const kept = [...r.pushes.filter((x) => x.endpoint !== sub.endpoint), sub];
+      const dropped = new Set(kept.filter((x) => x.player === me).slice(0, -PUSHES_PER_PLAYER));
+      return { record: { ...r, pushes: kept.filter((x) => !dropped.has(x)) } };
+    }
   }
+}
+
+/** Browsers a player can be reached on; the oldest drops off past this. */
+export const PUSHES_PER_PLAYER = 5;
+
+export interface Notice {
+  player: PlayerId;
+  title: string;
+  body: string;
+}
+
+const ADJECTIVE: Record<Power, string> = {
+  Russians: 'Soviet',
+  Germans: 'German',
+  British: 'British',
+  Japanese: 'Japanese',
+  Americans: 'American',
+};
+
+const DECISION: { [K in Decision['kind']]: (power: string, space: string) => string } = {
+  casualties: (p, at) => `${p} must choose casualties in ${at}`,
+  submerge: (p, at) => `${p} may submerge submarines in ${at}`,
+  retreat: (p, at) => `${p} may retreat from ${at}`,
+  bombard: (p, at) => `${p} may bombard ${at}`,
+  intercept: (p, at) => `${p} may intercept the raid on ${at}`,
+  landStranded: (p) => `${p} must land stranded fighters`,
+};
+
+/** Offline players who should hear that a change made it their move, or that the game is over. */
+export function whoToNotify(before: RoomRecord, after: RoomRecord, online: ReadonlySet<PlayerId>): Notice[] {
+  const was = before.session.state;
+  const now = after.session.state;
+  const name = (id: PlayerId | null) => after.players.find((p) => p.id === id)?.name ?? 'Someone';
+  const actor = name(before.seats[actingPower(was)]);
+  if (now.winner) {
+    if (was.winner) return [];
+    return after.players
+      .filter((p) => !online.has(p.id))
+      .map((p) => ({ player: p.id, title: `The ${now.winner} win`, body: `Round ${now.round} · ${actor} finished the game` }));
+  }
+  const acting = actingPower(now);
+  const player = after.seats[acting];
+  if (!player || player === before.seats[actingPower(was)] || online.has(player)) return [];
+  const d = now.pending;
+  const space = d && 'battle' in d ? (now.battles.find((b) => b.id === d.battle)?.space ?? '') : '';
+  const body = d
+    ? DECISION[d.kind](powerName(acting), space)
+    : now.power !== was.power
+      ? `Round ${now.round} · ${actor} finished the ${ADJECTIVE[was.power]} turn`
+      : `Round ${now.round} · ${actor} made the ${ADJECTIVE[actingPower(was)]} decision`;
+  return [{ player, title: `Your move: ${powerName(acting)}`, body }];
 }
 
 const isObject = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && x !== null && !Array.isArray(x);
 const isVersion = (x: unknown): x is number => Number.isInteger(x);
+
+const B64URL = /^[A-Za-z0-9_-]+$/;
+/** Lengths of a P-256 public key (65 bytes) and an auth secret (16 bytes) in unpadded base64url. */
+const P256DH_LENGTH = 87;
+const AUTH_LENGTH = 22;
+
+function parseSubscription(x: unknown): PushSubscriptionKeys | null {
+  if (!isObject(x) || typeof x.endpoint !== 'string' || x.endpoint.length > 2048 || !isObject(x.keys)) return null;
+  const { p256dh, auth } = x.keys;
+  if (typeof p256dh !== 'string' || p256dh.length !== P256DH_LENGTH || !B64URL.test(p256dh)) return null;
+  if (typeof auth !== 'string' || auth.length !== AUTH_LENGTH || !B64URL.test(auth)) return null;
+  if (!URL.canParse(x.endpoint) || new URL(x.endpoint).protocol !== 'https:') return null;
+  return { endpoint: x.endpoint, keys: { p256dh, auth } };
+}
 
 /** Checks the envelope; the engine itself rejects a well-formed action that breaks a rule. */
 export function parseClientMsg(text: string): ClientMsg | null {
@@ -156,6 +234,10 @@ export function parseClientMsg(text: string): ClientMsg | null {
         : null;
     case 'undo':
       return isVersion(m.version) ? { t: 'undo', version: m.version } : null;
+    case 'subscribe': {
+      const subscription = parseSubscription(m.subscription);
+      return subscription && { t: 'subscribe', subscription };
+    }
     default:
       return null;
   }
