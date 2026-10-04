@@ -265,6 +265,25 @@ describe('amphibious assaults (p.13-15)', () => {
     expect(s.owner['France']).toBe('British');
   });
 
+  it('in a mixed assault only overland units and aircraft retreat; seaborne units fight on', () => {
+    let s = scenario({
+      power: 'British',
+      owners: { 'Northwestern Europe': 'British' },
+      units: [['British', 'transport', '8 Sea Zone'], ['British', 'armour', 'Northwestern Europe'], ['Germans', 'infantry', 'France', 3]],
+      dice: [6, 6, 6, 6, 6],
+    });
+    load(s, 'British', '8 Sea Zone', ['infantry']);
+    s = move(s, ids(s, 'British', 'infantry', '8 Sea Zone'), ['8 Sea Zone', 'France']);
+    s = move(s, ids(s, 'British', 'armour', 'Northwestern Europe'), ['Northwestern Europe', 'France']);
+    s = ok(s, { type: 'endPhase' });
+    s = ok(s, { type: 'startBattle', battle: battleIn(s, 'France').id });
+    expect(s.pending).toMatchObject({ kind: 'retreat', options: ['Northwestern Europe'] });
+    s = ok(s, { type: 'retreat', to: 'Northwestern Europe' });
+    expect(count(s, 'British', 'armour', 'Northwestern Europe')).toBe(1);
+    expect(count(s, 'British', 'infantry', 'Northwestern Europe')).toBe(0);
+    expect(battleIn(s, 'France').round).toBeGreaterThan(1);
+  });
+
   it('seaborne units cannot retreat', () => {
     let s = assault([['Germans', 'infantry', 'France']], [6, 6, 6, 6]);
     s = ok(s, { type: 'endPhase' });
@@ -303,6 +322,12 @@ describe('mobilization and income (p.22-23)', () => {
     s.purchases = [{ type: 'fighter', count: 3 }];
     s = ok(s, { type: 'place', unitType: 'fighter', at: '15 Sea Zone', count: 2 });
     fails(s, { type: 'place', unitType: 'fighter', at: '15 Sea Zone', count: 1 }, /carriers/);
+  });
+
+  it('a power without its capital collects no income', () => {
+    let s = scenario({ phase: 'mobilize', owners: { Germany: 'Russians' }, treasury: { Germans: 5 }, units: [] });
+    s = ok(s, { type: 'endPhase' });
+    expect(s.treasury.Germans).toBe(5);
   });
 
   it('income is collected at the end of the turn', () => {
