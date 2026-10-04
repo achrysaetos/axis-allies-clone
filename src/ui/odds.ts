@@ -1,5 +1,5 @@
 import { asCombatants, simulate } from '../ai/eval';
-import { isLand, space } from '../engine/data';
+import { STATS, isLand, space } from '../engine/data';
 import { areAllied } from '../engine/queries';
 import type { GameState, SpaceId, Unit } from '../engine/types';
 
@@ -33,10 +33,26 @@ export function forecasts(state: GameState): Forecast[] {
       ? here.filter((u) => u.owner === power && u.carriedBy === null && !u.sbr)
       : [...here.filter((u) => u.owner === power && u.movedInCombat && !u.sbr && u.carriedBy === null), ...landing.filter((u) => u.offloadedTo === id)];
     if (attackers.length === 0 || defenders.length === 0) continue;
-    const odds = simulate({ kind: water ? 'sea' : 'land', attackers: asCombatants(attackers), defenders: asCombatants(defenders), trials: TRIALS });
+    const odds = simulate({
+      kind: water ? 'sea' : 'land',
+      attackers: asCombatants(attackers),
+      defenders: asCombatants(defenders),
+      bombard: water ? [] : bombardment(state, landing.filter((u) => u.offloadedTo === id)),
+      trials: TRIALS,
+    });
     out.push({ space: id, kind: water ? 'sea' : 'land', ...odds });
   }
   return out;
+}
+
+/** Attack values of ships that can bombard, one per landing unit, from zones with no sea battle. */
+function bombardment(state: GameState, landing: Unit[]): number[] {
+  const zones = new Set(landing.map((u) => u.at));
+  const contested = (zone: SpaceId) => state.units.some((u) => u.at === zone && !areAllied(u.owner, state.power));
+  return state.units
+    .filter((u) => u.owner === state.power && (u.type === 'battleship' || u.type === 'cruiser') && zones.has(u.at) && !contested(u.at) && !u.bombarded)
+    .slice(0, landing.length)
+    .map((u) => STATS[u.type].attack);
 }
 
 export const oddsClass = (win: number) => (win >= 0.7 ? 'good' : win >= 0.4 ? 'warn' : 'bad');
