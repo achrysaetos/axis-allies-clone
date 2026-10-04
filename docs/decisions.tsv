@@ -22,3 +22,4 @@ when	what	why	evidence	result
 2026-10-04	fallen-capital-tray	Purchase tray says the capital has fallen instead of showing cards that error on click	kept: no-capital scenario shows message, 0 cards, no contradicting hint
 2026-10-04	defender-finish-link	Finish-automatically link only for whoever controls the attack; no retreat clause on the defender's decision	kept: hotseat battle defender sees plain label; online defender (attacker remote) sees none
 2026-10-04	turn-card-orientation	Map centers on the new power's capital when the turn card appears, not only after Start	kept: opening shows Soviet home behind the card
+2026-10-04	sound	Synthesized sound cues (drop, dice, hit, capture, turn, victory) derived from state changes, mute in the menu	kept: browser counted audio nodes per drop/roll/casualty; 4 cue tests

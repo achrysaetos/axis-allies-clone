@@ -26,6 +26,7 @@ import type { Hand } from './pieces';
 import { useDrag } from './drag';
 import { UnitSvg } from './icons';
 import { tally } from './units';
+import { cuesBetween, play } from './sound';
 import { POWER_STYLE } from './theme';
 import { actAll, aiBurst, quickResolve, undo } from './session';
 import { autosave, downloadSave, loadAutosave } from './saves';
@@ -227,6 +228,12 @@ function Game({
   useEffect(() => {
     if (!send) autosave(session);
   }, [session, send]);
+
+  const heard = useRef(state);
+  useEffect(() => {
+    play(cuesBetween(heard.current, state));
+    heard.current = state;
+  }, [state]);
 
   const serverError = online?.lastError;
   useEffect(() => {

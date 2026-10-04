@@ -4,6 +4,7 @@ import { income, victoryCities } from '../../engine/queries';
 import type { GameState, Phase, Power } from '../../engine/types';
 import type { Controller } from '../session';
 import { PHASE_LABEL, POWER_STYLE } from '../theme';
+import { isMuted, setMuted } from '../sound';
 import { Chip } from '../units';
 
 interface Props {
@@ -22,6 +23,7 @@ const PHASES: Phase[] = ['purchase', 'combatMove', 'combat', 'noncombatMove', 'm
 
 export function PhaseBar({ state, controllers, canUndo, onEndPhase, onUndo, onExport, onMenu, onHelp, onLog }: Props) {
   const [menu, setMenu] = useState(false);
+  const [quiet, setQuiet] = useState(isMuted);
   const style = POWER_STYLE[state.power];
   const t = VICTORY_THRESHOLD[state.options.victory];
   const human = controllers[state.pending?.power ?? state.power] === 'human';
@@ -66,6 +68,14 @@ export function PhaseBar({ state, controllers, canUndo, onEndPhase, onUndo, onEx
           <div className="menu" onClick={() => setMenu(false)}>
             <button onClick={onLog}>Game log (L)</button>
             <button onClick={onHelp}>How to play (?)</button>
+            <button
+              onClick={() => {
+                setMuted(!quiet);
+                setQuiet(!quiet);
+              }}
+            >
+              {quiet ? 'Turn sound on' : 'Turn sound off'}
+            </button>
             <button onClick={onExport}>Export save</button>
             <button onClick={onMenu}>Main menu</button>
           </div>
