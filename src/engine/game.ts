@@ -101,9 +101,9 @@ const costOf = (ps: Purchase[]) => ps.reduce((n, p) => n + STATS[p.type].cost * 
 
 function buy(s: GameState, purchases: Purchase[]): string | null {
   if (s.phase !== 'purchase') return 'units are bought in the purchase phase';
-  if (!capitalHeld(s, s.power)) return 'a power without its capital cannot buy units';
   if (purchases.some((p) => !Number.isInteger(p.count) || p.count < 0)) return 'invalid purchase count';
   const clean = purchases.filter((p) => p.count > 0);
+  if (clean.length > 0 && !capitalHeld(s, s.power)) return 'a power without its capital cannot buy units';
   if (costOf(clean) > s.treasury[s.power]) return 'not enough IPCs';
   const factories = eligibleFactories(s, s.power);
   const capacity = factories.reduce((n, f) => n + productionLeft(s, f), 0);

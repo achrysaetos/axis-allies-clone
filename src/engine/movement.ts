@@ -354,8 +354,8 @@ export function combatMoveErrors(state: GameState): string[] {
   for (const zone of new Set(state.units.filter((u) => u.owner === power && isSea(u.type)).map((u) => u.at))) {
     const mine = unitsAt(state, zone).filter((u) => u.owner === power && u.carriedBy === null);
     if (!isHostileSea(state, zone, power)) continue;
-    const fighters = mine.filter((u) => STATS[u.type].attack > 0);
-    if (fighters.length === 0 && mine.some((u) => u.type === 'transport'))
+    const combatants = mine.filter((u) => STATS[u.type].attack > 0);
+    if (combatants.length === 0 && mine.some((u) => u.type === 'transport' && u.movedInCombat))
       errors.push(`transports in ${zone} cannot attack without combat units`);
   }
   return errors;
