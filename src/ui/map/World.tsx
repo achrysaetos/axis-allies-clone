@@ -56,7 +56,7 @@ function Pieces({ id, x, y, stacks, held }: { id: SpaceId; x: number; y: number;
               transform={`translate(${at},${y + r * (PIECE_H + 2)})`}
             >
               <title>
-                {`${style.name} ${UNIT_GLYPH[st.type].name.toLowerCase()} ×${st.units.length}${st.carried ? ' (aboard a transport)' : ''}${st.spent ? ' (done moving)' : ''}`}
+                {`${style.name} ${UNIT_GLYPH[st.type].name.toLowerCase()} ×${st.units.length}${st.carried ? ' (aboard a transport)' : ''}${st.spent ? ' (done for now)' : ''}`}
               </title>
               <rect
                 width={w}

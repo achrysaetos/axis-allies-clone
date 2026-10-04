@@ -941,3 +941,44 @@ kbd {
 .tile.on {
   box-shadow: 0 0 0 2px var(--accent);
 }
+.die {
+  animation: tumble 0.45s ease-out backwards;
+}
+.dice-row .die:nth-child(2n) {
+  animation-delay: 0.05s;
+}
+.dice-row .die:nth-child(3n) {
+  animation-delay: 0.1s;
+}
+@keyframes tumble {
+  0% {
+    transform: translateY(-10px) rotate(-200deg) scale(0.6);
+    opacity: 0;
+  }
+  70% {
+    transform: translateY(1px) rotate(12deg) scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: none;
+  }
+}
+.die.hit {
+  animation:
+    tumble 0.45s ease-out backwards,
+    hitflash 0.5s 0.45s ease-out;
+}
+@keyframes hitflash {
+  0% {
+    box-shadow: 0 0 0 0 rgba(229, 99, 77, 0.9);
+  }
+  100% {
+    box-shadow: 0 0 0 7px rgba(229, 99, 77, 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .die,
+  .die.hit {
+    animation: none;
+  }
+}

@@ -33,7 +33,9 @@ export const pickable = (state: GameState, u: Unit) =>
 
 export function stacksAt(state: GameState, units: Unit[]): Stack[] {
   const moving = state.phase === 'combatMove' || state.phase === 'noncombatMove';
-  const spent = (u: Unit) => moving && u.owner === state.power && !pickable(state, u);
+  // Planes that retreated hover over the battlefield until noncombat; they are drawn as out of play until then.
+  const spent = (u: Unit) =>
+    u.owner === state.power && ((moving && !pickable(state, u)) || (state.phase === 'combat' && u.retreated));
   const out: Stack[] = [];
   for (const owner of POWERS)
     for (const type of UNIT_TYPES) {
