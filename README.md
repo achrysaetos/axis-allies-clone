@@ -1,6 +1,6 @@
 # Axis & Allies 1942 Second Edition
 
-A private, rules-complete clone of Axis & Allies 1942 Second Edition. It plays in the browser, hotseat or against a computer opponent.
+A private, rules-complete clone of Axis & Allies 1942 Second Edition. Two players share one screen: one plays the Allies (Soviet Union, United Kingdom, United States) and the other plays the Axis (Germany, Japan). Either side can also be handed to the computer.
 
 ## Run it
 
@@ -9,7 +9,19 @@ npm install
 npm run dev
 ```
 
-Open the printed local URL. Pick a human or the AI for each power, then start a game. The game autosaves in the browser. You can export and import save files.
+Open the printed local URL and press **Start new game**. The game autosaves in the browser after every action, so **Continue** on the start screen picks up where you left off. **Export** saves the game to a file and **Import saved game** loads one.
+
+## How a turn plays
+
+Each power's turn opens with a card that names the player, shows the money to spend, and recaps what the previous power did. Press **Start turn** or Enter, and the map centers on that power's capital. The sidebar then guides each phase:
+
+1. **Purchase.** Use the steppers to buy units. The panel shows how many units your factories can place this turn.
+2. **Combat move.** Click a territory or sea zone, choose units, and click a highlighted destination. **Planned attacks** shows each attack's simulated win chance and expected losses. **Undo** (Ctrl or Cmd+Z) takes back moves in this phase.
+3. **Combat.** Press **Start** to fight a battle and answer its choices in the battle dialog. Hit dice are marked in red. **Quick** fights a battle to the end with the default choices for both sides.
+4. **Noncombat move.** Move units that did not attack, and land every plane.
+5. **Mobilize.** Click a highlighted space, or use the **Place** buttons, to put your new units on the board.
+
+If ending a phase would lose planes, leave units unplaced, or skip buying, the game asks you to confirm first. Press **E** to end a phase from the keyboard.
 
 ## Rules source
 
@@ -20,7 +32,7 @@ The engine follows these sources, in priority order:
 
 Map adjacency, territory values and the starting setup come from TripleA's `world_war_ii_v5_1942` map. TripleA is a data source only, not a rules authority. `scripts/gen-data.ts` regenerates `src/data/*.json` from `vendor/triplea/`.
 
-Optional rules from the rulebook are off by default and can be turned on when you start a game:
+Optional rules from the rulebook are off by default and can be switched on from the start screen:
 
 - Total victory. The winning side must hold all 13 victory cities.
 - Turkish straits. No sea units may enter or leave sea zone 16.
@@ -29,8 +41,8 @@ Optional rules from the rulebook are off by default and can be turned on when yo
 ## Layout
 
 - `src/engine` is the pure rules engine. `apply(state, action)` returns a new state or an error. It never mutates its input.
-- `src/ai` holds the computer opponents. `aiAction(state)` returns the next action for whoever must act.
-- `src/ui` is the React interface.
+- `src/ai` holds the computer opponent. `aiAction(state)` returns the next action for whoever must act. Its battle simulator also powers the win-chance preview.
+- `src/ui` is the React interface. `npm run format` formats the code with Prettier.
 - `test` holds behavior tests named after rulebook pages.
 - `scripts` holds the data generator, the fuzzer, the mutation tester and the AI match runner.
 - `docs/decisions.tsv` records design decisions with their evidence.
