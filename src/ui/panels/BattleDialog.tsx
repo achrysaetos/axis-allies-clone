@@ -282,9 +282,11 @@ export function BattleDialog({
         ) : (
           <>
             <DecisionView state={state} d={mine} act={act} />
-            <button className="link" onClick={() => onQuick(battle.id)}>
-              Finish this battle automatically (retreats below 30%)
-            </button>
+            {human && (
+              <button className="link" onClick={() => onQuick(battle.id)}>
+                Finish this battle automatically{mine.power === battle.attacker ? ' (retreats below 30%)' : ''}
+              </button>
+            )}
           </>
         ))}
     </div>
