@@ -9,17 +9,17 @@ npm install
 npm run dev
 ```
 
-Open the printed local URL and press **Start new game**. The game autosaves in the browser after every action, so **Continue** on the start screen picks up where you left off. **Export** saves the game to a file and **Import saved game** loads one.
+Open the printed local URL and press **Start new game**. The game autosaves in the browser after every action, so **Continue** on the start screen picks up where you left off. **Export save** in the ☰ menu saves the game to a file and **Import saved game** on the start screen loads one.
 
 ## How a turn plays
 
-Each power's turn opens with a card that names the player, shows the money to spend, and recaps what the previous power did. Press **Start turn** or Enter, and the map centers on that power's capital. The sidebar then guides each phase:
+Each power's turn opens with a card that names the player, shows the money to spend, and recaps what the previous power did. Press **Start turn** or Enter, and the map centers on that power's capital. A hint line at the top of the map names the next step. The ☰ menu holds the game log (L), help (?), export and the main menu.
 
-1. **Purchase.** Use the steppers to buy units. The panel shows how many units your factories can place this turn.
-2. **Combat move.** Click a territory or sea zone, choose units, and click a highlighted destination. **Planned attacks** shows each attack's simulated win chance and expected losses. **Undo** (Ctrl or Cmd+Z) takes back moves in this phase.
-3. **Combat.** Press **Start** to fight a battle and answer its choices in the battle dialog. Hit dice are marked in red. **Quick** fights a battle to the end with the default choices for both sides.
+1. **Purchase.** Click a unit card in the tray at the bottom to buy one, and right-click to remove one. The tray shows the IPCs left and how many units your factories can place.
+2. **Combat move.** Drag a piece onto a space to move its whole stack, or click a piece to pick up one unit and click a highlighted space. Planned attacks show their win chance on the map. **Undo** (Ctrl or Cmd+Z) takes back moves in this phase.
+3. **Combat.** The first battle's dialog opens by itself, and clicking a battle space opens its dialog. Press **Roll dice** and answer its choices, or **Fight it out automatically**. Hit dice are marked in red. **Next** moves to the following battle.
 4. **Noncombat move.** Move units that did not attack, and land every plane.
-5. **Mobilize.** Click a highlighted space, or use the **Place** buttons, to put your new units on the board.
+5. **Mobilize.** Drag a card from the tray onto a highlighted space to place your new units.
 
 If ending a phase would lose planes, leave units unplaced, or skip buying, the game asks you to confirm first. Press **E** to end a phase from the keyboard.
 

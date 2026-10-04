@@ -12,11 +12,11 @@ Players start a new game choosing Player or Computer for each side (Allies, Axis
 
 ## How to get to it (user POV)
 
-- Open the app with no game in progress, or press `Menu` in a game.
+- Open the app with no game in progress, or press `Menu` then `Main menu` in a game.
 - Choose `Player` or `Computer` for each side, tick the option checkboxes, then press `Start new game`.
 - Press the `Continue: round N, Power` button on the setup screen.
 - Choose a file with `Import saved game…`.
-- Press `Export` in the top bar during a game.
+- Press `Menu` then `Export save` in the top bar during a game.
 
 ## Driving it with the browser pane
 
@@ -26,9 +26,9 @@ Preconditions:
 
 - **New game.** Press `Start new game`; if a save exists, press `Replace saved game and start`. Dismiss the turn card. The top bar reads `Round 1`, `Soviet Union` and `Purchase`, with `Treasury 24 · Income 24` and `Axis 6/9 · Allies 7/10`.
 - **Options.** On the setup screen, tick `Optional: fighters escort and intercept bombing raids` and choose `Total: all 13 cities`, then start. The state snippet shows `options.sbrEscortsInterceptors: true` and `options.victory: "total"`, and the top bar threshold reads `/13`.
-- **Continue.** Make one purchase, reload the page, then press `Continue: round 1, Soviet Union` and `Continue turn`. The purchase panel shows the same purchase.
-- **Import.** Press `Menu`, then run the Import snippet with `opening`. The turn card opens for `Soviet Union` in `Purchase`.
-- **Export.** Press `Export`. The browser starts a download named `aa1942-round1-Russians.json`. Downloads need the user's permission, so record this as unverified unless they allow it.
+- **Continue.** Make one purchase, reload the page, then press `Continue: round 1, Soviet Union` and `Continue turn`. The purchase tray shows the same purchase.
+- **Import.** Press `Menu`, then `Main menu`, then run the Import snippet with `opening`. The turn card opens for `Soviet Union` in `Purchase`.
+- **Export.** Press `Menu`, then `Export save`. The browser starts a download named `aa1942-round1-Russians.json`. Downloads need the user's permission, so record this as unverified unless they allow it.
 
 ## Gotchas
 

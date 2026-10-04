@@ -5,15 +5,15 @@ This directory is the maintained source for verifying what a player can do in th
 ## Baseline preconditions
 
 - Run the dev server from this checkout at `http://localhost:5173`, started by this run with `preview_start` and `name: "game"`.
-- Set the viewport to 1440 by 900.
+- Set the viewport to 1440 by 900. The map opens at zoom 1.35.
 - `scripts/verify/doctor.sh` must print `DOCTOR OK` for this checkout.
 - Generate the scenario each recipe names with `npx tsx scripts/verify/scenario.ts <name>`.
 - Never drive a server or a saved game this run did not create.
 
 ## Driving conventions
 
-- Start each recipe from the setup screen. Press `Menu` if a game is open.
-- Prefer button text and `data-space` territory handles over screen coordinates.
+- Start each recipe from the setup screen. Press `Menu`, then `Main menu` if a game is open.
+- Prefer button text, `data-space` territory handles and `data-stack` piece handles over screen coordinates. Drags need coordinates taken from those handles.
 - Load positions only through the `Import saved game…` path, using the snippet in SKILL.md.
 - Use territory and sea zone names exactly as they appear in `src/data/map.json`.
 - Read state only with the read-only snippet in SKILL.md. Never write state to make progress.
@@ -34,9 +34,9 @@ Each feature file starts with an H1 title and one paragraph on the player-visibl
 ## Features
 
 - [Setup and saves](./setup-and-saves.md) covers new games, options, continue, import and export.
-- [Purchase](./purchase.md) covers buying units, the production limit and factory repair.
-- [Movement](./movement.md) covers selecting units, moving, blitzing, loading, offloading and undo.
+- [Purchase](./purchase.md) covers the purchase tray, the production limit and factory repair.
+- [Movement](./movement.md) covers dragging and picking up pieces, moving, blitzing, loading, offloading and undo.
 - [Combat](./combat.md) covers battle order, the battle dialog and every battle decision.
-- [Mobilize and income](./mobilize-and-income.md) covers placing units, ending a turn, income and victory.
+- [Mobilize and income](./mobilize-and-income.md) covers placing units from the tray, ending a turn, income and victory.
 - [AI turns](./ai-turns.md) covers computer-controlled powers and handing decisions to human defenders.
-- [Turn flow and guidance](./turn-flow.md) covers the turn card, phase guide, odds preview, end-phase warnings and help.
+- [Turn flow and guidance](./turn-flow.md) covers the turn card, hint line, odds tags, end-phase warnings, the menu, log and help.

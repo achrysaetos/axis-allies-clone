@@ -1,11 +1,11 @@
 # Combat
 
-In the combat phase the player resolves battles in the rulebook's order: strategic bombing raids, then amphibious assaults, then general combat. Each battle opens a dialog with both sides, the dice rolled so far and the decision currently pending, which may belong to the attacker or to a defender.
+In the combat phase the player resolves battles in the rulebook's order: strategic bombing raids, then amphibious assaults, then general combat. Each battle opens a dialog from the map with both sides, the dice rolled so far and the decision currently pending, which may belong to the attacker or to a defender.
 
 ## Sub-features
 
-- `combat-order` disables `Start` with the reason when a raid or amphibious assault must go first.
-- `combat-skip` declines an optional battle against only submarines or transports.
+- `combat-order` shows `Not yet: <reason>` instead of the roll buttons when a raid or amphibious assault must go first.
+- `combat-skip` presses `Skip` to decline an optional battle against only submarines or transports.
 - `combat-casualties` assigns hits under the rules (air cannot hit subs without a destroyer, transports last, battleships take two hits).
 - `combat-retreat` retreats to a space the attackers came from, or presses on.
 - `combat-submerge` submerges submarines instead of a surprise strike.
@@ -16,8 +16,11 @@ In the combat phase the player resolves battles in the rulebook's order: strateg
 
 ## How to get to it (user POV)
 
-- The `Battles` panel during the combat phase, with `Start` (accessible name `Fight this battle`), `Skip` and `view` per battle.
-- The battle dialog's decision area: `Confirm casualties`, `Auto`, `Press on`, retreat destination buttons, and checkboxes for submerge, bombard and intercept.
+- When the combat phase starts, the first fightable battle's dialog opens automatically. Clicking a battle space on the map opens its dialog.
+- A not-yet-started battle shows both sides, the forecast line, and `Roll dice`, `Fight it out automatically` and `Skip` (optional battles only).
+- A finished battle shows `Next: <space>` or `Back to the map`.
+- The casualty picker lists the side's units as `button.tile` tiles under "In the fight, click to take a hit" with a dashed `Casualty zone · n/m` row below. Clicking a tile in the fight moves one hit into the zone. Clicking a tile in the zone, or right-clicking it, moves it back.
+- The battle dialog's decision area: `Remove casualties`, `Suggest`, `Press on`, retreat destination buttons, and checkboxes for submerge, bombard and intercept.
 
 ## Driving it with the browser pane
 
@@ -25,14 +28,16 @@ Preconditions:
 
 - Load the scenario the step names. Unless the scenario is AI-controlled, every power in it is human, so you answer both sides' decisions.
 
-- **Amphibious with bombardment.** Load `amphibious`, offload the cargo into `France` as in movement.md, and press `End phase`. Press `Start` on France. The bombard decision offers the battleship and cruiser with a maximum of 2, the number of seaborne units. Press `Bombard`, then answer casualties and retreat prompts until the dialog shows a winner. The dice log starts with a `bombardment` row. If the British win, the state snippet shows `owner.France: "British"`.
-- **Surprise strike.** Load `sub-strike`, move both submarines from `12 Sea Zone` to `13 Sea Zone`, end the phase and press `Start`. Answer the submerge prompts. The dialog shows a `surprise strike` dice row, and a British casualty from it never fires back.
-- **Interception.** Load `raid-intercept`, select the bombers and the fighter in `United Kingdom`, tick the raid checkbox, click `data-space="Germany"`, end the phase and press `Start`. Germany's intercept decision appears. The dice log shows `escort fire`, `interceptor fire`, `factory air defense` and `bombing damage`, and the factory badge in Germany shows the damage.
+- **Amphibious with bombardment.** Load `amphibious`, offload the cargo into `France` as in movement.md, and press `End phase`. The France dialog opens by itself. Press `Roll dice`. The bombard decision offers the battleship and cruiser with a maximum of 2, the number of seaborne units. Press `Bombard`, then answer casualties and retreat prompts until the dialog shows a winner. The dice log starts with a `bombardment` row. If the British win, the state snippet shows `owner.France: "British"`.
+- **Surprise strike.** Load `sub-strike`, drag both submarines from `12 Sea Zone` to `13 Sea Zone`, end the phase and press `Roll dice` in the dialog that opens. Answer the submerge prompts. The dialog shows a `surprise strike` dice row, and a British casualty from it never fires back.
+- **Interception.** Load `raid-intercept`, drag the bombers and the fighter from `United Kingdom` onto `data-space="Germany"`, choose `Bomb the industrial complex`, end the phase and press `Roll dice`. Germany's intercept decision appears. The dice log shows `escort fire`, `interceptor fire`, `factory air defense` and `bombing damage`, and the factory badge in Germany shows the damage. Before rolling, the `.map-tag` over Germany reads `~N dmg`.
+- **Order.** In a scenario with a raid and a land battle, click the land battle's space first. The dialog shows `Not yet: <reason>` and no roll buttons.
 - **Stranded fighters.** Load `carrier-loss`, attack `6 Sea Zone` with the battleships, sink the carrier, then retreat or win. On ending combat, Britain is asked to land each fighter within one space, and the state shows them in `United Kingdom` or destroyed.
 
 ## Gotchas
 
+- The dialog opens automatically at the start of combat and after `Next: <space>`. A click on a map space with no battle does nothing.
 - Decisions alternate between attacker and defender. Read `pending.power` before answering.
-- Casualty steppers start filled with the cheapest legal choice, so pressing `Confirm casualties` without changes is a valid answer.
+- The casualty zone starts filled with the cheapest legal choice, so pressing `Remove casualties` without changes is a valid answer. Once `n/m` is full, further tile clicks have no effect until a tile is moved back.
 - A battle that ends with no attacking land units never captures, even if the defenders are gone.
 - Dice are random unless the scenario scripts them. Prove rules from the dice rows actually shown, not from the outcome alone.

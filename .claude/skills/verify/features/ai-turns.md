@@ -21,7 +21,7 @@ Preconditions:
 - Bring the tab to the front with `tabs_select`. Hidden panes throttle the AI's timers.
 
 - **Hand over.** Finish the Russian turn by pressing `End phase` and `End turn`. The top bar changes to `Germans (AI)` and the phases advance on their own.
-- **Defender handoff.** When the state snippet shows `pending.power` of `Russians` or `British`, the battle dialog is open for that power. Answer it with `Confirm casualties` or `Press on`. The AI turn then continues.
+- **Defender handoff.** When the state snippet shows `pending.power` of `Russians` or `British`, the battle dialog is open for that power. Answer it with `Remove casualties` or `Press on`. The AI turn then continues.
 - **Turn completes.** Poll the state snippet every few seconds. The log gains `Germans collects N IPCs`, and `power` becomes `British`.
 
 ## Gotchas

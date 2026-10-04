@@ -51,17 +51,3 @@ export function UnitChips({ units, muted }: { units: Unit[]; muted?: boolean }) 
     </span>
   );
 }
-
-export function Stepper({ value, max, onChange }: { value: number; max: number; onChange: (n: number) => void }) {
-  return (
-    <span className="stepper">
-      <button disabled={value <= 0} onClick={() => onChange(value - 1)}>
-        −
-      </button>
-      <span className="stepper-value">{value}</span>
-      <button disabled={value >= max} onClick={() => onChange(value + 1)}>
-        +
-      </button>
-    </span>
-  );
-}

@@ -93,6 +93,26 @@ const SCENARIOS: Record<string, Scenario> = {
         ['British', 'fighter', '6 Sea Zone', 2],
       ]),
   },
+  battle: {
+    summary:
+      'German combat move: a mixed army in Poland next to a mixed Soviet army in Belorussia, so both sides choose casualties.',
+    build: () =>
+      board(
+        'Germans',
+        'combatMove',
+        [
+          ['Germans', 'infantry', 'Poland', 3],
+          ['Germans', 'artillery', 'Poland'],
+          ['Germans', 'armour', 'Poland', 2],
+          ['Germans', 'fighter', 'Poland'],
+          ['Russians', 'infantry', 'Belorussia', 3],
+          ['Russians', 'artillery', 'Belorussia'],
+          ['Russians', 'armour', 'Belorussia'],
+          ['Russians', 'fighter', 'Belorussia'],
+        ],
+        { owners: { Belorussia: 'Russians' } },
+      ),
+  },
   mobilize: {
     summary: 'German mobilize phase holding 4 infantry and 1 destroyer, with complexes in Germany and Italy.',
     build: () => {

@@ -3,8 +3,9 @@ import { SIDE, STATS } from '../../engine/data';
 import { assignable, autoCasualties } from '../../engine/casualties';
 import type { Action, Decision, GameState, HitCategory, Unit, UnitId } from '../../engine/types';
 import { casualtyPool, unreachable } from '../session';
-import { UNIT_GLYPH, powerName } from '../theme';
-import { Chip, Stepper } from '../units';
+import { UnitSvg } from '../icons';
+import { POWER_STYLE, UNIT_GLYPH, powerName } from '../theme';
+import { Chip } from '../units';
 
 type Act = (a: Action) => boolean;
 type Of<K extends Decision['kind']> = Extract<Decision, { kind: K }>;
@@ -47,6 +48,39 @@ function picksFrom(buckets: HitBucket[], ids: UnitId[]): Record<string, number> 
   return out;
 }
 
+/** A piece in the casualty board: click to move one unit across, right-click to move it back. */
+function Tile({
+  bk,
+  n,
+  label,
+  onMore,
+  onLess,
+}: {
+  bk: HitBucket;
+  n: number;
+  label?: string;
+  onMore: () => void;
+  onLess: () => void;
+}) {
+  const style = POWER_STYLE[bk.sample.owner];
+  return (
+    <button
+      className="tile"
+      style={{ background: style.color, color: style.ink }}
+      onClick={onMore}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        onLess();
+      }}
+      title={`${UNIT_GLYPH[bk.sample.type].name}${bk.sample.damage > 0 ? ' (damaged)' : ''}`}
+    >
+      <UnitSvg type={bk.sample.type} color={style.ink} size={30} />
+      <span className="tile-count">{n}</span>
+      {label && <span className="tile-label">{label}</span>}
+    </button>
+  );
+}
+
 export function CasualtyPicker({ state, d, act }: { state: GameState; d: Of<'casualties'>; act: Act }) {
   const b = state.battles.find((x) => x.id === d.battle)!;
   const pool = casualtyPool(state, b, d.side);
@@ -55,31 +89,70 @@ export function CasualtyPicker({ state, d, act }: { state: GameState; d: Of<'cas
   const [picks, setPicks] = useState(() => picksFrom(buckets, suggested));
   const need = assignable(d.groups, pool).total;
   const chosen = buckets.flatMap((bk) => bk.slots.slice(0, picks[bk.key] ?? 0));
+  const set = (bk: HitBucket, n: number) => setPicks({ ...picks, [bk.key]: Math.max(0, Math.min(bk.slots.length, n)) });
+  /** With the zone full, a new pick swaps out a piece already there, as a player trades one casualty for another. */
+  const take = (bk: HitBucket) => {
+    const swap = chosen.length >= need ? buckets.find((o) => o.key !== bk.key && (picks[o.key] ?? 0) > 0) : undefined;
+    if (chosen.length >= need && !swap) return;
+    setPicks({ ...picks, ...(swap ? { [swap.key]: picks[swap.key]! - 1 } : {}), [bk.key]: (picks[bk.key] ?? 0) + 1 });
+  };
+  const units = (bk: HitBucket) => bk.slots.length / (STATS[bk.sample.type].hitPoints - bk.sample.damage);
   return (
     <div className="decision">
       <div className="decision-title">
-        {powerName(d.power)} ({SIDE[d.power]} player): choose {need} casualt{need === 1 ? 'y' : 'ies'}
+        {powerName(d.power)} ({SIDE[d.power]} player): {need} hit{need === 1 ? '' : 's'} to take
       </div>
-      <div className="dim">{REASON_LABEL[d.reason]}</div>
-      <div className="dim">{d.groups.map((g) => `${g.hits} × ${CATEGORY_LABEL[g.category]}`).join(', ')}</div>
-      {buckets.map((bk) => (
-        <div key={bk.key} className="row">
-          <Chip owner={bk.sample.owner} type={bk.sample.type} />
-          <span className="grow">
-            {UNIT_GLYPH[bk.sample.type].name}
-            {bk.sample.damage > 0 ? ' (damaged)' : ''}
-            {STATS[bk.sample.type].hitPoints - bk.sample.damage > 1 ? <span className="dim"> · 2 hits each</span> : null}
-          </span>
-          <Stepper value={picks[bk.key] ?? 0} max={bk.slots.length} onChange={(v) => setPicks({ ...picks, [bk.key]: v })} />
-        </div>
-      ))}
+      <div className="dim">
+        {REASON_LABEL[d.reason]} · {d.groups.map((g) => `${g.hits} × ${CATEGORY_LABEL[g.category]}`).join(', ')}
+      </div>
+      <div className="zone-label dim">In the fight, click to take a hit</div>
+      <div className="tiles">
+        {buckets.map((bk) => {
+          const left = bk.slots.length - (picks[bk.key] ?? 0);
+          return left > 0 ? (
+            <Tile
+              key={bk.key}
+              bk={bk}
+              n={Math.min(left, units(bk))}
+              onMore={() => take(bk)}
+              onLess={() => set(bk, (picks[bk.key] ?? 0) - 1)}
+            />
+          ) : null;
+        })}
+      </div>
+      <div className="zone-label dim">
+        Casualty zone · {chosen.length}/{need}
+      </div>
+      <div className="tiles casualties">
+        {chosen.length === 0 && <span className="dim">Nothing yet.</span>}
+        {buckets.map((bk) => {
+          const n = picks[bk.key] ?? 0;
+          if (n === 0) return null;
+          const lost = Math.max(0, n - units(bk));
+          const damaged = n - 2 * lost;
+          const label =
+            units(bk) < bk.slots.length
+              ? lost > 0
+                ? `${lost} sunk${damaged > 0 ? `, ${damaged} hit` : ''}`
+                : 'damaged'
+              : undefined;
+          return (
+            <Tile
+              key={bk.key}
+              bk={bk}
+              n={lost > 0 ? lost + damaged : n}
+              label={label}
+              onMore={() => set(bk, n - 1)}
+              onLess={() => take(bk)}
+            />
+          );
+        })}
+      </div>
       <div className="row actions">
-        <button onClick={() => setPicks(picksFrom(buckets, suggested))}>Auto</button>
-        <span className="grow dim">
-          {chosen.length}/{need} chosen
-        </span>
+        <button onClick={() => setPicks(picksFrom(buckets, suggested))}>Suggest</button>
+        <span className="grow" />
         <button className="primary" disabled={chosen.length !== need} onClick={() => act({ type: 'casualties', units: chosen })}>
-          Confirm casualties
+          Remove casualties
         </button>
       </div>
     </div>
