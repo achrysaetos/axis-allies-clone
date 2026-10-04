@@ -8,7 +8,7 @@ export function Chip({ owner, type, count, muted }: { owner: Power; type: UnitTy
     <span
       className={muted ? 'chip muted' : 'chip'}
       style={{ background: style.color, color: style.ink }}
-      title={`${owner} ${UNIT_GLYPH[type].name}`}
+      title={`${POWER_STYLE[owner].name} ${UNIT_GLYPH[type].name}`}
     >
       {count !== undefined && count > 1 ? `${count}×` : ''}
       {UNIT_GLYPH[type].letter}
@@ -20,7 +20,7 @@ export function PowerTag({ power }: { power: Power }) {
   const style = POWER_STYLE[power];
   return (
     <span className="power-tag" style={{ background: style.color, color: style.ink }}>
-      {power}
+      {style.name}
     </span>
   );
 }

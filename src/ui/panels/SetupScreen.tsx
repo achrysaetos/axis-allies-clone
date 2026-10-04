@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { SIDE } from '../../engine/data';
 import { newGame } from '../../engine/state';
 import { POWERS } from '../../engine/types';
-import type { Options, Power } from '../../engine/types';
+import type { Options, Power, Side } from '../../engine/types';
 import { newSession, parseSession } from '../session';
 import type { Controller, Session } from '../session';
+import { powerName } from '../theme';
 import { PowerTag } from '../units';
 
 interface Props {
@@ -11,17 +13,10 @@ interface Props {
   onStart: (s: Session) => void;
 }
 
-const randomSeed = () => Math.floor(Math.random() * 1_000_000);
+const SIDES: Side[] = ['Allies', 'Axis'];
 
 export function SetupScreen({ saved, onStart }: Props) {
-  const [seed, setSeed] = useState(randomSeed);
-  const [controllers, setControllers] = useState<Record<Power, Controller>>({
-    Russians: 'human',
-    Germans: 'ai',
-    British: 'human',
-    Japanese: 'ai',
-    Americans: 'human',
-  });
+  const [players, setPlayers] = useState<Record<Side, Controller>>({ Allies: 'human', Axis: 'human' });
   const [victory, setVictory] = useState<Options['victory']>('standard');
   const [straits, setStraits] = useState(false);
   const [escorts, setEscorts] = useState(false);
@@ -34,62 +29,62 @@ export function SetupScreen({ saved, onStart }: Props) {
     else onStart(s);
   };
 
+  const start = () => {
+    const controllers = Object.fromEntries(POWERS.map((p) => [p, players[SIDE[p]]])) as Record<Power, Controller>;
+    const seed = Math.floor(Math.random() * 1_000_000_000);
+    onStart(newSession(newGame(seed, { victory, turkishStraitsClosed: straits, sbrEscortsInterceptors: escorts }), controllers));
+  };
+
   return (
     <div className="setup">
       <div className="setup-card">
         <h1>Axis &amp; Allies 1942</h1>
+        <p className="dim">Second Edition. Two players share this screen and take turns.</p>
         {saved && (
           <button className="primary wide" onClick={() => onStart(saved)}>
-            Continue: round {saved.state.round}, {saved.state.power}
+            Continue: round {saved.state.round}, {powerName(saved.state.power)}
           </button>
         )}
         <h2>New game</h2>
-        <div className="setup-grid">
-          {POWERS.map((p) => (
-            <div key={p} className="row">
-              <PowerTag power={p} />
-              <span className="grow" />
-              <span className="segmented">
-                {(['human', 'ai'] as const).map((c) => (
-                  <button
-                    key={c}
-                    className={controllers[p] === c ? 'on' : undefined}
-                    onClick={() => setControllers({ ...controllers, [p]: c })}
-                  >
-                    {c === 'human' ? 'Human' : 'AI'}
-                  </button>
-                ))}
-              </span>
+        <div className="sides">
+          {SIDES.map((side) => (
+            <div key={side} className="side">
+              <div className="side-head">
+                <strong>{side}</strong>
+                <span className="segmented">
+                  {(['human', 'ai'] as const).map((c) => (
+                    <button key={c} className={players[side] === c ? 'on' : undefined} onClick={() => setPlayers({ ...players, [side]: c })}>
+                      {c === 'human' ? 'Player' : 'Computer'}
+                    </button>
+                  ))}
+                </span>
+              </div>
+              {POWERS.filter((p) => SIDE[p] === side).map((p) => (
+                <PowerTag key={p} power={p} />
+              ))}
             </div>
           ))}
         </div>
+        <h2>Rules</h2>
         <div className="row">
           <span className="grow">Victory</span>
           <span className="segmented">
             {(['standard', 'total'] as const).map((v) => (
               <button key={v} className={victory === v ? 'on' : undefined} onClick={() => setVictory(v)}>
-                {v === 'standard' ? 'Standard (9 / 10 cities)' : 'Total (13 cities)'}
+                {v === 'standard' ? 'Standard: 9 Axis / 10 Allies cities' : 'Total: all 13 cities'}
               </button>
             ))}
           </span>
         </div>
         <label className="row">
           <input type="checkbox" checked={straits} onChange={(e) => setStraits(e.target.checked)} />
-          <span className="grow">Turkish straits closed</span>
+          <span className="grow">Optional: Turkey closes the straits to ships (sea zone 16)</span>
         </label>
         <label className="row">
           <input type="checkbox" checked={escorts} onChange={(e) => setEscorts(e.target.checked)} />
-          <span className="grow">Bombing raid escorts and interceptors</span>
+          <span className="grow">Optional: fighters escort and intercept bombing raids</span>
         </label>
-        <label className="row">
-          <span className="grow">Dice seed</span>
-          <input type="number" value={seed} onChange={(e) => setSeed(Number(e.target.value) || 0)} />
-          <button onClick={() => setSeed(randomSeed())}>↻</button>
-        </label>
-        <button
-          className="primary wide"
-          onClick={() => onStart(newSession(newGame(seed, { victory, turkishStraitsClosed: straits, sbrEscortsInterceptors: escorts }), controllers))}
-        >
+        <button className="primary wide" onClick={start}>
           Start new game
         </button>
         <label className="import">

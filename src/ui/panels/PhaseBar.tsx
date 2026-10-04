@@ -24,7 +24,7 @@ export function PhaseBar({ state, controllers, canUndo, onEndPhase, onUndo, onEx
     <header className="phase-bar">
       <span className="round">Round {state.round}</span>
       <span className="power" style={{ background: style.color, color: style.ink }}>
-        {state.power}
+        {style.name}
         {controllers[state.power] === 'ai' ? ' (AI)' : ''}
       </span>
       <span className="phases">

@@ -1,7 +1,7 @@
 import { POWERS, UNIT_TYPES } from '../../engine/types';
 import type { Action, Battle, GameState, Power, Unit, UnitId } from '../../engine/types';
 import type { Controller } from '../session';
-import { POWER_STYLE } from '../theme';
+import { POWER_STYLE, powerName } from '../theme';
 import { Chip, PowerTag } from '../units';
 import { DecisionView } from './Decisions';
 
@@ -112,7 +112,7 @@ export function BattleDialog({ state, battle, fallen, controllers, act, onClose 
           {battle.winner === 'attacker' ? `${battle.attacker} win` : battle.winner === 'defender' ? 'Defender holds' : 'No decision'}
         </div>
       )}
-      {mine && (waitingOnAi ? <div className="dim">Waiting for {mine.power} (AI)…</div> : <DecisionView state={state} d={mine} act={act} />)}
+      {mine && (waitingOnAi ? <div className="dim">Waiting for {powerName(mine.power)} (computer)…</div> : <DecisionView state={state} d={mine} act={act} />)}
     </div>
   );
 }

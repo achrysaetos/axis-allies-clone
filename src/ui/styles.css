@@ -527,7 +527,7 @@ table.buy tr.picked td {
   overflow-y: auto;
 }
 .setup-card {
-  width: 440px;
+  width: 540px;
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 10px;
@@ -565,4 +565,27 @@ table.buy tr.picked td {
 }
 .import input {
   display: none;
+}
+
+.sides {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.side-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
+}
+.side .power-tag {
+  align-self: flex-start;
 }

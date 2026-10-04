@@ -3,7 +3,7 @@ import { STATS } from '../../engine/data';
 import { assignable, autoCasualties } from '../../engine/casualties';
 import type { Action, Decision, GameState, HitCategory, Unit, UnitId } from '../../engine/types';
 import { casualtyPool, unreachable } from '../session';
-import { UNIT_GLYPH } from '../theme';
+import { UNIT_GLYPH, powerName } from '../theme';
 import { Chip, Stepper } from '../units';
 
 type Act = (a: Action) => boolean;
@@ -58,7 +58,7 @@ export function CasualtyPicker({ state, d, act }: { state: GameState; d: Of<'cas
   return (
     <div className="decision">
       <div className="decision-title">
-        {REASON_LABEL[d.reason]}: assign {need} hit{need === 1 ? '' : 's'} to {d.power}
+        {REASON_LABEL[d.reason]}: assign {need} hit{need === 1 ? '' : 's'} to {powerName(d.power)}
       </div>
       <div className="dim">{d.groups.map((g) => `${g.hits} × ${CATEGORY_LABEL[g.category]}`).join(', ')}</div>
       {buckets.map((bk) => (
@@ -145,7 +145,7 @@ function LandStranded({ state, d, act }: { state: GameState; d: Of<'landStranded
   );
   return (
     <div className="decision">
-      <div className="decision-title">{d.power}: land fighters whose carrier was sunk</div>
+      <div className="decision-title">{powerName(d.power)}: land fighters whose carrier was sunk</div>
       {d.fighters.map((f) => {
         const u = unitOf(state, f);
         return (
@@ -191,7 +191,7 @@ export function DecisionView({ state, d, act }: { state: GameState; d: Decision;
           ids={d.subs}
           max={d.subs.length}
           initial={[]}
-          title={`${d.power}: submerge submarines? Checked subs leave the battle.`}
+          title={`${powerName(d.power)}: submerge submarines? Checked subs leave the battle.`}
           confirm="Confirm"
           onConfirm={(units) => act({ type: 'submerge', units })}
         />
@@ -212,7 +212,7 @@ export function DecisionView({ state, d, act }: { state: GameState; d: Decision;
     case 'retreat':
       return (
         <div className="decision">
-          <div className="decision-title">{d.power}: press on or retreat?</div>
+          <div className="decision-title">{powerName(d.power)}: press on or retreat?</div>
           <div className="row actions wrap">
             <button className="primary" onClick={() => act({ type: 'retreat', to: null })}>
               Press on
@@ -233,7 +233,7 @@ export function DecisionView({ state, d, act }: { state: GameState; d: Decision;
           ids={d.fighters}
           max={d.fighters.length}
           initial={d.fighters}
-          title={`${d.power}: which fighters intercept the raid?`}
+          title={`${powerName(d.power)}: which fighters intercept the raid?`}
           confirm="Intercept"
           onConfirm={(units) => act({ type: 'intercept', units })}
         />
