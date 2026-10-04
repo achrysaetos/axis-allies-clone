@@ -129,7 +129,10 @@ function Game({ initial, onMenu }: { initial: Session; onMenu: () => void }) {
     if (humanActs && moving && inspect && selected.length > 0 && id !== inspect) {
       const r = resolveMove(state, intent, inspect, id);
       if (!r.ok) return showError(r.error);
-      if (!act({ type: 'move', units: selected, path: r.path, sbr: sbr || undefined })) return;
+      for (const m of r.moves) {
+        const air = current.current.state.units.some((u) => m.units.includes(u.id) && (u.type === 'bomber' || u.type === 'fighter'));
+        if (!act({ type: 'move', units: m.units, path: m.path, sbr: (sbr && air) || undefined })) return;
+      }
       const after = current.current.state;
       const left = after.units.some((u) => u.at === inspect && u.owner === after.power && u.type !== 'factory' && remainingMove(u) > 0);
       inspectSpace(left ? inspect : id);

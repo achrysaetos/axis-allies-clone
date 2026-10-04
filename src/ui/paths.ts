@@ -1,4 +1,5 @@
 import { SPACE_IDS, isAir, isLand, isSea, space } from '../engine/data';
+import { apply } from '../engine/game';
 import { planMove } from '../engine/movement';
 import { isPassable, remainingMove } from '../engine/queries';
 import type { GameState, SpaceId, Unit, UnitId } from '../engine/types';
@@ -70,27 +71,55 @@ function candidatePaths(units: Unit[], from: SpaceId, to: SpaceId, limit: number
   return out;
 }
 
-export type MoveResolution = { ok: true; path: SpaceId[] } | { ok: false; error: string };
+export type MoveResolution = { ok: true; moves: { units: UnitId[]; path: SpaceId[] }[] } | { ok: false; error: string };
 
-export function resolveMove(state: GameState, intent: MoveIntent, from: SpaceId, to: SpaceId, limit = 60): MoveResolution {
-  const units = intent.units.map((id) => state.units.find((u) => u.id === id)).filter((u): u is Unit => !!u);
-  if (units.length === 0) return { ok: false, error: 'select units to move' };
+const domainOf = (u: Unit) => (isAir(u.type) ? 'air' : isSea(u.type) ? 'sea' : 'land');
+
+/** Split a mixed selection into one group per domain; the engine moves land, sea and air separately. */
+function groups(state: GameState, ids: UnitId[]): Unit[][] {
+  const units = ids.map((id) => state.units.find((u) => u.id === id)).filter((u): u is Unit => !!u);
+  const byDomain = new Map<string, Unit[]>();
+  for (const u of units) byDomain.set(domainOf(u), [...(byDomain.get(domainOf(u)) ?? []), u]);
+  return ['land', 'sea', 'air'].map((d) => byDomain.get(d)).filter((g): g is Unit[] => !!g);
+}
+
+function pathFor(state: GameState, units: Unit[], sbr: boolean, from: SpaceId, to: SpaceId, limit: number): MoveResolution & { path?: SpaceId[] } {
   const paths = candidatePaths(units, from, to, limit);
   if (paths.length === 0) return { ok: false, error: `${to} is out of reach` };
   let firstError: string | null = null;
+  const ids = units.map((u) => u.id);
   for (const path of paths) {
-    const r = planMove(state, { units: intent.units, path, sbr: intent.sbr || undefined });
-    if (typeof r !== 'string') return { ok: true, path };
+    const r = planMove(state, { units: ids, path, sbr: (sbr && units.some((u) => isAir(u.type))) || undefined });
+    if (typeof r !== 'string') return { ok: true, moves: [{ units: ids, path }] };
     firstError ??= r;
   }
   return { ok: false, error: firstError ?? `${to} is out of reach` };
 }
 
+/** Moves that carry the selection to `to`, each validated against the state left by the one before. */
+export function resolveMove(state: GameState, intent: MoveIntent, from: SpaceId, to: SpaceId, limit = 60): MoveResolution {
+  const gs = groups(state, intent.units);
+  if (gs.length === 0) return { ok: false, error: 'select units to move' };
+  const moves: { units: UnitId[]; path: SpaceId[] }[] = [];
+  let cur = state;
+  for (const g of gs) {
+    const r = pathFor(cur, g, intent.sbr, from, to, limit);
+    if (!r.ok) return r;
+    const move = r.moves[0]!;
+    const next = apply(cur, { type: 'move', units: move.units, path: move.path, sbr: (intent.sbr && g.some((u) => isAir(u.type))) || undefined });
+    if (!next.ok) return { ok: false, error: next.error };
+    moves.push(move);
+    cur = next.state;
+  }
+  return { ok: true, moves };
+}
+
 export function reachable(state: GameState, intent: MoveIntent, from: SpaceId): Set<SpaceId> {
   const out = new Set<SpaceId>();
-  if (intent.units.length === 0) return out;
+  const gs = groups(state, intent.units);
+  if (gs.length === 0) return out;
   for (const id of SPACE_IDS) {
-    if (id !== from && resolveMove(state, intent, from, id, 4).ok) out.add(id);
+    if (id !== from && gs.every((g) => pathFor(state, g, intent.sbr, from, id, 4).ok)) out.add(id);
   }
   return out;
 }
