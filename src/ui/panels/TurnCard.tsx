@@ -4,7 +4,7 @@ import { capitalHeld, income } from '../../engine/queries';
 import type { GameState } from '../../engine/types';
 import { POWER_STYLE, readable } from '../theme';
 
-const NOTABLE = /captures|liberates|seizes|Raid on|Battle in|lost|win with|cannot collect/;
+const NOTABLE = /captures|liberates|seizes|bombs|battle for|holds against|lost|win with|cannot collect/;
 const TURN_END = /collects \d+ IPCs|cannot collect income/;
 
 /** What the previous power did, so the next player catches up at a glance. */

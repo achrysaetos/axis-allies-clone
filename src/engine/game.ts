@@ -181,7 +181,7 @@ function nextStranded(s: GameState): Decision | null {
     const doomed = mine.filter((f) => options[f.id]!.length === 0).map((f) => f.id);
     if (doomed.length > 0) {
       s.units = s.units.filter((u) => !doomed.includes(u.id));
-      s.log.push(`${doomed.length} stranded ${owner} fighters are lost in ${zone}`);
+      s.log.push(`${owner} lost ${doomed.length} stranded fighter${doomed.length === 1 ? '' : 's'} in ${zone}`);
       return nextStranded(s);
     }
     return { kind: 'landStranded', power: owner, fighters: mine.map((f) => f.id), options };
@@ -285,7 +285,7 @@ export function doomedAir(s: GameState): UnitId[] {
 
 function crashAir(s: GameState): void {
   const dead = new Set(doomedAir(s));
-  if (dead.size > 0) s.log.push(`${dead.size} ${s.power} air units had nowhere to land and were lost`);
+  if (dead.size > 0) s.log.push(`${s.power} lost ${dead.size} air unit${dead.size === 1 ? '' : 's'} with nowhere to land`);
   s.units = s.units.filter((u) => !dead.has(u.id));
 }
 
@@ -324,7 +324,7 @@ function endTurn(s: GameState): void {
     const gained = income(s, power);
     s.treasury[power] += gained;
     s.log.push(`${power} collects ${gained} IPCs`);
-  } else s.log.push(`${power} cannot collect income without ${CAPITAL_OF[power]}`);
+  } else s.log.push(`${power} cannot collect income while ${CAPITAL_OF[power]} is occupied`);
 
   if (power === 'Americans') {
     const t = VICTORY_THRESHOLD[s.options.victory];

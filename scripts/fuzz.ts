@@ -43,7 +43,7 @@ function observe(before: GameState, after: GameState, a: Action): void {
     if (line.includes('retreats')) hit('battle:retreat');
     if (line.includes('nowhere to land')) hit('air:crashed');
     if (line.includes('stranded')) hit('air:strandedLost');
-    if (line.includes('Raid')) hit('sbr:raid');
+    if (line.includes(' bombs ')) hit('sbr:raid');
   }
   if (a.type === 'move' && a.path.length === 2 && before.units.find((u) => u.id === a.units[0])?.carriedBy) hit('move:offload');
   if (a.type === 'move' && after.units.find((u) => u.id === a.units[0])?.blitzed) hit('move:blitz');

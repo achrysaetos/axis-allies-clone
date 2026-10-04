@@ -207,7 +207,13 @@ function finish(s: GameState, b: Battle, winner: Battle['winner']): void {
   b.resolved = true;
   b.step = 'done';
   s.activeBattle = null;
-  s.log.push(`Battle in ${b.space}: ${winner === 'attacker' ? 'attacker wins' : winner === 'defender' ? 'defender holds' : 'no decision'}`);
+  s.log.push(
+    winner === 'attacker'
+      ? `${b.attacker} wins the battle for ${b.space}`
+      : winner === 'defender'
+        ? `${b.space} holds against ${b.attacker}`
+        : `The battle for ${b.space} ends with no winner`,
+  );
 }
 
 function trivialCasualties(pool: Unit[], q: PendingHits): UnitId[] | null {
@@ -442,7 +448,7 @@ function bomb(s: GameState, b: Battle): void {
   const applied = Math.min(total, cap - factory.damage);
   factory.damage += applied;
   b.dice.push({ round: 0, side: 'attacker', label: 'bombing damage', rolls: dmgRolls, targets: [], hits: applied });
-  s.log.push(`Raid on ${b.space}: ${shotDown.length} bombers lost, ${applied} damage`);
+  s.log.push(`${b.attacker} bombs ${b.space} for ${applied} damage, losing ${shotDown.length} bomber${shotDown.length === 1 ? '' : 's'}`);
   finish(s, b, survivors > 0 ? 'attacker' : 'defender');
 }
 

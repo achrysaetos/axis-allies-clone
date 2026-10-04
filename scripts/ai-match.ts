@@ -96,7 +96,7 @@ function play(seed: number, aiSide: Side | 'both'): Outcome {
     s = r.state;
     const aiTurn = aiSide === 'both' || SIDE[before.power] === aiSide;
     if (aiTurn && a.type === 'endPhase' && before.phase === 'mobilize') {
-      const line = s.log.slice(-4).find((l) => l.includes(`${before.power} air units had nowhere to land`));
+      const line = s.log.slice(-4).find((l) => l.includes(`${before.power} lost`) && l.includes('with nowhere to land'));
       if (line) crashed += Number(line.split(' ')[0]);
     }
     recent.push(a);
