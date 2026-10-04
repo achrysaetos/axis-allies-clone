@@ -115,7 +115,7 @@ export function CasualtyPicker({ state, d, act }: { state: GameState; d: Of<'cas
         {REASON_LABEL[d.reason]}
         {restricted(d.groups, pool) && ` · ${d.groups.map((g) => `${g.hits} × ${CATEGORY_LABEL[g.category]}`).join(', ')}`}
       </div>
-      <div className="zone-label dim">In the fight, click to take a hit</div>
+      <div className="zone-label dim">In the fight: pick who takes each hit</div>
       <div className="tiles">
         {buckets.map((bk) => {
           const left = bk.slots.length - (picks[bk.key] ?? 0);

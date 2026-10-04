@@ -19,7 +19,7 @@ In the combat phase the player resolves battles in the rulebook's order: strateg
 - When the combat phase starts, the first fightable battle's dialog opens automatically. Clicking a battle space on the map opens its dialog.
 - A not-yet-started battle shows both sides, the forecast line, and `Roll dice`, `Fight it out automatically` and `Skip` (optional battles only).
 - A finished battle shows `Next: <space>` or `Back to the map`.
-- The casualty picker lists the side's units as `button.tile` tiles under "In the fight, click to take a hit" with a dashed `Casualty zone · n/m` row below. Clicking a tile in the fight moves one hit into the zone. Clicking a tile in the zone, or right-clicking it, moves it back.
+- The casualty picker lists the side's units as `button.tile` tiles under "In the fight: pick who takes each hit" with a dashed `Casualty zone · n/m` row below. Clicking a tile in the fight moves one hit into the zone. Clicking a tile in the zone, or right-clicking it, moves it back.
 - The battle dialog's decision area: `Remove casualties`, `Suggest`, `Press on`, retreat destination buttons, and piece tiles (`button.tile`, `aria-pressed`) that toggle submerge and intercept choices.
 
 ## Driving it with the browser pane
