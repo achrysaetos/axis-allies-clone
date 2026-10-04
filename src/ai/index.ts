@@ -56,8 +56,8 @@ function fallback(s: GameState): Action {
       return { type: 'bombard', ships: [] };
     case 'landStranded':
       return { type: 'landStranded', landings: Object.fromEntries(d.fighters.map((f) => [f, null])) };
-    default:
-      return intercept(s, { battle: (d as { battle: number }).battle, fighters: [] });
+    case 'intercept':
+      return { type: 'intercept', units: [] };
   }
 }
 

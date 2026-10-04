@@ -140,6 +140,12 @@ describe('air movement (p.13, 26-27)', () => {
     expect(s.battles[0]!.attackers).toHaveLength(2);
   });
 
+  it('a fighter that rode a moving carrier cannot then fly off in noncombat', () => {
+    let s = scenario({ power: 'Japanese', phase: 'noncombatMove', units: [['Japanese', 'carrier', '60 Sea Zone'], ['Japanese', 'fighter', '60 Sea Zone']] });
+    s = move(s, ids(s, 'Japanese', 'carrier', '60 Sea Zone'), ['60 Sea Zone', '61 Sea Zone']);
+    fails(s, { type: 'move', units: ids(s, 'Japanese', 'fighter', '61 Sea Zone'), path: ['61 Sea Zone', '60 Sea Zone', 'Japan'] }, /aboard/);
+  });
+
   it('air units without a landing space at end of turn are destroyed', () => {
     let s = scenario({ power: 'Germans', phase: 'noncombatMove', units: [['Germans', 'fighter', 'Germany'], ['Germans', 'carrier', '5 Sea Zone']] });
     s = move(s, ids(s, 'Germans', 'fighter', 'Germany'), ['Germany', '5 Sea Zone']);

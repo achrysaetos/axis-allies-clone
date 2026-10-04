@@ -145,7 +145,7 @@ function planAir(state: GameState, units: Unit[], path: SpaceId[], combat: boole
     if (remainingMove(u) < steps) return `${u.type} does not have enough movement`;
     if (!combat && u.sbr && u.moved === 0) return 'bombers on a raid land during noncombat';
     const carrier = u.carriedBy === null ? undefined : state.units.find((c) => c.id === u.carriedBy);
-    if (combat && carrier && carrier.moved > 0) return 'fighters must take off before their carrier moves to join combat';
+    if (carrier && carrier.moved > 0) return 'fighters still aboard a carrier that moved stay aboard this turn';
   }
   if (sbr) {
     if (!combat) return 'strategic bombing raids are declared during combat move';

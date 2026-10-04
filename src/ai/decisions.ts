@@ -69,20 +69,17 @@ export function decide(s: GameState, d: Decision): Action {
           }),
         ),
       };
-    default:
+    case 'intercept':
       return intercept(s, d);
   }
 }
 
-/**
- * Interceptors (optional SBR rule on newer engines) scramble when they outnumber the escorts.
- * Typed structurally so it compiles whether or not this engine knows the 'intercept' decision.
- */
+/** Interceptors scramble when they outnumber the escorts. */
 export function intercept(s: GameState, d: { battle: number; fighters: UnitId[] }): Action {
   const b = s.battles.find((x) => x.id === d.battle);
   const escorts = s.units.filter((u) => b?.attackers.includes(u.id) && u.type === 'fighter').length;
   const units = d.fighters.length > escorts ? d.fighters : [];
-  return { type: 'intercept', units } as unknown as Action;
+  return { type: 'intercept', units };
 }
 
 /** Fight open battles in a legal order; skip optional ones we would likely lose. */
