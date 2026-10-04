@@ -207,8 +207,11 @@ function finish(s: GameState, b: Battle, winner: Battle['winner']): void {
   b.resolved = true;
   b.step = 'done';
   s.activeBattle = null;
+  const airOnly = b.kind === 'land' && winner === 'attacker' && !att.some((u) => isLand(u.type) && u.type !== 'aaGun');
   s.log.push(
-    winner === 'attacker'
+    airOnly
+      ? `${b.attacker} clears ${b.space} but has no land units left to take it`
+      : winner === 'attacker'
       ? `${b.attacker} wins the battle for ${b.space}`
       : winner === 'defender'
         ? `${b.space} holds against ${b.attacker}`

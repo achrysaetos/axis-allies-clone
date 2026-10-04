@@ -28,6 +28,14 @@ describe('general combat (p.16-19)', () => {
     expect(s.owner['Archangel']).toBe('Germans');
   });
 
+  it('aircraft can clear a territory but never take it', () => {
+    let s = scenario({ units: [['Germans', 'fighter', 'West Russia', 2], ['Russians', 'infantry', 'Archangel']], dice: [1, 6, 6] });
+    s = move(s, ids(s, 'Germans', 'fighter', 'West Russia'), ['West Russia', 'Archangel']);
+    s = fight(s, 'Archangel');
+    expect(s.owner['Archangel']).toBe('Russians');
+    expect(s.log.at(-1)).toBe('Germans clears Archangel but has no land units left to take it');
+  });
+
   it('defending casualties fire back before they are removed', () => {
     let s = scenario({ units: [['Germans', 'armour', 'West Russia'], ['Russians', 'infantry', 'Archangel']], dice: [1, 2] });
     s = move(s, ids(s, 'Germans', 'armour', 'West Russia'), ['West Russia', 'Archangel']);

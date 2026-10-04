@@ -1,6 +1,7 @@
 import { POWERS, UNIT_TYPES } from '../../engine/types';
 import type { Action, Battle, GameState, Power, Unit, UnitId } from '../../engine/types';
 import type { Controller } from '../session';
+import { SIDE } from '../../engine/data';
 import { POWER_STYLE, powerName } from '../theme';
 import { Chip, PowerTag } from '../units';
 import { DecisionView } from './Decisions';
@@ -90,6 +91,18 @@ function Side({
   );
 }
 
+function outcome(state: GameState, b: Battle): string {
+  const attacker = powerName(b.attacker);
+  if (b.kind === 'sbr') return b.winner === 'attacker' ? `${attacker} damages the industrial complex` : 'Every bomber was shot down';
+  if (b.winner === 'defender') return `${b.space} holds`;
+  if (b.winner === 'none') return 'Neither side can hit the other, so the battle ends';
+  if (b.kind === 'sea') return `${attacker} wins the sea battle`;
+  const owner = state.owner[b.space];
+  return owner && SIDE[owner] === SIDE[b.attacker]
+    ? `${attacker} takes ${b.space}`
+    : `${b.space} is cleared, but only aircraft survived, so it cannot be taken`;
+}
+
 export function BattleDialog({ state, battle, fallen, controllers, act, onQuick, onClose }: Props) {
   const d = state.pending;
   const mine = d && 'battle' in d && d.battle === battle.id ? d : null;
@@ -145,11 +158,7 @@ export function BattleDialog({ state, battle, fallen, controllers, act, onQuick,
       </div>
       {battle.resolved && (
         <div className={`result ${battle.winner === 'attacker' ? 'good' : 'bad'}`}>
-          {battle.winner === 'attacker'
-            ? `${powerName(battle.attacker)} wins`
-            : battle.winner === 'defender'
-              ? 'The defender holds'
-              : 'No decision'}
+          {outcome(state, battle)}
         </div>
       )}
       {mine &&

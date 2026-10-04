@@ -3,11 +3,12 @@ import { freshUnit } from '../src/engine/state';
 import type { GameState, UnitType } from '../src/engine/types';
 import { forecasts } from '../src/ui/odds';
 import { ids, move, scenario } from './helpers';
+import type { Placement } from './helpers';
 
 function landing(withBattleship: boolean): GameState {
   const s = scenario({
     power: 'British',
-    units: [['British', 'transport', '8 Sea Zone'], ['Germans', 'infantry', 'France', 2], ...(withBattleship ? ([['British', 'battleship', '8 Sea Zone']] as const) : [])],
+    units: [['British', 'transport', '8 Sea Zone'], ['Germans', 'infantry', 'France', 2], ...(withBattleship ? [['British', 'battleship', '8 Sea Zone'] as Placement] : [])],
   });
   const t = s.units.find((u) => u.type === 'transport')!;
   for (const type of ['infantry', 'armour'] as UnitType[]) {
