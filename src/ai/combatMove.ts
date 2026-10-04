@@ -36,20 +36,41 @@ const ORDER: Partial<Record<string, number>> = { infantry: 0, artillery: 1, armo
 /** Greedy attack plan: best-value targets first, each with the smallest force that wins often enough. */
 export function planCombatMove(s: GameState): Draft {
   const d = new Draft(s);
-  const used = new Set<UnitId>(garrison(s));
+  const used = new Set<UnitId>([...garrison(s), ...evacuate(d)]);
   for (const target of targets(s)) {
     if (target.kind === 'land' && !isEnemyLand(d.state, target.at, s.power)) continue;
     const force = assemble(d.state, target, used);
     if (!force) continue;
     const mark = d.mark();
+    const before = new Set(combatMoveErrors(d.state));
     const actions = force.flatMap((o) => o.actions);
-    if (!d.tryAll(actions) || combatMoveErrors(d.state).length > 0) {
+    if (!d.tryAll(actions) || combatMoveErrors(d.state).some((e) => !before.has(e))) {
       d.rollback(mark);
       continue;
     }
     for (const o of force) for (const u of o.units) used.add(u.id);
   }
   return d;
+}
+
+/** Transports caught in a zone with enemy warships sail out before anything else moves; returns the movers. */
+function evacuate(d: Draft): UnitId[] {
+  const power = d.state.power;
+  const moved: UnitId[] = [];
+  for (const t of mine(d.state).filter((u) => u.type === 'transport' && u.moved === 0 && isHostileSea(d.state, u.at, power))) {
+    const s = d.state;
+    const havens = [...paths(t.at, STATS.transport.move, (p, n) => space(n).water && seaPassageOpen(s, p, n, power) && !isHostileSea(s, n, power), () => true)];
+    const safety = (z: SpaceId) => s.units.filter((u) => u.at === z && u.owner === power && isSea(u.type)).length - enemyUnitsAt(s, z, power).length;
+    havens.sort((a, b) => safety(b[0]) - safety(a[0]) || a[1].length - b[1].length);
+    for (const [, path] of havens) {
+      const cargo = s.units.filter((u) => u.carriedBy === t.id).map((u) => u.id);
+      if (d.try({ type: 'move', units: [t.id], path })) {
+        moved.push(t.id, ...cargo);
+        break;
+      }
+    }
+  }
+  return moved;
 }
 
 /** Units that must stay home so that no factory is likely to fall next turn. */

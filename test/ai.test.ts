@@ -77,6 +77,21 @@ describe('AI', () => {
     expect(moved.units.filter((u) => u.at === 'West Russia' && u.owner === 'Russians')).toEqual([]);
   });
 
+  it('sails a transport out of a zone held by enemy warships before ending combat move', () => {
+    const s = scenario({
+      power: 'Japanese',
+      units: [
+        ['Japanese', 'transport', '60 Sea Zone'],
+        ['Japanese', 'infantry', 'Japan', 3],
+        ['Americans', 'destroyer', '60 Sea Zone'],
+        ['Americans', 'cruiser', '60 Sea Zone'],
+      ],
+    });
+    const after = runUntil(s, (x) => x.phase !== 'combatMove');
+    const transport = after.units.find((u) => u.type === 'transport');
+    expect(transport?.at).not.toBe('60 Sea Zone');
+  });
+
   it('lands every aircraft it flies', () => {
     const s = scenario({
       power: 'Germans',
