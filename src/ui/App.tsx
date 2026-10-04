@@ -31,6 +31,9 @@ import type { Session } from './session';
 const AI_DELAY_MS = 120;
 const AI_BUDGET_MS = 30;
 const TOAST_MS = 4500;
+const CAPTURE_MS = 1800;
+/** Width the battle dialog covers on the right, kept clear when the map centers on a battle. */
+const BATTLE_DIALOG_W = 590;
 
 export function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -71,7 +74,7 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
   const [battleView, setBattleView] = useState<number | null>(null);
   const [toast, setToast] = useState<{ text: string; id: number; info?: boolean } | null>(null);
   const [aiRetry, setAiRetry] = useState(0);
-  const [focus, setFocus] = useState<{ id: SpaceId; nonce: number } | null>(null);
+  const [focus, setFocus] = useState<{ id: SpaceId; nonce: number; inset?: number } | null>(null);
   const [greeted, setGreeted] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<string[] | null>(null);
   const [overlay, setOverlay] = useState<'help' | 'log' | null>(null);
@@ -175,6 +178,20 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
     return { route, odds };
   }, [hand, hover, reach, state]);
   const route = preview?.route ?? null;
+  const viewedSpace = state.battles.find((b) => b.id === battleView)?.space;
+  useEffect(() => {
+    if (viewedSpace) setFocus({ id: viewedSpace, nonce: Date.now(), inset: BATTLE_DIALOG_W });
+  }, [viewedSpace]);
+  const [captured, setCaptured] = useState<ReadonlySet<SpaceId>>(new Set());
+  const owners = useRef(state.owner);
+  useEffect(() => {
+    const changed = Object.keys(state.owner).filter((id) => state.owner[id] !== owners.current[id]);
+    owners.current = state.owner;
+    if (changed.length === 0) return;
+    setCaptured(new Set(changed));
+    const t = setTimeout(() => setCaptured(new Set()), CAPTURE_MS);
+    return () => clearTimeout(t);
+  }, [state.owner]);
   const revealed = useMemo(() => placements.map((p) => p.at), [placements]);
   const held = useMemo(() => new Set(hand?.kind === 'units' ? hand.units : []), [hand]);
   const odds = useMemo(() => (humanActs ? forecasts(state) : []), [state, humanActs]);
@@ -297,8 +314,12 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
 
   const startTurn = useCallback(() => {
     setGreeted(turnKey);
-    setFocus({ id: CAPITAL_OF[state.power], nonce: Date.now() });
-  }, [turnKey, state.power]);
+    setFocus(
+      viewedSpace
+        ? { id: viewedSpace, nonce: Date.now(), inset: BATTLE_DIALOG_W }
+        : { id: CAPITAL_OF[state.power], nonce: Date.now() },
+    );
+  }, [turnKey, state.power, viewedSpace]);
 
   const onUndo = useCallback(() => {
     if (current.current.undo.length === 0) return;
@@ -370,6 +391,7 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
           held={held}
           tags={tags}
           route={route}
+          captured={captured}
           onSpace={onSpace}
           onPiece={onPiece}
           onPieceDown={onPieceDown}
@@ -442,11 +464,7 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
             onClose={() => setBattleView(null)}
             forecast={odds.find((f) => f.space === viewed.space && f.kind === viewed.kind)}
             next={nextBattle(state, viewed.id)}
-            onOpen={(id) => {
-              setBattleView(id);
-              const b = state.battles.find((x) => x.id === id);
-              if (b) setFocus({ id: b.space, nonce: Date.now() });
-            }}
+            onOpen={setBattleView}
           />
         )}
         {stranded && controllers[stranded.power] === 'human' && (

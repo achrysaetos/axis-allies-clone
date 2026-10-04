@@ -992,3 +992,25 @@ kbd {
   stroke-width: 1.5;
   stroke-dasharray: 3 2;
 }
+path.captured {
+  fill: #fff;
+  stroke: #ffe27a;
+  stroke-width: 4;
+  animation: captured 1.8s ease-out forwards;
+}
+@keyframes captured {
+  0% {
+    fill-opacity: 0.7;
+    stroke-opacity: 1;
+  }
+  100% {
+    fill-opacity: 0;
+    stroke-opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  path.captured {
+    animation: none;
+    fill-opacity: 0;
+  }
+}

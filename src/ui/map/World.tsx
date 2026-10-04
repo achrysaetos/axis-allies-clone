@@ -18,6 +18,8 @@ export interface WorldProps {
   tags: ReadonlyMap<SpaceId, { text: string; tone: string }>;
   /** The route the held units would take to the space under the cursor. */
   route: SpaceId[] | null;
+  /** Territories that just changed hands, pulsed once so the capture is noticed. */
+  captured: ReadonlySet<SpaceId>;
 }
 
 const GAP = 2;
@@ -194,7 +196,7 @@ export function NeutralPattern() {
   );
 }
 
-export const World = memo(function World({ state, selected, highlights, held, tags, route }: WorldProps) {
+export const World = memo(function World({ state, selected, highlights, held, tags, route, captured }: WorldProps) {
   const byAt = new Map<SpaceId, Unit[]>();
   const factories = new Map<SpaceId, Unit>();
   for (const u of state.units) {
@@ -219,6 +221,9 @@ export const World = memo(function World({ state, selected, highlights, held, ta
       ))}
       {SHAPES.filter((s) => highlights.has(s.id)).map((s) => (
         <path key={`h-${s.id}`} d={s.d} className="highlight" pointerEvents="none" />
+      ))}
+      {SHAPES.filter((s) => captured.has(s.id)).map((s) => (
+        <path key={`c-${s.id}`} d={s.d} className="captured" pointerEvents="none" />
       ))}
       {SHAPES.filter((s) => s.id === selected).map((s) => (
         <path key={`s-${s.id}`} d={s.d} className="selected" pointerEvents="none" />

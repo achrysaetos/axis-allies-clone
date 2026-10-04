@@ -28,7 +28,7 @@ interface Props extends WorldProps {
   onHover: (id: SpaceId | null) => void;
   onBackground: () => void;
   /** Changing this value recenters the map on the space. */
-  focus: { id: SpaceId; nonce: number } | null;
+  focus: { id: SpaceId; nonce: number; inset?: number } | null;
   /** Spaces the player now needs to see; the map pans to the nearest one only if none is on screen. */
   reveal: readonly SpaceId[];
 }
@@ -46,9 +46,10 @@ function normalize(v: View, w: number, h: number): View {
   return { tx, ty, k };
 }
 
-function centeredOn(id: SpaceId, k: number, w: number, h: number): View {
+/** Center a space in the part of the map left of `inset` pixels covered on the right. */
+function centeredOn(id: SpaceId, k: number, w: number, h: number, inset = 0): View {
   const [x, y] = CENTER.get(id) ?? [MAP_WIDTH / 2, MAP_HEIGHT / 2];
-  return normalize({ tx: w / 2 - x * k, ty: h / 2 - y * k, k }, w, h);
+  return normalize({ tx: (w - inset) / 2 - x * k, ty: h / 2 - y * k, k }, w, h);
 }
 
 function pieceOf(target: EventTarget): { space: SpaceId; stack: string } | null {
@@ -75,7 +76,7 @@ export function MapView({ onSpace, onPiece, onPieceDown, onHover, onBackground, 
 
   useEffect(() => {
     if (!focus) return;
-    setView((v) => centeredOn(focus.id, v?.k ?? START_ZOOM, size.w, size.h));
+    setView((v) => centeredOn(focus.id, v?.k ?? START_ZOOM, size.w, size.h, focus.inset));
   }, [focus, size.w, size.h]);
 
   const revealKey = reveal.join('|');
