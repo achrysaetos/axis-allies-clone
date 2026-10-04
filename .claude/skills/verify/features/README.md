@@ -39,3 +39,4 @@ Each feature file starts with an H1 title and one paragraph on the player-visibl
 - [Combat](./combat.md) covers battle order, the battle dialog and every battle decision.
 - [Mobilize and income](./mobilize-and-income.md) covers placing units, ending a turn, income and victory.
 - [AI turns](./ai-turns.md) covers computer-controlled powers and handing decisions to human defenders.
+- [Turn flow and guidance](./turn-flow.md) covers the turn card, phase guide, odds preview, end-phase warnings and help.

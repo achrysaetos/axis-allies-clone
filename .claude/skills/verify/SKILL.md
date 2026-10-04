@@ -30,7 +30,10 @@ Stable handles, in order of preference:
   - `End phase` and `End turn` are `End phase (E)` (the text changes, the name does not).
   - `Undo` is `Undo last move (Ctrl+Z)`, and `Export` is `Download this game as JSON`.
   - A battle's `Start` is `Fight this battle`, and a battle with a decision waiting is `A decision is pending`.
-  - Names match visible text for `Start new game`, `Import saved game…`, `Menu`, `Skip`, `Confirm casualties`, `Auto`, `Press on`, `Bombard`, `Select all`, `Clear`, `Place 1` and `Place N` (N is a count).
+  - `Quick` is named by its tooltip, which begins `Fight automatically`. The `?` button is `How to play (?)`.
+  - Names match visible text for `Start new game`, `Import saved game…`, `Menu`, `Skip`, `Confirm casualties`, `Auto`, `Press on`, `Bombard`, `Select all`, `Clear`, `Place 1`, `Place N` (N is a count), `Start turn`, `Continue turn`, `Go back`, `End anyway` and `Finish this battle automatically (retreats below 30%)`.
+  - Overlays sit on top of the game and block clicks until answered: the turn card (`Start turn` or `Continue turn`, or Enter), the end-phase confirmation (`Go back` or `End anyway`), and help (Esc). Clear them before driving the map.
+  - With a saved game present, `Start new game` first shows a warning and becomes `Replace saved game and start`; press it again to start.
   - Panels re-render a moment after a phase change. If a button is missing, wait half a second and list again.
 - **Map territories by `data-space`.** Each territory and sea zone is an SVG element with `data-space="<name>"`, using the exact names from `src/data/map.json` (for example `France` or `8 Sea Zone`). The snippet below clicks a territory without needing it on screen.
 - **Purchase steppers.** The `+` and `−` buttons sit in the row whose text starts with the unit name (`Infantry`, `Tank`, and so on).
