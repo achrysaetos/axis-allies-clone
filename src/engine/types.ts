@@ -117,6 +117,8 @@ export interface Battle {
   resolved: boolean;
   skipped: boolean;
   winner: 'attacker' | 'defender' | 'none' | null;
+  /** Every unit that entered the battle, so losses can be reported after the dead leave play. */
+  roster: { id: UnitId; owner: Power; type: UnitType }[];
 }
 
 export type HitCategory = 'any' | 'notAir' | 'notSub' | 'air';

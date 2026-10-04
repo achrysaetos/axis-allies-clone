@@ -34,6 +34,10 @@ describe('general combat (p.16-19)', () => {
     s = fight(s, 'Archangel');
     expect(battleIn(s, 'Archangel').dice[0]).toMatchObject({ side: 'attacker', rolls: [2, 2, 6], targets: [2, 1, 2], hits: 1 });
     expect(s.owner['Archangel']).toBe('Germans');
+    expect(s.log.slice(-2)).toEqual([
+      'Germans wins the battle for Archangel. Losses: Russians 1 infantry',
+      'Germans captures Archangel',
+    ]);
   });
 
   it('aircraft can clear a territory but never take it', () => {
@@ -47,7 +51,7 @@ describe('general combat (p.16-19)', () => {
     s = move(s, ids(s, 'Germans', 'fighter', 'West Russia'), ['West Russia', 'Archangel']);
     s = fight(s, 'Archangel');
     expect(s.owner['Archangel']).toBe('Russians');
-    expect(s.log.at(-1)).toBe('Germans clears Archangel but has no land units left to take it');
+    expect(s.log.at(-1)).toBe('Germans clears Archangel but has no land units left to take it. Losses: Russians 1 infantry');
   });
 
   it('defending casualties fire back before they are removed', () => {
@@ -64,6 +68,7 @@ describe('general combat (p.16-19)', () => {
     expect(count(s, 'Russians', 'infantry', 'Archangel')).toBe(0);
     expect(s.owner['Archangel']).toBe('Russians');
     expect(battleIn(s, 'Archangel').winner).toBe('none');
+    expect(s.log.at(-1)).toBe('The battle for Archangel ends with no winner. Losses: Germans 1 tank; Russians 1 infantry');
   });
 
   it('antiaircraft fires min(3 per gun, attacking aircraft) shots that hit on 1', () => {

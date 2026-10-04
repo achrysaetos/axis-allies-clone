@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { newGame } from '../src/engine/state';
 import { newSession, parseSession, quickResolve } from '../src/ui/session';
+import { sinceLastTurn } from '../src/ui/panels/TurnCard';
 import { POWERS } from '../src/engine/types';
 import { ids, move, ok, scenario } from './helpers';
 
@@ -45,5 +46,20 @@ describe('quick resolve', () => {
     expect(r.session.state.battles[0]!.resolved).toBe(true);
     expect(r.session.state.pending).toBeNull();
     expect(r.session.state.battles[0]!.dice.length).toBeGreaterThan(0);
+  });
+});
+
+describe('turn recap', () => {
+  it('covers everything since this power last ended a turn', () => {
+    const log = [
+      'Germans captures Karelia S.S.R.',
+      'Russians collects 20 IPCs',
+      'Germans wins the battle for West Russia. Losses: Russians 2 infantry',
+      'Germans collects 40 IPCs',
+      'British bombs Germany for 4 damage, losing 0 bombers',
+      'British collects 31 IPCs',
+    ];
+    expect(sinceLastTurn(log, 'Russians')).toEqual([log[2], log[4]]);
+    expect(sinceLastTurn(log.slice(0, 1), 'Russians')).toEqual([log[0]]);
   });
 });

@@ -1,7 +1,8 @@
 import { POWERS, UNIT_TYPES } from '../../engine/types';
 import type { Action, Battle, GameState, Power, Unit, UnitId } from '../../engine/types';
 import type { Controller } from '../session';
-import { SIDE } from '../../engine/data';
+import { SIDE, space } from '../../engine/data';
+import { factoryAt } from '../../engine/queries';
 import { POWER_STYLE, powerName } from '../theme';
 import { Chip, PowerTag } from '../units';
 import { DecisionView } from './Decisions';
@@ -91,6 +92,20 @@ function Side({
   );
 }
 
+function RaidTarget({ state, battle }: { state: GameState; battle: Battle }) {
+  const f = factoryAt(state, battle.space);
+  const owner = state.owner[battle.space];
+  return (
+    <div className="side">
+      <div className="dim">Defender {owner && <PowerTag power={owner} />}</div>
+      <div>
+        Industrial complex · damage {f?.damage ?? 0} of {2 * space(battle.space).ipc} max
+      </div>
+      <div className="dim small">It fires once at each bomber, hitting on a 1.</div>
+    </div>
+  );
+}
+
 function outcome(state: GameState, b: Battle): string {
   const attacker = powerName(b.attacker);
   if (b.kind === 'sbr')
@@ -121,7 +136,11 @@ export function BattleDialog({ state, battle, fallen, controllers, act, onQuick,
       </header>
       <div className="sides">
         <Side title="Attacker" ids={battle.attackers} state={state} battle={battle} fallen={fallen} />
-        <Side title="Defender" ids={battle.defenders} state={state} battle={battle} fallen={fallen} />
+        {battle.kind === 'sbr' && battle.defenders.length === 0 ? (
+          <RaidTarget state={state} battle={battle} />
+        ) : (
+          <Side title="Defender" ids={battle.defenders} state={state} battle={battle} fallen={fallen} />
+        )}
       </div>
       <div className="dice-log">
         {battle.dice.length === 0 && <div className="dim">No dice rolled yet.</div>}

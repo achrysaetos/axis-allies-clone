@@ -1,6 +1,6 @@
 import { POWERS } from './types';
 import type { Battle, GameState, HitCategory, HitGroup, PendingHits, Power, SpaceId, Unit, UnitId } from './types';
-import { STATS, isAir, isLand, space } from './data';
+import { STATS, isAir, isLand, space, unitCount } from './data';
 import { areAllied, enemyUnitsAt, factoryAt, isFriendlyLand, isHostileSea, unitsAt, wasHostileAtTurnStart } from './queries';
 import { assignable, autoCasualties, canTake, validateCasualties } from './casualties';
 import { captureTerritory } from './capture';
@@ -74,6 +74,7 @@ function newBattle(
     resolved: false,
     skipped: false,
     winner: null,
+    roster: [],
   };
 }
 
@@ -189,6 +190,7 @@ export function retreatOptions(s: GameState, b: Battle): SpaceId[] {
 
 function finish(s: GameState, b: Battle, winner: Battle['winner']): void {
   const att = liveAttackers(s, b);
+  const logAt = s.log.length;
   if (
     b.kind === 'land' &&
     winner === 'attacker' &&
@@ -205,15 +207,33 @@ function finish(s: GameState, b: Battle, winner: Battle['winner']): void {
   b.step = 'done';
   s.activeBattle = null;
   const airOnly = b.kind === 'land' && winner === 'attacker' && !att.some((u) => isLand(u.type) && u.type !== 'aaGun');
-  s.log.push(
-    airOnly
-      ? `${b.attacker} clears ${b.space} but has no land units left to take it`
-      : winner === 'attacker'
-        ? `${b.attacker} wins the battle for ${b.space}`
-        : winner === 'defender'
-          ? `${b.space} holds against ${b.attacker}`
-          : `The battle for ${b.space} ends with no winner`,
-  );
+  if (b.kind === 'sbr') return;
+  const message = airOnly
+    ? `${b.attacker} clears ${b.space} but has no land units left to take it`
+    : winner === 'attacker'
+      ? `${b.attacker} wins the battle for ${b.space}`
+      : winner === 'defender'
+        ? `${b.space} holds against ${b.attacker}`
+        : `The battle for ${b.space} ends with no winner`;
+  s.log.splice(logAt, 0, `${message}. ${lossesOf(s, b)}`);
+}
+
+function enlist(s: GameState, b: Battle, ids: UnitId[]): void {
+  for (const u of alive(s, ids))
+    if (!b.roster.some((r) => r.id === u.id)) b.roster.push({ id: u.id, owner: u.owner, type: u.type });
+}
+
+/** "Losses: Germany 2 infantry; Soviet Union 1 tank", from the roster against who is still alive. */
+function lossesOf(s: GameState, b: Battle): string {
+  const living = new Set(s.units.map((u) => u.id));
+  const parts: string[] = [];
+  for (const owner of [b.attacker, ...POWERS.filter((p) => p !== b.attacker)]) {
+    const dead = b.roster.filter((r) => r.owner === owner && !living.has(r.id));
+    if (dead.length === 0) continue;
+    const types = [...new Set(dead.map((r) => r.type))];
+    parts.push(`${owner} ${types.map((t) => unitCount(dead.filter((r) => r.type === t).length, t)).join(', ')}`);
+  }
+  return parts.length > 0 ? `Losses: ${parts.join('; ')}` : 'No losses';
 }
 
 function trivialCasualties(pool: Unit[], q: PendingHits): UnitId[] | null {
@@ -402,6 +422,7 @@ function start(s: GameState, b: Battle): void {
   b.defenders = here
     .filter((u) => !areAllied(u.owner, power) && u.type !== 'factory' && !isCargo(u) && !u.fought)
     .map((u) => u.id);
+  enlist(s, b, [...b.attackers, ...b.defenders]);
   b.origins = [
     ...new Set(
       alive(s, b.attackers)
@@ -437,6 +458,7 @@ function eligibleStrikers(s: GameState, b: Battle, side: 'attacker' | 'defender'
 
 function strategicBombing(s: GameState, b: Battle): void {
   b.attackers = s.units.filter((u) => u.at === b.space && u.owner === b.attacker && u.sbr).map((u) => u.id);
+  enlist(s, b, b.attackers);
   const factory = factoryAt(s, b.space);
   if (!factory || areAllied(factory.owner, b.attacker)) return finish(s, b, 'none');
   b.step = 'airBattle';
@@ -609,6 +631,7 @@ export function applyDecision(s: GameState, action: { type: string } & Record<st
       const ids = action.units as UnitId[];
       if (ids.some((id) => !d.fighters.includes(id))) return 'only fighters in the raided territory can intercept';
       b!.defenders = ids;
+      enlist(s, b!, ids);
       s.pending = null;
       return null;
     }

@@ -3,6 +3,12 @@ import { oddsClass } from '../odds';
 import type { Forecast } from '../odds';
 
 export function OddsTag({ f }: { f: Forecast }) {
+  if (f.kind === 'sbr')
+    return (
+      <span className="tag good" title={`Expected bombers lost: about ${(f.attLoss / 12).toFixed(1)}`}>
+        ~{f.defLoss.toFixed(1)} damage
+      </span>
+    );
   return (
     <span
       className={`tag ${oddsClass(f.win)}`}
@@ -19,12 +25,12 @@ export function AttackPlan({ forecasts, onFocus }: { forecasts: Forecast[]; onFo
     <section className="panel">
       <h3>Planned attacks</h3>
       {forecasts.map((f) => (
-        <div key={f.space} className="battle-row">
+        <div key={`${f.kind}:${f.space}`} className="battle-row">
           <button className="link grow left" onClick={() => onFocus(f.space)}>
             {f.space}
           </button>
           <span className="dim">
-            −{Math.round(f.attLoss)} / −{Math.round(f.defLoss)} IPC
+            {f.kind === 'sbr' ? 'Bombing raid' : `−${Math.round(f.attLoss)} / −${Math.round(f.defLoss)} IPC`}
           </span>
           <OddsTag f={f} />
         </div>

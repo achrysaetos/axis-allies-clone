@@ -1,14 +1,14 @@
 import { asCombatants, simulate } from '../ai/eval';
 import { STATS, isLand, space } from '../engine/data';
-import { areAllied } from '../engine/queries';
+import { areAllied, factoryAt } from '../engine/queries';
 import type { GameState, SpaceId, Unit } from '../engine/types';
 
 export interface Forecast {
   space: SpaceId;
-  kind: 'land' | 'sea';
-  /** Chance the attacker clears the space (and, on land, can take it). */
+  kind: 'land' | 'sea' | 'sbr';
+  /** Chance the attacker clears the space (and, on land, can take it); for a raid, that a bomber gets through. */
   win: number;
-  /** Expected IPC value lost by the attacker and by the defender. */
+  /** Expected IPC value lost by the attacker and by the defender; for a raid, the defender's is factory damage. */
   attLoss: number;
   defLoss: number;
 }
@@ -28,7 +28,7 @@ export function forecasts(state: GameState): Forecast[] {
     ...state.units.filter((u) => u.owner === power && !isCargo(u)).map((u) => u.at),
     ...landing.map((u) => u.offloadedTo!),
   ]);
-  const out: Forecast[] = [];
+  const out: Forecast[] = raidForecasts(state, started);
   for (const id of [...spaces].sort()) {
     if (started.has(id)) continue;
     const water = space(id).water;
@@ -56,6 +56,24 @@ export function forecasts(state: GameState): Forecast[] {
     out.push({ space: id, kind: water ? 'sea' : 'land', ...odds });
   }
   return out;
+}
+
+/** Each bomber survives the complex's air defense 5 times in 6 and rolls one die of damage, capped at twice the territory value. */
+function raidForecasts(state: GameState, started: Set<SpaceId>): Forecast[] {
+  const bySpace = new Map<SpaceId, number>();
+  for (const u of state.units)
+    if (u.owner === state.power && u.sbr && u.type === 'bomber' && !started.has(u.at))
+      bySpace.set(u.at, (bySpace.get(u.at) ?? 0) + 1);
+  return [...bySpace].map(([id, n]) => {
+    const room = 2 * space(id).ipc - (factoryAt(state, id)?.damage ?? 0);
+    return {
+      space: id,
+      kind: 'sbr' as const,
+      win: 1 - (1 / 6) ** n,
+      attLoss: (n / 6) * STATS.bomber.cost,
+      defLoss: Math.min(room, n * (5 / 6) * 3.5),
+    };
+  });
 }
 
 /** Attack values of ships that can bombard, one per landing unit, from zones with no sea battle. */

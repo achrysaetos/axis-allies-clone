@@ -29,7 +29,10 @@ export function SetupScreen({ saved, onStart }: Props) {
     else onStart(s);
   };
 
+  const [replacing, setReplacing] = useState(false);
+
   const start = () => {
+    if (saved && !replacing) return setReplacing(true);
     const controllers = Object.fromEntries(POWERS.map((p) => [p, players[SIDE[p]]])) as Record<Power, Controller>;
     const seed = Math.floor(Math.random() * 1_000_000_000);
     onStart(newSession(newGame(seed, { victory, turkishStraitsClosed: straits, sbrEscortsInterceptors: escorts }), controllers));
@@ -88,8 +91,13 @@ export function SetupScreen({ saved, onStart }: Props) {
           <input type="checkbox" checked={escorts} onChange={(e) => setEscorts(e.target.checked)} />
           <span className="grow">Optional: fighters escort and intercept bombing raids</span>
         </label>
+        {replacing && saved && (
+          <div className="warn-text">
+            This replaces your saved game at round {saved.state.round}, {powerName(saved.state.power)}. Press again to confirm.
+          </div>
+        )}
         <button className="primary wide" onClick={start}>
-          Start new game
+          {replacing ? 'Replace saved game and start' : 'Start new game'}
         </button>
         <label className="import">
           Import saved game…

@@ -31,7 +31,7 @@ export function CombatPanel({ state, odds, act, onQuick, onView, onFocus }: Prop
       {open.length === 0 && battles.length > 0 && <div className="hint">All battles resolved. End the phase.</div>}
       {battles.map((b) => {
         const blocker = b.resolved ? null : battleBlocker(state, b);
-        const forecast = b.resolved || b.kind === 'sbr' ? undefined : odds.find((f) => f.space === b.space && f.kind === b.kind);
+        const forecast = b.resolved ? undefined : odds.find((f) => f.space === b.space && f.kind === b.kind);
         return (
           <div key={b.id} className={b.resolved ? 'battle-row done' : 'battle-row'}>
             <button className="link grow left" onClick={() => onFocus(b.space)}>

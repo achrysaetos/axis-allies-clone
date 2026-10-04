@@ -671,3 +671,7 @@ table.buy tr.picked td {
   padding-left: 18px;
   line-height: 1.5;
 }
+.warn-text {
+  margin: 8px 0;
+  color: var(--accent);
+}

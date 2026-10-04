@@ -51,8 +51,8 @@ export function MovePanel({ state, at, selected, sbr, onSelect, onSbr }: Props) 
   const raiders = state.options.sbrEscortsInterceptors ? ['bomber', 'fighter'] : ['bomber'];
   const canRaid = selectedUnits.some((u) => u.type === 'bomber') && selectedUnits.every((u) => raiders.includes(u.type));
   useEffect(() => {
-    if (sbr && !canRaid) onSbr(false);
-  }, [sbr, canRaid, onSbr]);
+    onSbr(canRaid);
+  }, [canRaid, onSbr]);
 
   return (
     <section className="panel">
@@ -120,7 +120,7 @@ export function MovePanel({ state, at, selected, sbr, onSelect, onSbr }: Props) 
       {canRaid && state.phase === 'combatMove' && (
         <label className="row">
           <input type="checkbox" checked={sbr} onChange={(e) => onSbr(e.target.checked)} />
-          Strategic bombing raid
+          Strategic bombing raid on an enemy industrial complex
         </label>
       )}
       {selected.length > 0 && <div className="hint">Click a highlighted space to move {selected.length} unit(s).</div>}

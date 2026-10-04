@@ -1,7 +1,7 @@
 import { SPACE_IDS, isAir, isLand, isSea, space } from '../engine/data';
 import { apply } from '../engine/game';
 import { planMove } from '../engine/movement';
-import { isPassable, remainingMove } from '../engine/queries';
+import { areAllied, factoryAt, isPassable, remainingMove } from '../engine/queries';
 import type { GameState, SpaceId, Unit, UnitId } from '../engine/types';
 
 export interface MoveIntent {
@@ -71,7 +71,13 @@ function candidatePaths(units: Unit[], from: SpaceId, to: SpaceId, limit: number
   return out;
 }
 
-export type MoveResolution = { ok: true; moves: { units: UnitId[]; path: SpaceId[] }[] } | { ok: false; error: string };
+export interface PlannedMove {
+  units: UnitId[];
+  path: SpaceId[];
+  sbr?: boolean;
+}
+
+export type MoveResolution = { ok: true; moves: PlannedMove[] } | { ok: false; error: string };
 
 const domainOf = (u: Unit) => (isAir(u.type) ? 'air' : isSea(u.type) ? 'sea' : 'land');
 
@@ -84,21 +90,21 @@ function groups(state: GameState, ids: UnitId[]): Unit[][] {
   return ['air', 'land', 'sea'].map((d) => byDomain.get(d)).filter((g): g is Unit[] => !!g);
 }
 
-function pathFor(
-  state: GameState,
-  units: Unit[],
-  sbr: boolean,
-  from: SpaceId,
-  to: SpaceId,
-  limit: number,
-): MoveResolution & { path?: SpaceId[] } {
+/** A raid is only possible against an enemy industrial complex; elsewhere the same planes simply attack. */
+const raids = (state: GameState, units: Unit[], to: SpaceId, sbr: boolean) => {
+  const f = factoryAt(state, to);
+  return sbr && units.every((u) => isAir(u.type)) && f !== undefined && !areAllied(f.owner, state.power);
+};
+
+function pathFor(state: GameState, units: Unit[], sbr: boolean, from: SpaceId, to: SpaceId, limit: number): MoveResolution {
   const paths = candidatePaths(units, from, to, limit);
   if (paths.length === 0) return { ok: false, error: `${to} is out of reach` };
   let firstError: string | null = null;
   const ids = units.map((u) => u.id);
+  const raid = raids(state, units, to, sbr) || undefined;
   for (const path of paths) {
-    const r = planMove(state, { units: ids, path, sbr: (sbr && units.some((u) => isAir(u.type))) || undefined });
-    if (typeof r !== 'string') return { ok: true, moves: [{ units: ids, path }] };
+    const r = planMove(state, { units: ids, path, sbr: raid });
+    if (typeof r !== 'string') return { ok: true, moves: [{ units: ids, path, sbr: raid }] };
     firstError ??= r;
   }
   return { ok: false, error: firstError ?? `${to} is out of reach` };
@@ -108,18 +114,13 @@ function pathFor(
 export function resolveMove(state: GameState, intent: MoveIntent, from: SpaceId, to: SpaceId, limit = 60): MoveResolution {
   const gs = groups(state, intent.units);
   if (gs.length === 0) return { ok: false, error: 'select units to move' };
-  const moves: { units: UnitId[]; path: SpaceId[] }[] = [];
+  const moves: PlannedMove[] = [];
   let cur = state;
   for (const g of gs) {
     const r = pathFor(cur, g, intent.sbr, from, to, limit);
     if (!r.ok) return r;
     const move = r.moves[0]!;
-    const next = apply(cur, {
-      type: 'move',
-      units: move.units,
-      path: move.path,
-      sbr: (intent.sbr && g.some((u) => isAir(u.type))) || undefined,
-    });
+    const next = apply(cur, { type: 'move', ...move });
     if (!next.ok) return { ok: false, error: next.error };
     moves.push(move);
     cur = next.state;

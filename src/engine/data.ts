@@ -28,6 +28,25 @@ export const STATS: Record<UnitType, UnitStats> = {
   battleship: { cost: 20, attack: 4, defense: 4, move: 2, domain: 'sea', hitPoints: 2 },
 };
 
+export const UNIT_NAME: Record<UnitType, string> = {
+  infantry: 'infantry',
+  artillery: 'artillery',
+  armour: 'tank',
+  aaGun: 'antiaircraft gun',
+  factory: 'industrial complex',
+  fighter: 'fighter',
+  bomber: 'bomber',
+  transport: 'transport',
+  submarine: 'submarine',
+  destroyer: 'destroyer',
+  cruiser: 'cruiser',
+  carrier: 'carrier',
+  battleship: 'battleship',
+};
+
+export const unitCount = (n: number, t: UnitType) =>
+  `${n} ${UNIT_NAME[t]}${n === 1 || t === 'infantry' || t === 'artillery' ? '' : 's'}`;
+
 export const TRANSPORT_CAPACITY = 5;
 export const CARRIER_CAPACITY = 2;
 export const SURFACE_WARSHIPS: ReadonlySet<UnitType> = new Set(['battleship', 'carrier', 'cruiser', 'destroyer']);

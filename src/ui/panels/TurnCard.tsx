@@ -1,24 +1,21 @@
 import { useEffect } from 'react';
 import { SIDE } from '../../engine/data';
 import { capitalHeld, income } from '../../engine/queries';
-import type { GameState } from '../../engine/types';
+import type { GameState, Power } from '../../engine/types';
 import { POWER_STYLE, readable } from '../theme';
 
 const NOTABLE = /captures|liberates|seizes|bombs|battle for|holds against|lost|win with|cannot collect/;
-const TURN_END = /collects \d+ IPCs|cannot collect income/;
-
-/** What the previous power did, so the next player catches up at a glance. */
-function lastTurn(log: string[]): string[] {
-  let end = log.length;
-  while (end > 0 && !TURN_END.test(log[end - 1]!)) end -= 1;
-  let start = end - 1;
-  while (start > 0 && !TURN_END.test(log[start - 1]!)) start -= 1;
-  return log.slice(Math.max(start, 0), end).filter((l) => NOTABLE.test(l));
+/** Everything notable since this power's last turn ended, so the returning player catches up at a glance. */
+export function sinceLastTurn(log: string[], power: Power): string[] {
+  const ended = new RegExp(`^${power} (collects \\d+ IPCs|cannot collect income)`);
+  let start = log.length;
+  while (start > 0 && !ended.test(log[start - 1]!)) start -= 1;
+  return log.slice(start).filter((l) => NOTABLE.test(l));
 }
 
 export function TurnCard({ state, onStart }: { state: GameState; onStart: () => void }) {
   const style = POWER_STYLE[state.power];
-  const recap = lastTurn(state.log);
+  const recap = sinceLastTurn(state.log, state.power);
   const exiled = !capitalHeld(state, state.power);
 
   useEffect(() => {
@@ -50,8 +47,8 @@ export function TurnCard({ state, onStart }: { state: GameState; onStart: () => 
         </div>
         {recap.length > 0 && (
           <div className="turn-recap">
-            <div className="dim">Last turn</div>
-            {recap.slice(-8).map((l, i) => (
+            <div className="dim">Since your last turn</div>
+            {recap.slice(-12).map((l, i) => (
               <div key={i}>{readable(l)}</div>
             ))}
           </div>
