@@ -39,6 +39,15 @@ function board(
 
 const SCENARIOS: Record<string, Scenario> = {
   opening: { summary: 'The printed 1942 setup, Russians to purchase.', build: () => newGame(1942) },
+  'naval-opening': {
+    summary: 'The printed 1942 setup at the start of the United Kingdom turn, for the naval powers.',
+    build: () => {
+      const s = newGame(1942);
+      s.power = 'British';
+      startTurn(s);
+      return s;
+    },
+  },
   amphibious: {
     summary: 'British combat move: loaded transport, battleship and cruiser in 8 Sea Zone; one German infantry in France.',
     build: () =>
