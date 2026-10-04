@@ -3,7 +3,7 @@ import { combatMoveErrors } from '../engine/movement';
 import { canLandAir, enemyUnitsAt, isHostileSea, seaPassageOpen } from '../engine/queries';
 import type { Action, GameState, Power, SpaceId, Unit, UnitId } from '../engine/types';
 import { Draft, enemiesAt, isEnemyLand, isFriendly, mine, ownFactories } from './board';
-import { type Combatant, asCombatants, dangerAt, simulate } from './eval';
+import { type Combatant, asCombatants, dangerAt, simulate, threatTo } from './eval';
 import { airDist, landDist, paths, seaDist } from './geo';
 
 /** One self-contained way to commit force to a target: a unit walking or flying in, or a loaded transport. */
@@ -19,8 +19,11 @@ interface Option {
 interface Target {
   at: SpaceId;
   kind: 'land' | 'sea';
-  /** IPC-equivalent value of taking or clearing the space, beyond the units destroyed. */
-  gain: number;
+  /** IPC value banked the moment we take it: this turn's income and any plundered treasury. */
+  now: number;
+  /** Further IPC value of still holding it after the enemy's next turn. */
+  held: number;
+  capital: boolean;
 }
 
 const WIN_LAND = 0.8;
@@ -80,12 +83,18 @@ function targets(s: GameState): Target[] {
   for (const [at, owner] of Object.entries(s.owner)) {
     if (!isEnemyLand(s, at, power) || isNeutral(at)) continue;
     const def = space(at);
-    const capital = def.capital && CAPITAL_OF[def.capital as Power] === at ? 20 + s.treasury[owner] : 0;
-    out.push({ at, kind: 'land', gain: def.ipc * 2 + (def.victoryCity ? 6 : 0) + capital });
+    const capital = def.capital !== null && CAPITAL_OF[def.capital as Power] === at;
+    out.push({
+      at,
+      kind: 'land',
+      now: def.ipc + (capital ? s.treasury[owner] : 0),
+      held: def.ipc + (def.victoryCity ? 6 : 0) + (capital ? 20 : 0),
+      capital,
+    });
   }
   const zones = new Set(s.units.filter((u) => space(u.at).water && enemiesAt(s, u.at, power).length > 0).map((u) => u.at));
-  for (const at of zones) out.push({ at, kind: 'sea', gain: 0 });
-  const worth = new Map(out.map((t) => [t, t.gain + enemiesAt(s, t.at, power).reduce((n, u) => n + STATS[u.type].cost, 0) / 2]));
+  for (const at of zones) out.push({ at, kind: 'sea', now: 0, held: 0, capital: false });
+  const worth = new Map(out.map((t) => [t, t.now + t.held + enemiesAt(s, t.at, power).reduce((n, u) => n + STATS[u.type].cost, 0) / 2]));
   return out.sort((a, b) => worth.get(b)! - worth.get(a)!);
 }
 
@@ -95,11 +104,11 @@ function assemble(s: GameState, t: Target, used: Set<UnitId>): Option[] | null {
   const options = optionsFor(s, t, used, landable(s)).sort((a, b) => a.order - b.order);
   if (t.kind === 'land' && defenders.length === 0) {
     const walker = options.find((o) => o.land && o.units.every((u) => isLand(u.type) || u.type === 'transport'));
-    return walker ? [walker] : null;
+    return walker && t.now + holdValue(s, t, walker.fighters, 0) > 0 ? [walker] : null;
   }
   if (defenders.length === 0) return null;
   const base: Combatant[] = t.kind === 'sea' ? asCombatants(s.units.filter((u) => u.at === t.at && u.owner === s.power && u.carriedBy === null && u.type !== 'transport')) : [];
-  const need = t.kind === 'sea' ? WIN_SEA : t.gain >= 20 ? WIN_CAPITAL : WIN_LAND;
+  const need = t.kind === 'sea' ? WIN_SEA : t.capital ? WIN_CAPITAL : WIN_LAND;
   const chosen: Option[] = [];
   const defPunch = defenders.reduce((n, c) => n + STATS[c.type].defense * STATS[c.type].hitPoints, 0);
   for (const o of options) {
@@ -110,10 +119,24 @@ function assemble(s: GameState, t: Target, used: Set<UnitId>): Option[] | null {
     if (punch < defPunch * 0.6) continue;
     const odds = simulate({ kind: t.kind, attackers, defenders, trials: 100 });
     if (odds.win < need) continue;
-    const net = odds.win * t.gain + odds.defLoss - odds.attLoss;
+    const hold = t.kind === 'land' ? holdValue(s, t, attackers.filter((c) => isLand(c.type)), odds.attLoss) : 0;
+    const net = odds.win * (t.now + hold) + odds.defLoss - odds.attLoss;
     return net > 0 ? chosen : null;
   }
   return null;
+}
+
+/**
+ * Expected value of still holding `t` after the enemy's turn, given the land units left after the attack.
+ * Counting the survivors' likely loss as well made the AI measurably too timid (threatTo over-counts).
+ */
+function holdValue(s: GameState, t: Target, landAttackers: Combatant[], attLoss: number): number {
+  const survivors = [...landAttackers].sort((a, b) => STATS[a.type].cost - STATS[b.type].cost);
+  for (let lost = 0; survivors.length > 1 && lost + STATS[survivors[0]!.type].cost <= attLoss; ) lost += STATS[survivors.shift()!.type].cost;
+  const threat = asCombatants(threatTo(s, t.at, s.power).filter((u) => u.at !== t.at));
+  if (threat.length === 0) return t.held;
+  const counter = simulate({ kind: 'land', attackers: threat, defenders: survivors, trials: 60 });
+  return t.held * (1 - counter.win);
 }
 
 const landable = (s: GameState) => Object.keys(s.owner).filter((id) => canLandAir(s, id, s.power));
