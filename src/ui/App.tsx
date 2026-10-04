@@ -14,6 +14,7 @@ import { SetupScreen } from './panels/SetupScreen';
 import { SpaceInfo } from './panels/SpaceInfo';
 import { TurnCard } from './panels/TurnCard';
 import { Help } from './panels/Help';
+import { Victory } from './panels/Victory';
 import { BuyTray, PlaceTray, placementOptions } from './panels/Tray';
 import { forecasts, oddsClass } from './odds';
 import { ConfirmEnd } from './panels/ConfirmEnd';
@@ -80,10 +81,12 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
   const [greeted, setGreeted] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<string[] | null>(null);
   const [overlay, setOverlay] = useState<'help' | 'log' | null>(null);
+  const [lookingAtBoard, setLookingAtBoard] = useState(false);
   const { state, controllers } = session;
   const turnKey = `${state.round}:${state.power}`;
   const greeting = controllers[state.power] === 'human' && greeted !== turnKey && !state.winner;
-  const humanActs = controllers[actingPower(state)] === 'human';
+  // Once someone has won, the board is for looking at only.
+  const humanActs = controllers[actingPower(state)] === 'human' && !state.winner;
   const moving = state.phase === 'combatMove' || state.phase === 'noncombatMove';
   const endable = humanActs && state.pending === null && !state.winner && !greeting;
 
@@ -347,15 +350,17 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
   const viewed = battleView !== null ? state.battles.find((b) => b.id === battleView) : undefined;
   const stranded = state.pending?.kind === 'landStranded' ? state.pending : null;
   const openBattles = state.battles.some((b) => !b.resolved);
-  const hint = !humanActs
-    ? `${powerName(actingPower(state))} (computer) is playing…`
-    : hand?.kind === 'units'
-      ? 'Drop on a highlighted space. Click a piece for one more, right-click to put one back, Esc to let go.'
-      : state.phase === 'combat'
-        ? openBattles
-          ? 'Click a ⚔ to fight that battle.'
-          : 'Every battle is fought. End the phase.'
-        : HINT[state.phase];
+  const hint = state.winner
+    ? `The ${state.winner} won. Open the ☰ menu for a new game.`
+    : !humanActs
+      ? `${powerName(actingPower(state))} (computer) is playing…`
+      : hand?.kind === 'units'
+        ? 'Drop on a highlighted space. Click a piece for one more, right-click to put one back, Esc to let go.'
+        : state.phase === 'combat'
+          ? openBattles
+            ? 'Click a ⚔ to fight that battle.'
+            : 'Every battle is fought. End the phase.'
+          : HINT[state.phase];
   const style = POWER_STYLE[state.power];
 
   return (
@@ -468,13 +473,8 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
         {overlay === 'help' && <Help options={state.options} onClose={() => setOverlay(null)} />}
         {overlay === 'log' && <LogPanel lines={state.log} onClose={() => setOverlay(null)} />}
         {warnings && <ConfirmEnd warnings={warnings} onConfirm={endPhase} onCancel={() => setWarnings(null)} />}
-        {state.winner && (
-          <div className="winner">
-            <h1>The {state.winner} win!</h1>
-            <button className="primary" onClick={onMenu}>
-              New game
-            </button>
-          </div>
+        {state.winner && !lookingAtBoard && (
+          <Victory state={state} winner={state.winner} onMenu={onMenu} onLook={() => setLookingAtBoard(true)} />
         )}
       </div>
     </div>

@@ -26,7 +26,7 @@ Preconditions:
 - **Capacity.** In `mobilize`, drag the `Infantry` card onto `data-space="Italy"`. Only 3 fit, so the state shows 3 infantry in Italy and the card count drops by 3. Italy no longer highlights. Germany takes up to 10.
 - **Sea unit.** Drag the `Destroyer` card onto `data-space="15 Sea Zone"`. A destroyer appears in `15 Sea Zone`.
 - **Income.** Press `End turn`. The log shows `Germans collects N IPCs`, the treasury rises by N, and the top bar moves to the British.
-- **Victory.** Load `victory` and press `End turn`. A winner banner names the Axis and the state shows `winner: "Axis"`.
+- **Victory.** Load `victory` and press `End turn`. A victory card reads `The Axis win`, lists the deciding victory cities and each power's income, and the state shows `winner: "Axis"`. `Look at the board` closes the card; the board is then frozen (no tray, the end button disabled) and the hint says to open the menu for a new game.
 
 ## Gotchas
 

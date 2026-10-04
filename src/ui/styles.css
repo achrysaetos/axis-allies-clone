@@ -419,20 +419,6 @@ path.selected {
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
 }
 
-.winner {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: rgba(10, 12, 15, 0.75);
-}
-.winner h1 {
-  font-size: 44px;
-  color: var(--accent);
-}
-
 .setup {
   height: 100vh;
   display: flex;
@@ -1035,4 +1021,28 @@ path.captured {
   padding: 10px 12px;
   background: var(--panel-2);
   border-radius: 8px;
+}
+.turn-card.victory {
+  width: 520px;
+  border-color: var(--accent);
+}
+.turn-card.victory h1 {
+  color: var(--accent);
+  font-size: 38px;
+}
+.final-powers {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  margin: 12px 0 16px;
+}
+.final-power {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  border-left: 3px solid;
+  background: var(--panel-2);
+  border-radius: 4px;
+  font-size: 12px;
 }
