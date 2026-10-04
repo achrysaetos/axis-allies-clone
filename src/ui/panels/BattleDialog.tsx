@@ -11,6 +11,7 @@ interface Props {
   fallen: Unit[];
   controllers: Record<Power, Controller>;
   act: (a: Action) => boolean;
+  onQuick: (battle: number) => void;
   onClose: () => void;
 }
 
@@ -89,7 +90,7 @@ function Side({
   );
 }
 
-export function BattleDialog({ state, battle, fallen, controllers, act, onClose }: Props) {
+export function BattleDialog({ state, battle, fallen, controllers, act, onQuick, onClose }: Props) {
   const d = state.pending;
   const mine = d && 'battle' in d && d.battle === battle.id ? d : null;
   const waitingOnAi = mine !== null && controllers[mine.power] === 'ai';
@@ -155,7 +156,12 @@ export function BattleDialog({ state, battle, fallen, controllers, act, onClose 
         (waitingOnAi ? (
           <div className="dim">Waiting for {powerName(mine.power)} (computer)…</div>
         ) : (
-          <DecisionView state={state} d={mine} act={act} />
+          <>
+            <DecisionView state={state} d={mine} act={act} />
+            <button className="link" onClick={() => onQuick(battle.id)}>
+              Finish this battle automatically
+            </button>
+          </>
         ))}
     </div>
   );

@@ -21,7 +21,7 @@ import { ConfirmEnd } from './panels/ConfirmEnd';
 import { endPhaseWarnings } from './warnings';
 import { PHASE_GUIDE, powerName } from './theme';
 import { reachable, resolveMove } from './paths';
-import { act as step, aiBurst, autosave, downloadSave, loadAutosave, undo } from './session';
+import { act as step, aiBurst, autosave, downloadSave, loadAutosave, quickResolve, undo } from './session';
 import type { Session } from './session';
 
 const AI_DELAY_MS = 120;
@@ -31,12 +31,12 @@ const TOAST_MS = 4500;
 export function App() {
   const [session, setSession] = useState<Session | null>(null);
   if (!session) return <SetupScreen saved={loadAutosave()} onStart={setSession} />;
-  return <Game initial={session} onMenu={() => setSession(null)} />;
+  return <Game session={session} setSession={setSession} onMenu={() => setSession(null)} />;
 }
 
-function Game({ initial, onMenu }: { initial: Session; onMenu: () => void }) {
-  const [session, setSession] = useState(initial);
+function Game({ session, setSession, onMenu }: { session: Session; setSession: (s: Session) => void; onMenu: () => void }) {
   const current = useRef(session);
+  current.current = session;
   const [inspect, setInspect] = useState<SpaceId | null>(null);
   const [selected, setSelected] = useState<UnitId[]>([]);
   const [sbr, setSbr] = useState(false);
@@ -54,10 +54,13 @@ function Game({ initial, onMenu }: { initial: Session; onMenu: () => void }) {
   const moving = state.phase === 'combatMove' || state.phase === 'noncombatMove';
   const endable = humanActs && state.pending === null && !state.winner && !greeting;
 
-  const commit = useCallback((next: Session) => {
-    current.current = next;
-    setSession(next);
-  }, []);
+  const commit = useCallback(
+    (next: Session) => {
+      current.current = next;
+      setSession(next);
+    },
+    [setSession],
+  );
 
   const showError = useCallback((text: string) => setToast({ text, id: Date.now() }), []);
 
@@ -153,6 +156,16 @@ function Game({ initial, onMenu }: { initial: Session; onMenu: () => void }) {
     if (id !== inspect) inspectSpace(id);
   };
 
+  const quick = useCallback(
+    (battle: number) => {
+      const r = quickResolve(current.current, battle);
+      if (!r.ok) return showError(r.error);
+      commit(r.session);
+      setBattleView(battle);
+    },
+    [commit, showError],
+  );
+
   const startTurn = useCallback(() => {
     setGreeted(turnKey);
     setFocus({ id: CAPITAL_OF[state.power], nonce: Date.now() });
@@ -222,7 +235,7 @@ function Game({ initial, onMenu }: { initial: Session; onMenu: () => void }) {
           {humanActs && !state.winner && <section className="panel guide">{PHASE_GUIDE[state.phase]}</section>}
           {humanActs && state.phase === 'purchase' && <PurchasePanel state={state} act={act} />}
           {humanActs && state.phase === 'combatMove' && <AttackPlan forecasts={odds} onFocus={focusOn} />}
-          {state.phase === 'combat' && <CombatPanel state={state} odds={odds} act={act} onView={setBattleView} onFocus={focusOn} />}
+          {state.phase === 'combat' && <CombatPanel state={state} odds={odds} act={act} onQuick={quick} onView={setBattleView} onFocus={focusOn} />}
           {humanActs && state.phase === 'mobilize' && (
             <MobilizePanel state={state} type={placeType} options={placements} onType={setPlaceType} act={act} />
           )}
@@ -240,6 +253,7 @@ function Game({ initial, onMenu }: { initial: Session; onMenu: () => void }) {
             fallen={session.fallen}
             controllers={controllers}
             act={act}
+            onQuick={quick}
             onClose={() => setBattleView(null)}
           />
         )}

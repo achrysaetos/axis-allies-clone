@@ -7,6 +7,7 @@ interface Props {
   state: GameState;
   odds: Forecast[];
   act: (a: Action) => boolean;
+  onQuick: (battle: number) => void;
   onView: (battle: number) => void;
   onFocus: (id: SpaceId) => void;
 }
@@ -20,7 +21,7 @@ function outcome(b: Battle): string {
   return 'no decision';
 }
 
-export function CombatPanel({ state, odds, act, onView, onFocus }: Props) {
+export function CombatPanel({ state, odds, act, onQuick, onView, onFocus }: Props) {
   const battles = [...state.battles].sort((a, b) => a.tier - b.tier || a.id - b.id);
   const open = battles.filter((b) => !b.resolved);
   return (
@@ -62,6 +63,9 @@ export function CombatPanel({ state, odds, act, onView, onFocus }: Props) {
                   onClick={() => act({ type: 'startBattle', battle: b.id }) && onView(b.id)}
                 >
                   Start
+                </button>
+                <button disabled={blocker !== null} title="Fight it out with the default choices for both sides" onClick={() => onQuick(b.id)}>
+                  Quick
                 </button>
                 {b.optional && <button onClick={() => act({ type: 'skipBattle', battle: b.id })}>Skip</button>}
               </>

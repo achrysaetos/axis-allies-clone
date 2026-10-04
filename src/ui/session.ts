@@ -79,6 +79,22 @@ export function unreachable(x: never): never {
   throw new Error(`unhandled ${JSON.stringify(x)}`);
 }
 
+/** Fight a battle to the end, answering every decision on both sides with its default. */
+export function quickResolve(session: Session, battle: number): Step {
+  let cur = session;
+  if (cur.state.activeBattle !== battle) {
+    const r = act(cur, { type: 'startBattle', battle });
+    if (!r.ok) return r;
+    cur = r.session;
+  }
+  for (let d = cur.state.pending; d && 'battle' in d && d.battle === battle; d = cur.state.pending) {
+    const r = act(cur, defaultDecision(cur.state, d));
+    if (!r.ok) return r;
+    cur = r.session;
+  }
+  return { ok: true, session: cur };
+}
+
 /** Keeps an AI turn moving when its own action is rejected. */
 export function fallbackAction(state: GameState): Action {
   if (state.pending) return defaultDecision(state, state.pending);
