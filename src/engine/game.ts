@@ -1,4 +1,15 @@
-import { CAPITAL_OF, CARRIER_CAPACITY, SPACE_IDS, STATS, VICTORY_THRESHOLD, isAir, isLand, isSea, space } from './data';
+import {
+  CAPITAL_OF,
+  CARRIER_CAPACITY,
+  SPACE_IDS,
+  STATS,
+  unitCount,
+  VICTORY_THRESHOLD,
+  isAir,
+  isLand,
+  isSea,
+  space,
+} from './data';
 import { POWERS } from './types';
 import type { Action, Decision, GameState, Power, Purchase, Result, SpaceId, Unit, UnitId, UnitType } from './types';
 import {
@@ -139,6 +150,7 @@ function endPhase(s: GameState): string | null {
   switch (s.phase) {
     case 'purchase':
       s.treasury[s.power] -= costOf(s.purchases);
+      if (s.purchases.length > 0) s.log.push(`${s.power} buys ${s.purchases.map((p) => unitCount(p.count, p.type)).join(', ')}`);
       s.phase = 'combatMove';
       return null;
     case 'combatMove': {

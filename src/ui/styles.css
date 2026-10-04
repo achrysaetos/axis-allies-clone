@@ -705,3 +705,47 @@ table.buy tr.picked td {
   color: var(--dim);
   margin-right: 2px;
 }
+.turn-card.help {
+  width: 760px;
+  max-height: calc(100% - 60px);
+  overflow-y: auto;
+  line-height: 1.5;
+}
+.turn-card.help h2 {
+  margin: 0;
+}
+.help-units {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 10px 0 14px;
+}
+.help-units td,
+.help-units th {
+  padding: 3px 6px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+.shortcuts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 16px;
+}
+kbd {
+  display: inline-block;
+  padding: 0 5px;
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  background: var(--panel-2);
+  font: inherit;
+  font-size: 11px;
+}
+.phase {
+  cursor: default;
+}
+.phase + .phase::before {
+  content: '›';
+  margin: 0 6px 0 2px;
+  color: var(--dim);
+}

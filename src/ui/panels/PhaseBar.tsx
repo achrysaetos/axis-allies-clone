@@ -13,11 +13,12 @@ interface Props {
   onUndo: () => void;
   onExport: () => void;
   onMenu: () => void;
+  onHelp: () => void;
 }
 
 const PHASES: Phase[] = ['purchase', 'combatMove', 'combat', 'noncombatMove', 'mobilize'];
 
-export function PhaseBar({ state, controllers, canUndo, onEndPhase, onUndo, onExport, onMenu }: Props) {
+export function PhaseBar({ state, controllers, canUndo, onEndPhase, onUndo, onExport, onMenu, onHelp }: Props) {
   const style = POWER_STYLE[state.power];
   const t = VICTORY_THRESHOLD[state.options.victory];
   const human = controllers[state.pending?.power ?? state.power] === 'human';
@@ -56,6 +57,9 @@ export function PhaseBar({ state, controllers, canUndo, onEndPhase, onUndo, onEx
       </button>
       <button onClick={onExport} title="Download this game as JSON">
         Export
+      </button>
+      <button onClick={onHelp} title="How to play (?)">
+        ?
       </button>
       <button onClick={onMenu}>Menu</button>
       <button className="primary end" onClick={onEndPhase} disabled={!human || state.pending !== null} title="End phase (E)">

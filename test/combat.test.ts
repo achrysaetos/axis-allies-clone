@@ -424,6 +424,9 @@ describe('strategic bombing (p.14, 25, 27)', () => {
     const f = s.units[0]!;
     f.damage = 8;
     fails(s, { type: 'buy', purchases: [{ type: 'infantry', count: 3 }] }, /only 2/);
+    expect(ok(ok(s, { type: 'buy', purchases: [{ type: 'infantry', count: 2 }] }), { type: 'endPhase' }).log.at(-1)).toBe(
+      'Germans buys 2 infantry',
+    );
     s = ok(s, { type: 'repair', factory: f.id, amount: 3 });
     expect(s.treasury.Germans).toBe(27);
     ok(s, { type: 'buy', purchases: [{ type: 'infantry', count: 5 }] });

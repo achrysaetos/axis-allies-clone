@@ -15,6 +15,7 @@ import { PurchasePanel } from './panels/PurchasePanel';
 import { SetupScreen } from './panels/SetupScreen';
 import { SpaceInfo } from './panels/SpaceInfo';
 import { TurnCard } from './panels/TurnCard';
+import { Help } from './panels/Help';
 import { AttackPlan } from './panels/AttackPlan';
 import { forecasts } from './odds';
 import { ConfirmEnd } from './panels/ConfirmEnd';
@@ -47,6 +48,7 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
   const [focus, setFocus] = useState<{ id: SpaceId; nonce: number } | null>(null);
   const [greeted, setGreeted] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<string[] | null>(null);
+  const [help, setHelp] = useState(false);
   const { state, controllers } = session;
   const turnKey = `${state.round}:${state.power}`;
   const greeting = controllers[state.power] === 'human' && greeted !== turnKey && !state.winner;
@@ -196,6 +198,7 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
         e.preventDefault();
         onUndo();
       } else if (e.key === 'Escape') setSelected([]);
+      else if (e.key === '?') setHelp(true);
       else if (e.key === 'e' && !e.metaKey && !e.ctrlKey && endable) onEndPhase();
     };
     window.addEventListener('keydown', onKey);
@@ -219,6 +222,7 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
         onUndo={onUndo}
         onExport={() => downloadSave(session)}
         onMenu={onMenu}
+        onHelp={() => setHelp(true)}
       />
       <div className="main">
         <MapView
@@ -270,7 +274,8 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
             {toast.text}
           </div>
         )}
-        {greeting && <TurnCard state={state} onStart={startTurn} />}
+        {greeting && !help && <TurnCard state={state} onStart={startTurn} />}
+        {help && <Help options={state.options} onClose={() => setHelp(false)} />}
         {warnings && <ConfirmEnd warnings={warnings} onConfirm={endPhase} onCancel={() => setWarnings(null)} />}
         {state.winner && (
           <div className="winner">
