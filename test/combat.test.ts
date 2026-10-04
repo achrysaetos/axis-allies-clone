@@ -180,6 +180,25 @@ describe('sea combat and submarines (p.16-17, 29-30)', () => {
     expect(b.winner).toBe('attacker');
   });
 
+  it('plane hits against a lone submarine are marked as having nothing to hit', () => {
+    let s = scenario({
+      power: 'British',
+      units: [
+        ['British', 'carrier', '13 Sea Zone'],
+        ['British', 'fighter', '13 Sea Zone'],
+        ['Germans', 'submarine', '12 Sea Zone'],
+      ],
+      dice: [6, 1],
+    });
+    s = move(s, ids(s, 'British', 'fighter', '13 Sea Zone'), ['13 Sea Zone', '12 Sea Zone']);
+    s = move(s, ids(s, 'British', 'carrier', '13 Sea Zone'), ['13 Sea Zone', '12 Sea Zone']);
+    s = fight(s, '12 Sea Zone', { retreat: null });
+    const air = battleIn(s, '12 Sea Zone').dice.find((d) => d.side === 'attacker' && d.label === 'notSub')!;
+    expect(air.hits).toBe(1);
+    expect(air.wasted).toBe(true);
+    expect(battleIn(s, '12 Sea Zone').dice.find((d) => d.side === 'defender')?.wasted).toBeUndefined();
+  });
+
   it('a destroyer cancels the surprise strike', () => {
     let s = scenario({
       units: [

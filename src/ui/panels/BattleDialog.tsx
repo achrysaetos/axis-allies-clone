@@ -220,6 +220,7 @@ export function BattleDialog({ state, battle, fallen, controllers, act, onQuick,
               </span>
               <span className="hits">
                 {r.hits} {r.label === 'bombing damage' ? 'damage' : r.hits === 1 ? 'hit' : 'hits'}
+                {r.wasted && <span className="dim"> · nothing it can hit</span>}
               </span>
             </div>
           </div>

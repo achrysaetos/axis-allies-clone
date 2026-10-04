@@ -113,7 +113,16 @@ export interface Battle {
   origins: SpaceId[];
   queue: PendingHits[];
   /** Each roll hits when it is at or below its target; damage rolls have no targets. */
-  dice: { round: number; side: 'attacker' | 'defender'; label: string; rolls: number[]; targets: number[]; hits: number }[];
+  dice: {
+    round: number;
+    side: 'attacker' | 'defender';
+    label: string;
+    rolls: number[];
+    targets: number[];
+    hits: number;
+    /** The hits had nothing they were allowed to hit, such as planes against a lone submarine. */
+    wasted?: boolean;
+  }[];
   resolved: boolean;
   skipped: boolean;
   winner: 'attacker' | 'defender' | 'none' | null;

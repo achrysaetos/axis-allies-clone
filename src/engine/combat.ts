@@ -160,8 +160,10 @@ function fire(s: GameState, b: Battle, side: 'attacker' | 'defender', firers: Un
     byCategory.set(cat, [...(byCategory.get(cat) ?? []), value]);
   }
   const groups: HitGroup[] = [];
+  const targets = casualtyPool(s, b, side === 'attacker' ? 'defender' : 'attacker');
   for (const [category, values] of byCategory) {
     const hits = rollGroup(s, b, side, category, values);
+    if (hits > 0 && !targets.some((t) => canTake(category, t))) b.dice[b.dice.length - 1]!.wasted = true;
     if (hits > 0) groups.push({ category, hits });
   }
   return groups;
