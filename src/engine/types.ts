@@ -76,6 +76,9 @@ export type BattleStep =
   | 'removeCasualties'
   | 'endRound'
   | 'retreat'
+  | 'airBattle'
+  | 'interceptorsFire'
+  | 'raid'
   | 'done';
 
 export interface PendingHits {
@@ -137,11 +140,14 @@ export type Decision =
   | { kind: 'submerge'; battle: number; power: Power; side: 'attacker' | 'defender'; subs: UnitId[] }
   | { kind: 'retreat'; battle: number; power: Power; options: SpaceId[] }
   | { kind: 'bombard'; battle: number; power: Power; ships: UnitId[]; max: number }
+  | { kind: 'intercept'; battle: number; power: Power; fighters: UnitId[] }
   | { kind: 'landStranded'; power: Power; fighters: UnitId[]; options: Record<UnitId, SpaceId[]> };
 
 export interface Options {
   victory: 'standard' | 'total';
   turkishStraitsClosed: boolean;
+  /** Optional rule p.14: fighters escort raids and intercept them. */
+  sbrEscortsInterceptors: boolean;
 }
 
 export interface GameState {
@@ -181,6 +187,7 @@ export type Action =
   | { type: 'submerge'; units: UnitId[] }
   | { type: 'retreat'; to: SpaceId | null }
   | { type: 'bombard'; ships: UnitId[] }
+  | { type: 'intercept'; units: UnitId[] }
   | { type: 'landStranded'; landings: Record<UnitId, SpaceId | null> }
   | { type: 'place'; unitType: UnitType; at: SpaceId; count: number };
 

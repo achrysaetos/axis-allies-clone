@@ -51,7 +51,7 @@ function observe(before: GameState, after: GameState, a: Action): void {
 
 function play(seed: number): Outcome {
   const rand = mulberry(seed * 7919);
-  let s: GameState = newGame(seed);
+  let s: GameState = newGame(seed, process.env.OPTIONAL ? { sbrEscortsInterceptors: true, turkishStraitsClosed: true, victory: 'total' } : {});
   let phaseStart = s;
   const recent: Action[] = [];
   let actions = 0;

@@ -161,12 +161,14 @@ function enterNoncombat(s: GameState): void {
   s.pending = nextStranded(s);
 }
 
-/** Defending fighters whose carriers sank must land within one space before noncombat moves. */
+/** Defending fighters whose carrier sank, or whose territory fell after they intercepted, land within one space. */
 function nextStranded(s: GameState): Decision | null {
-  for (const zone of new Set(s.units.filter((u) => u.type === 'fighter' && space(u.at).water).map((u) => u.at))) {
+  for (const zone of new Set(s.units.filter((u) => u.type === 'fighter' && !areAllied(u.owner, s.power)).map((u) => u.at))) {
     const enemySide = s.units.filter((u) => u.at === zone && !areAllied(u.owner, s.power));
     const fighters = enemySide.filter((u) => u.type === 'fighter').sort((a, b) => b.id - a.id);
-    const excess = fighters.length - enemySide.filter((u) => u.type === 'carrier').length * CARRIER_CAPACITY;
+    const lost = !space(zone).water && areAllied(s.owner[zone]!, s.power);
+    if (!space(zone).water && !lost) continue;
+    const excess = lost ? fighters.length : fighters.length - enemySide.filter((u) => u.type === 'carrier').length * CARRIER_CAPACITY;
     if (excess <= 0) continue;
     const stranded = fighters.slice(0, excess);
     const owner = POWERS.find((p) => stranded.some((f) => f.owner === p))!;

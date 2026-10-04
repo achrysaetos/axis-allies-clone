@@ -2,7 +2,7 @@ import { SETUP, SPACE_IDS, space } from './data';
 import type { GameState, Options, Power, Unit, UnitType } from './types';
 import { POWERS } from './types';
 
-export const DEFAULT_OPTIONS: Options = { victory: 'standard', turkishStraitsClosed: false };
+export const DEFAULT_OPTIONS: Options = { victory: 'standard', turkishStraitsClosed: false, sbrEscortsInterceptors: false };
 
 export function freshUnit(id: number, type: UnitType, owner: Power, at: string): Unit {
   return {

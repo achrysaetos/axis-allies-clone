@@ -5,3 +5,5 @@ when	what	why	evidence	result
 2026-10-04	Engine = pure apply(state, action) over structuredClone draft; phases + battle step machine with explicit pending decisions	one reducer gives undo, replay, AI search and fuzzing for free	design	adopted
 2026-10-04	Casualty legality via bipartite matching (max hits assigned, transports last)	rulebook p.17 examples are matching constraints, not ad-hoc ifs	design	adopted
 2026-10-04	Scripted dice queue in state ahead of seeded RNG	tests and replays need exact rolls	design	adopted
+2026-10-04	Implement optional SBR escorts/interceptors (p.14) behind options.sbrEscortsInterceptors	full parity includes the rulebook optional rules; default off like the printed game	test + OPTIONAL=1 fuzz 40 games, 7 intercept decisions, 0 failures	adopted
+2026-10-04	Mutation testing script with 22 rule mutants	prove the suite detects rule defects, not just passes	22/22 killed after adding 3 tests	adopted

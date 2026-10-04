@@ -331,6 +331,10 @@ function step(s: GameState, b: Battle): void {
       }
       return;
     }
+    case 'airBattle':
+    case 'interceptorsFire':
+    case 'raid':
+      return raidStep(s, b);
     case 'done':
       return;
   }
@@ -355,7 +359,9 @@ function start(s: GameState, b: Battle): void {
   b.attackers = here
     .filter((u) => u.owner === power && u.carriedBy === null && !u.sbr && (b.kind === 'sea' || u.movedInCombat || b.seaborne.includes(u.id)))
     .map((u) => u.id);
-  b.defenders = here.filter((u) => !areAllied(u.owner, power) && u.type !== 'factory' && !isCargo(u)).map((u) => u.id);
+  b.defenders = here
+    .filter((u) => !areAllied(u.owner, power) && u.type !== 'factory' && !isCargo(u) && !u.fought)
+    .map((u) => u.id);
   b.origins = [
     ...new Set(
       alive(s, b.attackers)
@@ -390,10 +396,39 @@ function eligibleStrikers(s: GameState, b: Battle, side: 'attacker' | 'defender'
 }
 
 function strategicBombing(s: GameState, b: Battle): void {
-  const bombers = s.units.filter((u) => u.at === b.space && u.owner === b.attacker && u.sbr);
-  b.attackers = bombers.map((u) => u.id);
+  b.attackers = s.units.filter((u) => u.at === b.space && u.owner === b.attacker && u.sbr).map((u) => u.id);
   const factory = factoryAt(s, b.space);
   if (!factory || areAllied(factory.owner, b.attacker)) return finish(s, b, 'none');
+  b.step = 'airBattle';
+  if (!s.options.sbrEscortsInterceptors) return;
+  const fighters = s.units.filter((u) => u.at === b.space && u.type === 'fighter' && !areAllied(u.owner, b.attacker) && !u.fought);
+  if (fighters.length > 0) s.pending = { kind: 'intercept', battle: b.id, power: fighters[0]!.owner, fighters: fighters.map((u) => u.id) };
+}
+
+function raidStep(s: GameState, b: Battle): void {
+  switch (b.step) {
+    case 'airBattle': {
+      b.step = 'interceptorsFire';
+      if (b.defenders.length === 0) return;
+      const hits = rollGroup(s, b, 'attacker', 'escort fire', liveAttackers(s, b).map(() => 1));
+      if (hits > 0) b.queue.push({ side: 'defender', groups: [{ category: 'air', hits }], immediate: true, reason: 'fire' });
+      return;
+    }
+    case 'interceptorsFire': {
+      b.step = 'raid';
+      const hits = rollGroup(s, b, 'defender', 'interceptor fire', liveDefenders(s, b).map(() => 2));
+      if (hits > 0) b.queue.push({ side: 'attacker', groups: [{ category: 'air', hits }], immediate: true, reason: 'fire' });
+      return;
+    }
+    case 'raid':
+      return bomb(s, b);
+  }
+}
+
+function bomb(s: GameState, b: Battle): void {
+  const factory = factoryAt(s, b.space)!;
+  for (const u of liveAttackers(s, b)) if (u.type === 'fighter') u.retreated = true;
+  const bombers = liveAttackers(s, b).filter((u) => u.type === 'bomber');
   const aaRolls = roll(s, bombers.length);
   b.dice.push({ side: 'defender', label: 'factory air defense', rolls: aaRolls, hits: aaRolls.filter((r) => r === 1).length });
   const shotDown = bombers.filter((_, i) => aaRolls[i] === 1).map((u) => u.id);
@@ -491,6 +526,14 @@ export function applyDecision(s: GameState, action: { type: string } & Record<st
       }
       const hits = rollGroup(s, b!, 'attacker', 'bombardment', ships.map((u) => STATS[u.type].attack));
       if (hits > 0) b!.queue.push({ side: 'defender', groups: [{ category: 'any', hits }], immediate: false, reason: 'bombard' });
+      return null;
+    }
+    case 'intercept': {
+      if (action.type !== 'intercept') return 'choose interceptors';
+      const ids = action.units as UnitId[];
+      if (ids.some((id) => !d.fighters.includes(id))) return 'only fighters in the raided territory can intercept';
+      b!.defenders = ids;
+      s.pending = null;
       return null;
     }
     case 'landStranded':

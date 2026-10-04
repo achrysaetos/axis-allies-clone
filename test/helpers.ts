@@ -74,6 +74,9 @@ export function autoResolve(s: GameState, choices: { retreat?: SpaceId | null; s
       case 'bombard':
         cur = ok(cur, { type: 'bombard', ships: d.ships.slice(0, d.max) });
         break;
+      case 'intercept':
+        cur = ok(cur, { type: 'intercept', units: d.fighters });
+        break;
       case 'landStranded':
         cur = ok(cur, {
           type: 'landStranded',

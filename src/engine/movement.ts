@@ -147,7 +147,8 @@ function planAir(state: GameState, units: Unit[], path: SpaceId[], combat: boole
   }
   if (sbr) {
     if (!combat) return 'strategic bombing raids are declared during combat move';
-    if (units.some((u) => u.type !== 'bomber')) return 'only bombers can raid industrial complexes';
+    const escorts = state.options.sbrEscortsInterceptors ? ['bomber', 'fighter'] : ['bomber'];
+    if (units.some((u) => !escorts.includes(u.type))) return 'only bombers (and escorting fighters) can raid industrial complexes';
     const f = factoryAt(state, dest);
     if (!f || areAllied(f.owner, state.power)) return 'raids must target an enemy industrial complex';
   }

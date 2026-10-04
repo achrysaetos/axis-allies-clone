@@ -52,6 +52,8 @@ export function randomAction(s: GameState, rand: Rand = Math.random): Action {
         return { type: 'retreat', to: rand() < 0.25 ? pick(d.options, rand) ?? null : null };
       case 'bombard':
         return { type: 'bombard', ships: d.ships.filter(() => rand() < 0.8).slice(0, d.max) };
+      case 'intercept':
+        return { type: 'intercept', units: d.fighters.filter(() => rand() < 0.5) };
       case 'landStranded':
         return {
           type: 'landStranded',

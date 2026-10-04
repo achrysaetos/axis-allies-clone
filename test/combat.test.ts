@@ -210,6 +210,59 @@ describe('strategic bombing (p.14, 25, 27)', () => {
     expect(s.units.find((u) => u.type === 'factory')!.damage).toBe(20);
   });
 
+  it('optional rule: escorts and interceptors fight one air round before the raid', () => {
+    let s = scenario({
+      power: 'British',
+      owners: { 'Northwestern Europe': 'British' },
+      units: [['British', 'bomber', 'United Kingdom', 2], ['British', 'fighter', 'United Kingdom'], ['Germans', 'factory', 'Germany'], ['Germans', 'fighter', 'Germany', 2], ['Germans', 'infantry', 'Germany']],
+      dice: [1, 6, 6, 2, 6, 6, 4, 5],
+    });
+    s.options.sbrEscortsInterceptors = true;
+    s = move(s, [...ids(s, 'British', 'bomber', 'United Kingdom'), ...ids(s, 'British', 'fighter', 'United Kingdom')], ['United Kingdom', '6 Sea Zone', '5 Sea Zone', 'Germany'], { sbr: true });
+    s = ok(s, { type: 'endPhase' });
+    s = ok(s, { type: 'startBattle', battle: battleIn(s, 'Germany').id });
+    expect(s.pending).toMatchObject({ kind: 'intercept', power: 'Germans' });
+    s = ok(s, { type: 'intercept', units: ids(s, 'Germans', 'fighter', 'Germany') });
+    s = autoResolve(s);
+    const b = battleIn(s, 'Germany');
+    expect(b.dice.map((d) => [d.label, d.hits])).toEqual([
+      ['escort fire', 1],
+      ['interceptor fire', 1],
+      ['factory air defense', 0],
+      ['bombing damage', 9],
+    ]);
+    expect(count(s, 'Germans', 'fighter', 'Germany')).toBe(1);
+    expect(count(s, 'British', 'bomber', 'Germany') + count(s, 'British', 'fighter', 'Germany')).toBe(2);
+    expect(s.units.find((u) => u.type === 'factory')!.damage).toBe(9);
+  });
+
+  it('optional rule: interceptors skip the land battle there and must land within one space if it falls', () => {
+    let s = scenario({
+      power: 'British',
+      owners: { 'Northwestern Europe': 'British' },
+      units: [['British', 'bomber', 'United Kingdom'], ['British', 'armour', 'Northwestern Europe'], ['Germans', 'factory', 'France'], ['Germans', 'fighter', 'France'], ['Germans', 'infantry', 'France']],
+      dice: [6, 6, 6, 3, 1, 6],
+    });
+    s.options.sbrEscortsInterceptors = true;
+    s = move(s, ids(s, 'British', 'bomber', 'United Kingdom'), ['United Kingdom', '8 Sea Zone', 'France'], { sbr: true });
+    s = move(s, ids(s, 'British', 'armour', 'Northwestern Europe'), ['Northwestern Europe', 'France']);
+    s = ok(s, { type: 'endPhase' });
+    s = autoResolve(ok(s, { type: 'startBattle', battle: s.battles.find((b) => b.kind === 'sbr')!.id }));
+    s = autoResolve(ok(s, { type: 'startBattle', battle: s.battles.find((b) => b.kind === 'land')!.id }));
+    const land = s.battles.find((b) => b.kind === 'land')!;
+    expect(land.defenders).toHaveLength(1);
+    expect(s.owner['France']).toBe('British');
+    s = ok(s, { type: 'endPhase' });
+    expect(s.pending).toMatchObject({ kind: 'landStranded', power: 'Germans' });
+    s = autoResolve(s);
+    expect(s.units.filter((u) => u.owner === 'Germans' && u.type === 'fighter').map((u) => u.at)).not.toContain('France');
+  });
+
+  it('without the optional rule fighters cannot join a raid', () => {
+    const s = scenario({ power: 'British', units: [['British', 'fighter', 'United Kingdom'], ['Germans', 'factory', 'Germany']] });
+    fails(s, { type: 'move', units: ids(s, 'British', 'fighter', 'United Kingdom'), path: ['United Kingdom', '6 Sea Zone', '5 Sea Zone', 'Germany'], sbr: true }, /bombers/);
+  });
+
   it('a damaged complex mobilizes fewer units and repairs cost 1 IPC each', () => {
     let s = scenario({ phase: 'purchase', units: [['Germans', 'factory', 'Germany']], treasury: { Germans: 30 } });
     const f = s.units[0]!;
