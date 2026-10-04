@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { CAPITAL_OF } from '../engine/data';
 import { actingPower } from '../engine/game';
 import { remainingMove } from '../engine/queries';
 import type { Action, SpaceId, UnitId, UnitType } from '../engine/types';
@@ -13,6 +14,8 @@ import { PhaseBar } from './panels/PhaseBar';
 import { PurchasePanel } from './panels/PurchasePanel';
 import { SetupScreen } from './panels/SetupScreen';
 import { SpaceInfo } from './panels/SpaceInfo';
+import { TurnCard } from './panels/TurnCard';
+import { powerName } from './theme';
 import { reachable, resolveMove } from './paths';
 import { act as step, aiBurst, autosave, downloadSave, loadAutosave, undo } from './session';
 import type { Session } from './session';
@@ -38,10 +41,13 @@ function Game({ initial, onMenu }: { initial: Session; onMenu: () => void }) {
   const [toast, setToast] = useState<{ text: string; id: number } | null>(null);
   const [aiRetry, setAiRetry] = useState(0);
   const [focus, setFocus] = useState<{ id: SpaceId; nonce: number } | null>(null);
+  const [greeted, setGreeted] = useState<string | null>(null);
   const { state, controllers } = session;
+  const turnKey = `${state.round}:${state.power}`;
+  const greeting = controllers[state.power] === 'human' && greeted !== turnKey && !state.winner;
   const humanActs = controllers[actingPower(state)] === 'human';
   const moving = state.phase === 'combatMove' || state.phase === 'noncombatMove';
-  const endable = humanActs && state.pending === null && !state.winner;
+  const endable = humanActs && state.pending === null && !state.winner && !greeting;
 
   const commit = useCallback((next: Session) => {
     current.current = next;
@@ -141,6 +147,11 @@ function Game({ initial, onMenu }: { initial: Session; onMenu: () => void }) {
     if (id !== inspect) inspectSpace(id);
   };
 
+  const startTurn = useCallback(() => {
+    setGreeted(turnKey);
+    setFocus({ id: CAPITAL_OF[state.power], nonce: Date.now() });
+  }, [turnKey, state.power]);
+
   const onUndo = useCallback(() => {
     if (current.current.undo.length === 0) return;
     commit(undo(current.current));
@@ -193,7 +204,7 @@ function Game({ initial, onMenu }: { initial: Session; onMenu: () => void }) {
         />
         <aside className="sidebar">
           {!humanActs && !state.winner && (
-            <section className="panel thinking">{actingPower(state)} (AI) is playing…</section>
+            <section className="panel thinking">{powerName(actingPower(state))} (computer) is playing…</section>
           )}
           {humanActs && state.phase === 'purchase' && <PurchasePanel state={state} act={act} />}
           {state.phase === 'combat' && <CombatPanel state={state} act={act} onView={setBattleView} onFocus={focusOn} />}
@@ -227,6 +238,7 @@ function Game({ initial, onMenu }: { initial: Session; onMenu: () => void }) {
             {toast.text}
           </div>
         )}
+        {greeting && <TurnCard state={state} onStart={startTurn} />}
         {state.winner && (
           <div className="winner">
             <h1>The {state.winner} win!</h1>

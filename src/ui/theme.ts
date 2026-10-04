@@ -4,16 +4,18 @@ import type { Power, UnitType } from '../engine/types';
 export interface PowerStyle {
   name: string;
   color: string;
+  /** Readable on the dark panels, for headings in the power's color. */
+  text: string;
   ink: string;
   short: string;
 }
 
 export const POWER_STYLE: Record<Power, PowerStyle> = {
-  Russians: { name: 'Soviet Union', color: '#8b2323', ink: '#fff', short: 'USSR' },
-  Germans: { name: 'Germany', color: '#5a5a5a', ink: '#fff', short: 'GER' },
-  British: { name: 'United Kingdom', color: '#c8a86b', ink: '#1d1608', short: 'UK' },
-  Japanese: { name: 'Japan', color: '#e08a1e', ink: '#1d1205', short: 'JPN' },
-  Americans: { name: 'United States', color: '#4f7a28', ink: '#fff', short: 'USA' },
+  Russians: { name: 'Soviet Union', color: '#8b2323', text: '#e2706a', ink: '#fff', short: 'USSR' },
+  Germans: { name: 'Germany', color: '#5a5a5a', text: '#c4c4c4', ink: '#fff', short: 'GER' },
+  British: { name: 'United Kingdom', color: '#c8a86b', text: '#dcc18e', ink: '#1d1608', short: 'UK' },
+  Japanese: { name: 'Japan', color: '#e08a1e', text: '#f0a443', ink: '#1d1205', short: 'JPN' },
+  Americans: { name: 'United States', color: '#4f7a28', text: '#93c461', ink: '#fff', short: 'USA' },
 };
 
 export const powerName = (p: Power) => POWER_STYLE[p].name;
