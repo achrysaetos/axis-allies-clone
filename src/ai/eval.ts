@@ -27,7 +27,7 @@ export interface Odds {
 
 type Category = 'any' | 'notAir' | 'notSub' | 'air';
 
-interface Fighter {
+interface Piece {
   type: UnitType;
   hp: number;
   rank: number;
@@ -48,14 +48,14 @@ function rng(seed: number) {
   };
 }
 
-const fighters = (cs: Combatant[]): Fighter[] =>
+const pieces = (cs: Combatant[]): Piece[] =>
   cs
     .filter((c) => c.type !== 'factory')
     .map((c) => ({ type: c.type, hp: STATS[c.type].hitPoints - c.damage, rank: rankOf(c) }))
     .sort((a, b) => a.rank - b.rank);
 
 /** Take one hit of `cat`: an undamaged battleship soaks it first, then the cheapest eligible unit dies. */
-function hit(side: Fighter[], cat: Category): boolean {
+function hit(side: Piece[], cat: Category): boolean {
   const soak = side.find((f) => f.hp > 1 && canTake(cat, f.type));
   const victim = soak ?? side.find((f) => f.hp > 0 && canTake(cat, f.type));
   if (!victim) return false;
@@ -63,16 +63,16 @@ function hit(side: Fighter[], cat: Category): boolean {
   return true;
 }
 
-const live = (side: Fighter[]) => side.filter((f) => f.hp > 0);
+const live = (side: Piece[]) => side.filter((f) => f.hp > 0);
 
-function category(f: Fighter, friendlyDestroyer: boolean): Category {
+function category(f: Piece, friendlyDestroyer: boolean): Category {
   if (f.type === 'submarine') return 'notAir';
   if (isAir(f.type) && !friendlyDestroyer) return 'notSub';
   return 'any';
 }
 
 /** Hits by category for one volley. */
-function volley(firers: Fighter[], attacking: boolean, rand: () => number): Map<Category, number> {
+function volley(firers: Piece[], attacking: boolean, rand: () => number): Map<Category, number> {
   const destroyer = firers.some((f) => f.type === 'destroyer');
   let support = attacking ? Math.min(firers.filter((f) => f.type === 'artillery').length, firers.filter((f) => f.type === 'infantry').length) : 0;
   const out = new Map<Category, number>();
@@ -90,23 +90,23 @@ function volley(firers: Fighter[], attacking: boolean, rand: () => number): Map<
   return out;
 }
 
-function applyHits(side: Fighter[], hits: Map<Category, number>): void {
+function applyHits(side: Piece[], hits: Map<Category, number>): void {
   for (const cat of ['air', 'notAir', 'notSub', 'any'] as Category[]) for (let i = 0; i < (hits.get(cat) ?? 0); i++) hit(side, cat);
 }
 
-const canHitAny = (firers: Fighter[], targets: Fighter[], attacking: boolean) => {
+const canHitAny = (firers: Piece[], targets: Piece[], attacking: boolean) => {
   const destroyer = firers.some((f) => f.type === 'destroyer');
   return firers.some((f) => (attacking ? STATS[f.type].attack : STATS[f.type].defense) > 0 && targets.some((t) => canTake(category(f, destroyer), t.type)));
 };
 
-const lossValue = (start: Fighter[], end: Fighter[]) =>
+const lossValue = (start: Piece[], end: Piece[]) =>
   start.reduce((n, f, i) => n + (end[i]!.hp <= 0 ? STATS[f.type].cost : 0), 0);
 
 /** Monte Carlo estimate of a battle fought to the end with cheapest-first casualties and no retreat. */
 export function simulate(spec: BattleSpec): Odds {
   const trials = spec.trials ?? 120;
-  const baseA = fighters(spec.attackers);
-  const baseD = fighters(spec.defenders);
+  const baseA = pieces(spec.attackers);
+  const baseD = pieces(spec.defenders);
   const rand = rng(baseA.length * 7919 + baseD.length * 104729 + 17);
   let wins = 0;
   let attLoss = 0;
@@ -124,7 +124,7 @@ export function simulate(spec: BattleSpec): Odds {
   return { win: wins / trials, attLoss: attLoss / trials, defLoss: defLoss / trials };
 }
 
-function fight(spec: BattleSpec, att: Fighter[], def: Fighter[], rand: () => number): void {
+function fight(spec: BattleSpec, att: Piece[], def: Piece[], rand: () => number): void {
   if (spec.kind === 'land') {
     const d = live(def);
     if (d.length > 0 && d.some((f) => f.type !== 'aaGun')) {
@@ -151,7 +151,7 @@ function fight(spec: BattleSpec, att: Fighter[], def: Fighter[], rand: () => num
     }
     if (a.length === 0 || d.length === 0) return;
     if (!canHitAny(a, d, true) && !canHitAny(d, a, false)) return;
-    let struck: Fighter[] = [];
+    let struck: Piece[] = [];
     if (spec.kind === 'sea') {
       const aSubs = d.some((f) => f.type === 'destroyer') ? [] : a.filter((f) => f.type === 'submarine');
       const dSubs = a.some((f) => f.type === 'destroyer') ? [] : d.filter((f) => f.type === 'submarine');

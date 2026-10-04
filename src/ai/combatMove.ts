@@ -10,7 +10,7 @@ import { airDist, landDist, paths, seaDist } from './geo';
 interface Option {
   units: Unit[];
   /** Units that fight (transport cargo, not the transport). */
-  fighters: Combatant[];
+  combatants: Combatant[];
   actions: Action[];
   order: number;
   land: boolean;
@@ -104,7 +104,7 @@ function assemble(s: GameState, t: Target, used: Set<UnitId>): Option[] | null {
   const options = optionsFor(s, t, used, landable(s)).sort((a, b) => a.order - b.order);
   if (t.kind === 'land' && defenders.length === 0) {
     const walker = options.find((o) => o.land && o.units.every((u) => isLand(u.type) || u.type === 'transport'));
-    return walker && t.now + holdValue(s, t, walker.fighters, 0) > 0 ? [walker] : null;
+    return walker && t.now + holdValue(s, t, walker.combatants, 0) > 0 ? [walker] : null;
   }
   if (defenders.length === 0) return null;
   const base: Combatant[] = t.kind === 'sea' ? asCombatants(s.units.filter((u) => u.at === t.at && u.owner === s.power && u.carriedBy === null && u.type !== 'transport')) : [];
@@ -113,7 +113,7 @@ function assemble(s: GameState, t: Target, used: Set<UnitId>): Option[] | null {
   const defPunch = defenders.reduce((n, c) => n + STATS[c.type].defense * STATS[c.type].hitPoints, 0);
   for (const o of options) {
     chosen.push(o);
-    const attackers = [...base, ...chosen.flatMap((c) => c.fighters)];
+    const attackers = [...base, ...chosen.flatMap((c) => c.combatants)];
     if (t.kind === 'land' && !chosen.some((c) => c.land)) continue;
     const punch = attackers.reduce((n, c) => n + STATS[c.type].attack, 0);
     if (punch < defPunch * 0.6) continue;
@@ -154,7 +154,7 @@ function optionsFor(s: GameState, t: Target, used: Set<UnitId>, landing: SpaceId
       const there = airDist(u.at, t.at);
       if (there === 0 || there + homeDist > left) continue;
       const route = paths(u.at, there, (_p, n) => !isNeutral(n), (n) => !isNeutral(n)).get(t.at);
-      if (route) out.push({ units: [u], fighters: asCombatants([u]), actions: [{ type: 'move', units: [u.id], path: route }], order: ORDER[u.type]! + there / 10, land: false });
+      if (route) out.push({ units: [u], combatants: asCombatants([u]), actions: [{ type: 'move', units: [u.id], path: route }], order: ORDER[u.type]! + there / 10, land: false });
     } else if (isLand(u.type) && t.kind === 'land' && !space(u.at).water) {
       if (landDist(u.at, t.at) > left) continue;
       const blitzer = u.type === 'armour';
@@ -164,11 +164,11 @@ function optionsFor(s: GameState, t: Target, used: Set<UnitId>, landing: SpaceId
         (_p, n) => !space(n).water && !isNeutral(n),
         (n) => isFriendly(s, n, power) || (blitzer && enemyUnitsAt(s, n, power).length === 0),
       ).get(t.at);
-      if (route) out.push({ units: [u], fighters: asCombatants([u]), actions: [{ type: 'move', units: [u.id], path: route }], order: ORDER[u.type]!, land: true });
+      if (route) out.push({ units: [u], combatants: asCombatants([u]), actions: [{ type: 'move', units: [u.id], path: route }], order: ORDER[u.type]!, land: true });
     } else if (isSea(u.type) && t.kind === 'sea' && u.type !== 'transport' && u.type !== 'carrier') {
       if (seaDist(u.at, t.at) > left) continue;
       const route = paths(u.at, left, (p, n) => space(n).water && seaPassageOpen(s, p, n, power), (n) => !isHostileSea(s, n, power)).get(t.at);
-      if (route) out.push({ units: [u], fighters: asCombatants([u]), actions: [{ type: 'move', units: [u.id], path: route }], order: ORDER[u.type]!, land: false });
+      if (route) out.push({ units: [u], combatants: asCombatants([u]), actions: [{ type: 'move', units: [u.id], path: route }], order: ORDER[u.type]!, land: false });
     }
   }
   if (t.kind === 'land') out.push(...amphibious(s, t, free, used));
@@ -201,7 +201,7 @@ function amphibious(s: GameState, t: Target, free: Unit[], used: Set<UnitId>): O
     }
     if (route.length > 1) actions.push({ type: 'move', units: [tr.id], path: route });
     actions.push({ type: 'move', units: cargo.map((u) => u.id), path: [route[route.length - 1]!, t.at] });
-    out.push({ units: [tr, ...cargo], fighters: asCombatants(cargo), actions, order: 2.5, land: true });
+    out.push({ units: [tr, ...cargo], combatants: asCombatants(cargo), actions, order: 2.5, land: true });
   }
   return out;
 }
@@ -213,7 +213,7 @@ function pack(units: Unit[]): Unit[] {
   let room = TRANSPORT_CAPACITY;
   for (const u of sorted) {
     const cost = STATS[u.type].transportCost ?? 99;
-    if (cost > room || (picked.length === 1 && picked[0]!.type !== 'infantry' && u.type !== 'infantry' && room - cost < 0)) continue;
+    if (cost > room) continue;
     picked.push(u);
     room -= cost;
     if (picked.length === 2) break;

@@ -78,7 +78,7 @@ function pickUp(d: Draft, t: Unit, goals: Set<SpaceId>): boolean {
     }
   }
   if (!best) {
-    homeward(d, t, goals);
+    homeward(d, t);
     return false;
   }
   const mark = d.mark();
@@ -107,7 +107,7 @@ function cargoFrom(s: GameState, land: SpaceId): Unit[] {
 }
 
 /** Empty transports with nothing to carry wait next to our factories. */
-function homeward(d: Draft, t: Unit, _goals: Set<SpaceId>): void {
+function homeward(d: Draft, t: Unit): void {
   const s = d.state;
   const homes = new Set(ownFactories(s, s.power).flatMap((f) => space(f).neighbors.filter((n) => space(n).water)));
   if (homes.size === 0 || homes.has(t.at)) return;
@@ -116,7 +116,6 @@ function homeward(d: Draft, t: Unit, _goals: Set<SpaceId>): void {
   for (const [zone, path] of ranked.slice(0, 3)) {
     if (nearestGoal(zone, homes) >= nearestGoal(t.at, homes)) break;
     if (d.try({ type: 'move', units: [t.id], path })) return;
-    void zone;
   }
 }
 
@@ -127,10 +126,11 @@ function deliver(d: Draft, t: Unit, front: Map<SpaceId, number>, goals: Set<Spac
   if (cargo.length === 0) return;
   const reach = paths(t.at, STATS.transport.move - t.moved, canSail(s, s.power), (id) => !isHostileSea(s, id, s.power));
   const zones: [SpaceId, SpaceId[]][] = [[t.at, [t.at]], ...reach];
+  // Never hand troops back to the shore they boarded from this turn: that only burns the transport's move.
   const drops: { zone: SpaceId; path: SpaceId[]; land: SpaceId; f: number }[] = [];
   for (const [zone, path] of zones)
     for (const land of space(zone).neighbors)
-      if (!space(land).water && !isNeutral(land) && isFriendly(s, land, s.power) && (front.get(land) ?? 99) <= 2)
+      if (!space(land).water && !isNeutral(land) && isFriendly(s, land, s.power) && (front.get(land) ?? 99) <= 2 && cargo.every((u) => u.turnStart !== land))
         drops.push({ zone, path, land, f: front.get(land)! });
   drops.sort((a, b) => a.f - b.f || a.path.length - b.path.length);
   for (const drop of drops) {
