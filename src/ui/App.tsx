@@ -423,6 +423,11 @@ function Game({
     [commit, showError, send],
   );
 
+  // The turn card already sits over the new power's home, so the player is oriented before pressing Start.
+  useEffect(() => {
+    if (greeting) setFocus({ id: CAPITAL_OF[state.power], nonce: Date.now() });
+  }, [greeting, state.power]);
+
   const startTurn = useCallback(() => {
     setGreeted(turnKey);
     setFocus(
