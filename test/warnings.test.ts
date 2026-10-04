@@ -14,7 +14,7 @@ describe('end of phase warnings', () => {
     s = move(s, ids(s, 'Germans', 'fighter', 'West Russia'), ['West Russia', 'Caucasus']);
     s = move(s, ids(s, 'Germans', 'armour', 'West Russia'), ['West Russia', 'Caucasus']);
     s = ok(s, { type: 'endPhase' });
-    expect(endPhaseWarnings(s)).toEqual([expect.stringMatching(/^1 fighter in Caucasus has nowhere to land/)]);
+    expect(endPhaseWarnings(s)).toEqual(['Planes that have not landed will be lost when your turn ends: 1 fighter in Caucasus.']);
     expect(endPhaseWarnings(ok(s, { type: 'endPhase' }))).toEqual([]);
     s = move(s, ids(s, 'Germans', 'fighter', 'Caucasus'), ['Caucasus', 'West Russia']);
     expect(endPhaseWarnings(s)).toEqual([]);

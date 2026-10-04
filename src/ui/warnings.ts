@@ -16,17 +16,22 @@ export function endPhaseWarnings(state: GameState): string[] {
   if (state.phase === 'noncombatMove' || (state.phase === 'mobilize' && carrierLeft)) {
     const doomed = doomedAir(state).map((id) => state.units.find((u) => u.id === id)!);
     if (doomed.length > 0) {
-      const fighters = doomed.filter((u) => u.type === 'fighter').length;
-      const bombers = doomed.length - fighters;
-      const what = [fighters && plural(fighters, UNIT_GLYPH.fighter.name), bombers && plural(bombers, UNIT_GLYPH.bomber.name)]
-        .filter(Boolean)
-        .join(' and ');
-      const where = [...new Set(doomed.map((u) => u.at))].join(', ');
+      const where = [...new Set(doomed.map((u) => u.at))]
+        .map((at) => {
+          const here = doomed.filter((u) => u.at === at);
+          const fighters = here.filter((u) => u.type === 'fighter').length;
+          const bombers = here.length - fighters;
+          const what = [fighters && plural(fighters, UNIT_GLYPH.fighter.name), bombers && plural(bombers, UNIT_GLYPH.bomber.name)]
+            .filter(Boolean)
+            .join(' and ');
+          return `${what} in ${at}`;
+        })
+        .join('; ');
       const rescue =
         carrierLeft && doomed.some((u) => space(u.at).water)
           ? ' A carrier you bought can still be placed under fighters at sea.'
           : '';
-      out.push(`${what} in ${where} ${doomed.length === 1 ? 'has' : 'have'} nowhere to land and will be lost.${rescue}`);
+      out.push(`Planes that have not landed will be lost when your turn ends: ${where}.${rescue}`);
     }
   }
   if (state.phase === 'mobilize') {

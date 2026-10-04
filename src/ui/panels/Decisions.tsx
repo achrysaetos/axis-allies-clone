@@ -111,6 +111,7 @@ function UnitChecklist({
         const u = unitOf(state, id);
         if (!u) return null;
         const checked = on.includes(id);
+        const sameType = ids.filter((x) => unitOf(state, x)?.type === u.type);
         return (
           <label key={id} className="row">
             <input
@@ -121,7 +122,7 @@ function UnitChecklist({
             />
             <Chip owner={u.owner} type={u.type} />
             <span className="grow">
-              {UNIT_GLYPH[u.type].name} #{u.id}
+              {UNIT_GLYPH[u.type].name} {sameType.length > 1 ? sameType.indexOf(id) + 1 : ''}
             </span>
           </label>
         );
@@ -143,13 +144,13 @@ function LandStranded({ state, d, act }: { state: GameState; d: Of<'landStranded
   return (
     <div className="decision">
       <div className="decision-title">{powerName(d.power)}: land fighters whose carrier was sunk</div>
-      {d.fighters.map((f) => {
+      {d.fighters.map((f, i) => {
         const u = unitOf(state, f);
         return (
           <div key={f} className="row">
             {u && <Chip owner={u.owner} type={u.type} />}
             <span className="grow">
-              Fighter #{f} in {u?.at}
+              Fighter {d.fighters.length > 1 ? i + 1 : ''} in {u?.at}
             </span>
             <select value={landings[f] ?? ''} onChange={(e) => setLandings({ ...landings, [f]: e.target.value || null })}>
               {(d.options[f] ?? []).map((o) => (

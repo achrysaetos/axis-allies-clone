@@ -98,6 +98,11 @@ const raids = (state: GameState, units: Unit[], to: SpaceId, sbr: boolean) => {
 
 function pathFor(state: GameState, units: Unit[], sbr: boolean, from: SpaceId, to: SpaceId, limit: number): MoveResolution {
   const paths = candidatePaths(units, from, to, limit);
+  if (paths.length === 0 && units.every((u) => isLand(u.type)) && !space(from).water && !space(to).water)
+    return {
+      ok: false,
+      error: `${to} cannot be reached over land. To cross water, first move the units into a sea zone with your transport.`,
+    };
   if (paths.length === 0) return { ok: false, error: `${to} is out of reach` };
   let firstError: string | null = null;
   const ids = units.map((u) => u.id);

@@ -27,7 +27,13 @@ describe('saved games', () => {
 
 describe('quick resolve', () => {
   it('retreats an attack whose chance has fallen below the threshold', () => {
-    let s = scenario({ units: [['Germans', 'armour', 'West Russia'], ['Russians', 'infantry', 'Archangel', 6]], dice: [6, 6, 6, 6, 6, 6, 6] });
+    let s = scenario({
+      units: [
+        ['Germans', 'armour', 'West Russia'],
+        ['Russians', 'infantry', 'Archangel', 6],
+      ],
+      dice: [6, 6, 6, 6, 6, 6, 6],
+    });
     s = move(s, ids(s, 'Germans', 'armour', 'West Russia'), ['West Russia', 'Archangel']);
     s = ok(s, { type: 'endPhase' });
     const session = newSession(s, Object.fromEntries(POWERS.map((p) => [p, 'human'])) as Parameters<typeof newSession>[1]);

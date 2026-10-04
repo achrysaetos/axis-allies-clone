@@ -3,6 +3,7 @@ import { income, victoryCities } from '../../engine/queries';
 import type { GameState, Phase, Power } from '../../engine/types';
 import type { Controller } from '../session';
 import { PHASE_LABEL, POWER_STYLE } from '../theme';
+import { Chip } from '../units';
 
 interface Props {
   state: GameState;
@@ -38,6 +39,14 @@ export function PhaseBar({ state, controllers, canUndo, onEndPhase, onUndo, onEx
         <span className="dim">Treasury</span> {state.treasury[state.power]} <span className="dim">· Income</span>{' '}
         {income(state, state.power)}
       </span>
+      {state.phase !== 'purchase' && state.purchases.length > 0 && (
+        <span className="to-place" title="Bought this turn, placed in the Mobilize phase">
+          To place{' '}
+          {state.purchases.map((p) => (
+            <Chip key={p.type} owner={state.power} type={p.type} count={p.count} />
+          ))}
+        </span>
+      )}
       <span className="vcs" title={`victory cities (win at ${t.Axis} Axis / ${t.Allies} Allies)`}>
         ★ Axis {victoryCities(state, 'Axis')}/{t.Axis} · Allies {victoryCities(state, 'Allies')}/{t.Allies}
       </span>

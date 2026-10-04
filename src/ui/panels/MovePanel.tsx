@@ -39,6 +39,14 @@ export function MovePanel({ state, at, selected, sbr, onSelect, onSbr }: Props) 
   const transports = free.filter((u) => u.type === 'transport');
   const movable = free.filter((u) => moveBlocker(state, u) === null);
   const blocked = free.filter((u) => u.type !== 'transport' && moveBlocker(state, u) !== null);
+  const offloadable = transports
+    .flatMap((t) => cargoOf(state, t.id))
+    .filter((c) => c.owner === state.power && c.offloadedTo === null);
+  /** Ships that can still sail are the natural group; once transports are spent, their cargo is what can still act. */
+  const selectAll = () =>
+    transports.some((t) => moveBlocker(state, t) === null) || offloadable.length === 0
+      ? movable.map((u) => u.id)
+      : [...movable.map((u) => u.id), ...offloadable.map((u) => u.id)];
   const reasons = [...new Set(blocked.map((u) => moveBlocker(state, u)!))];
   const others = unitsAt(state, at).filter((u) => u.owner !== state.power && u.type !== 'factory');
   const chosen = new Set(selected);
@@ -69,12 +77,12 @@ export function MovePanel({ state, at, selected, sbr, onSelect, onSbr }: Props) 
             </span>
             <Stepper value={n} max={g.units.length} onChange={(v) => setGroup(g, v)} />
             <button className="link" onClick={() => setGroup(g, n === g.units.length ? 0 : g.units.length)}>
-              {n === g.units.length ? 'none' : `all ${g.units.length}`}
+              {n === g.units.length ? 'clear' : `all ${g.units.length}`}
             </button>
           </div>
         );
       })}
-      {transports.map((t) => {
+      {transports.map((t, ti) => {
         const cargo = cargoOf(state, t.id);
         return (
           <div key={t.id} className="transport">
@@ -87,7 +95,7 @@ export function MovePanel({ state, at, selected, sbr, onSelect, onSbr }: Props) 
               />
               <Chip owner={t.owner} type="transport" />
               <span className="grow">
-                Transport #{t.id} <span className="dim">· {remainingMove(t)} mv</span>
+                Transport {transports.length > 1 ? ti + 1 : ''} <span className="dim">· {remainingMove(t)} mv</span>
               </span>
               {cargo.length === 0 && <span className="dim">empty</span>}
             </label>
@@ -111,7 +119,7 @@ export function MovePanel({ state, at, selected, sbr, onSelect, onSbr }: Props) 
       })}
       {mine.length > 0 && (
         <div className="row actions">
-          <button onClick={() => onSelect(movable.map((u) => u.id))}>Select all</button>
+          <button onClick={() => onSelect(selectAll())}>Select all</button>
           <button disabled={selected.length === 0} onClick={() => onSelect([])}>
             Clear
           </button>

@@ -42,7 +42,7 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
   const [sbr, setSbr] = useState(false);
   const [placeType, setPlaceType] = useState<UnitType | null>(null);
   const [battleView, setBattleView] = useState<number | null>(null);
-  const [toast, setToast] = useState<{ text: string; id: number } | null>(null);
+  const [toast, setToast] = useState<{ text: string; id: number; info?: boolean } | null>(null);
   const [aiRetry, setAiRetry] = useState(0);
   const [focus, setFocus] = useState<{ id: SpaceId; nonce: number } | null>(null);
   const [greeted, setGreeted] = useState<string | null>(null);
@@ -175,6 +175,7 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
     if (current.current.undo.length === 0) return;
     commit(undo(current.current));
     setSelected([]);
+    setToast({ text: 'Last move undone', id: Date.now(), info: true });
   }, [commit]);
 
   const endPhase = useCallback(() => {
@@ -265,7 +266,7 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
           </div>
         )}
         {toast && (
-          <div key={toast.id} className="toast" onClick={() => setToast(null)}>
+          <div key={toast.id} className={toast.info ? 'toast info' : 'toast'} onClick={() => setToast(null)}>
             {toast.text}
           </div>
         )}

@@ -677,3 +677,20 @@ table.buy tr.picked td {
   margin: 8px 0;
   color: var(--accent);
 }
+.battle-row {
+  flex-wrap: wrap;
+}
+.toast.info {
+  background: var(--panel-2);
+  border-color: var(--line);
+  color: var(--text);
+}
+.to-place {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--dim);
+}
+.land-label {
+  cursor: pointer;
+}

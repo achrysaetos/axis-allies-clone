@@ -106,7 +106,12 @@ function quickRetreat(state: GameState, d: Extract<Decision, { kind: 'retreat' }
   const attackers = casualtyPool(state, b, 'attacker');
   const defenders = casualtyPool(state, b, 'defender');
   if (b.kind === 'land' && !attackers.some((u) => isLand(u.type) && u.type !== 'aaGun')) return { type: 'retreat', to };
-  const odds = simulate({ kind: b.kind === 'sea' ? 'sea' : 'land', attackers: asCombatants(attackers), defenders: asCombatants(defenders), trials: 300 });
+  const odds = simulate({
+    kind: b.kind === 'sea' ? 'sea' : 'land',
+    attackers: asCombatants(attackers),
+    defenders: asCombatants(defenders),
+    trials: 300,
+  });
   return { type: 'retreat', to: odds.win < QUICK_RETREAT_BELOW ? to : null };
 }
 

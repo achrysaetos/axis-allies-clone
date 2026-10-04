@@ -180,14 +180,7 @@ export const World = memo(function World({ state, selected, highlights }: WorldP
         <path key={`s-${s.id}`} d={s.d} className="selected" pointerEvents="none" />
       ))}
       {SHAPES.filter((s) => !s.water).map((s) => (
-        <text
-          key={`n-${s.id}`}
-          x={s.center[0]}
-          y={s.center[1] + 3}
-          textAnchor="middle"
-          className="land-label"
-          pointerEvents="none"
-        >
+        <text key={`n-${s.id}`} x={s.center[0]} y={s.center[1] + 3} textAnchor="middle" className="land-label" data-space={s.id}>
           {s.id}
         </text>
       ))}
