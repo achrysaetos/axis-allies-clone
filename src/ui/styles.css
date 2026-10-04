@@ -298,9 +298,8 @@ path.selected {
 
 .battle-dialog {
   position: absolute;
-  left: 50%;
-  top: 24px;
-  transform: translateX(-50%);
+  right: 16px;
+  top: 16px;
   z-index: 10;
   width: 560px;
   max-height: calc(100% - 48px);

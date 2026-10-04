@@ -150,7 +150,15 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
     () => (hand?.kind === 'new' && state.phase === 'mobilize' ? placementOptions(state, hand.type) : []),
     [hand, state],
   );
-  const highlights = useMemo(() => reach ?? new Set(placements.map((p) => p.at)), [reach, placements]);
+  const pendingRetreat = state.pending?.kind === 'retreat' && controllers[state.pending.power] === 'human' ? state.pending : null;
+  // Withdrawing planes keeps them in the battle space, so only real destinations are offered on the map.
+  const retreat = pendingRetreat && {
+    options: pendingRetreat.options.filter((o) => o !== state.battles.find((b) => b.id === pendingRetreat.battle)?.space),
+  };
+  const highlights = useMemo(
+    () => reach ?? new Set(retreat ? retreat.options : placements.map((p) => p.at)),
+    [reach, retreat, placements],
+  );
   const route = useMemo(() => {
     if (hand?.kind !== 'units' || !hover || !reach?.has(hover)) return null;
     const r = dropMoves(state, hand.units, hand.from, hover, false);
@@ -254,6 +262,7 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
   };
 
   const onSpace = (id: SpaceId) => {
+    if (retreat?.options.includes(id)) return act({ type: 'retreat', to: id });
     if (humanActs && hand) return playHand(hand, id, last.current.x, last.current.y);
     const b = state.battles.find((x) => x.space === id && !x.resolved) ?? state.battles.find((x) => x.space === id);
     if (state.phase === 'combat' && b) return setBattleView(b.id);
