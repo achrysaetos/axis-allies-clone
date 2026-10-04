@@ -1,4 +1,5 @@
-import { STATS } from '../../engine/data';
+import { STATS, isSea } from '../../engine/data';
+import { productionCapacity } from '../../engine/game';
 import { UNIT_TYPES } from '../../engine/types';
 import type { Action, GameState, Purchase, UnitType } from '../../engine/types';
 import { UNIT_GLYPH } from '../theme';
@@ -18,6 +19,11 @@ export function PurchasePanel({ state, act }: Props) {
     const next: Purchase[] = UNIT_TYPES.map((type) => ({ type, count: type === t ? count : countOf(type) })).filter((p) => p.count > 0);
     act({ type: 'buy', purchases: next });
   };
+  const capacity = productionCapacity(state, power);
+  const units = state.purchases.filter((p) => p.type !== 'factory').reduce((n, p) => n + p.count, 0);
+  const ships = state.purchases.filter((p) => isSea(p.type)).reduce((n, p) => n + p.count, 0);
+  const room = (t: UnitType) =>
+    t === 'factory' ? Infinity : Math.min(capacity.total - units, isSea(t) ? capacity.coastal - ships : Infinity);
   const damaged = state.units.filter((u) => u.type === 'factory' && u.owner === power && u.damage > 0);
   return (
     <section className="panel">
@@ -26,6 +32,9 @@ export function PurchasePanel({ state, act }: Props) {
         <span>Treasury {state.treasury[power]}</span>
         <span>Spent {spent}</span>
         <span className={left < 0 ? 'bad' : 'good'}>Left {left}</span>
+        <span title="How many units your industrial complexes can place this turn">
+          Units {units}/{capacity.total}
+        </span>
       </div>
       <table className="buy">
         <thead>
@@ -50,7 +59,7 @@ export function PurchasePanel({ state, act }: Props) {
                 <td>{s.cost}</td>
                 <td className="dim">{t === 'factory' ? '—' : `${s.attack}/${s.defense}/${s.move}`}</td>
                 <td>
-                  <Stepper value={n} max={n + Math.floor(Math.max(0, left) / s.cost)} onChange={(v) => setCount(t, v)} />
+                  <Stepper value={n} max={n + Math.min(Math.floor(Math.max(0, left) / s.cost), Math.max(0, room(t)))} onChange={(v) => setCount(t, v)} />
                 </td>
               </tr>
             );

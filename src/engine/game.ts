@@ -99,6 +99,13 @@ const productionLeft = (s: GameState, at: SpaceId) => {
   return f ? Math.max(0, space(at).ipc - f.damage - (s.placements[at] ?? 0)) : 0;
 };
 
+/** Units the power's usable industrial complexes can still mobilize this turn, in total and next to the sea. */
+export function productionCapacity(s: GameState, power: Power): { total: number; coastal: number } {
+  const factories = eligibleFactories(s, power);
+  const sum = (fs: SpaceId[]) => fs.reduce((n, f) => n + productionLeft(s, f), 0);
+  return { total: sum(factories), coastal: sum(factories.filter((f) => space(f).neighbors.some((n) => space(n).water))) };
+}
+
 const costOf = (ps: Purchase[]) => ps.reduce((n, p) => n + STATS[p.type].cost * p.count, 0);
 
 function buy(s: GameState, purchases: Purchase[]): string | null {
@@ -107,11 +114,7 @@ function buy(s: GameState, purchases: Purchase[]): string | null {
   const clean = purchases.filter((p) => p.count > 0);
   if (clean.length > 0 && !capitalHeld(s, s.power)) return 'a power without its capital cannot buy units';
   if (costOf(clean) > s.treasury[s.power]) return 'not enough IPCs';
-  const factories = eligibleFactories(s, s.power);
-  const capacity = factories.reduce((n, f) => n + productionLeft(s, f), 0);
-  const coastal = factories
-    .filter((f) => space(f).neighbors.some((n) => space(n).water))
-    .reduce((n, f) => n + productionLeft(s, f), 0);
+  const { total: capacity, coastal } = productionCapacity(s, s.power);
   const units = clean.filter((p) => p.type !== 'factory').reduce((n, p) => n + p.count, 0);
   const naval = clean.filter((p) => isSea(p.type)).reduce((n, p) => n + p.count, 0);
   if (units > capacity) return `your industrial complexes can mobilize only ${capacity} units`;
