@@ -1,0 +1,1067 @@
+{
+ "treasury": {
+  "Russians": 24,
+  "Germans": 41,
+  "British": 31,
+  "Japanese": 30,
+  "Americans": 42
+ },
+ "units": [
+  {
+   "type": "infantry",
+   "at": "Karelia S.S.R.",
+   "owner": "Russians",
+   "count": 4
+  },
+  {
+   "type": "fighter",
+   "at": "Karelia S.S.R.",
+   "owner": "Russians",
+   "count": 1
+  },
+  {
+   "type": "artillery",
+   "at": "Karelia S.S.R.",
+   "owner": "Russians",
+   "count": 1
+  },
+  {
+   "type": "factory",
+   "at": "Karelia S.S.R.",
+   "owner": "Russians",
+   "count": 1
+  },
+  {
+   "type": "armour",
+   "at": "Archangel",
+   "owner": "Russians",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Archangel",
+   "owner": "Russians",
+   "count": 1
+  },
+  {
+   "type": "factory",
+   "at": "Caucasus",
+   "owner": "Russians",
+   "count": 1
+  },
+  {
+   "type": "aaGun",
+   "at": "Caucasus",
+   "owner": "Russians",
+   "count": 1
+  },
+  {
+   "type": "artillery",
+   "at": "Caucasus",
+   "owner": "Russians",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Caucasus",
+   "owner": "Russians",
+   "count": 3
+  },
+  {
+   "type": "armour",
+   "at": "Caucasus",
+   "owner": "Russians",
+   "count": 1
+  },
+  {
+   "type": "factory",
+   "at": "Russia",
+   "owner": "Russians",
+   "count": 1
+  },
+  {
+   "type": "aaGun",
+   "at": "Russia",
+   "owner": "Russians",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Russia",
+   "owner": "Russians",
+   "count": 4
+  },
+  {
+   "type": "artillery",
+   "at": "Russia",
+   "owner": "Russians",
+   "count": 1
+  },
+  {
+   "type": "armour",
+   "at": "Russia",
+   "owner": "Russians",
+   "count": 2
+  },
+  {
+   "type": "fighter",
+   "at": "Russia",
+   "owner": "Russians",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Evenki National Okrug",
+   "owner": "Russians",
+   "count": 2
+  },
+  {
+   "type": "infantry",
+   "at": "Novosibirsk",
+   "owner": "Russians",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Yakut S.S.R.",
+   "owner": "Russians",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Soviet Far East",
+   "owner": "Russians",
+   "count": 2
+  },
+  {
+   "type": "infantry",
+   "at": "Buryatia S.S.R.",
+   "owner": "Russians",
+   "count": 2
+  },
+  {
+   "type": "infantry",
+   "at": "Kazakh S.S.R.",
+   "owner": "Russians",
+   "count": 1
+  },
+  {
+   "type": "submarine",
+   "at": "4 Sea Zone",
+   "owner": "Russians",
+   "count": 1
+  },
+  {
+   "type": "aaGun",
+   "at": "France",
+   "owner": "Germans",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "France",
+   "owner": "Germans",
+   "count": 1
+  },
+  {
+   "type": "armour",
+   "at": "France",
+   "owner": "Germans",
+   "count": 2
+  },
+  {
+   "type": "fighter",
+   "at": "Northwestern Europe",
+   "owner": "Germans",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Northwestern Europe",
+   "owner": "Germans",
+   "count": 1
+  },
+  {
+   "type": "armour",
+   "at": "Northwestern Europe",
+   "owner": "Germans",
+   "count": 1
+  },
+  {
+   "type": "aaGun",
+   "at": "Italy",
+   "owner": "Germans",
+   "count": 1
+  },
+  {
+   "type": "armour",
+   "at": "Italy",
+   "owner": "Germans",
+   "count": 1
+  },
+  {
+   "type": "factory",
+   "at": "Italy",
+   "owner": "Germans",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Italy",
+   "owner": "Germans",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Southern Europe",
+   "owner": "Germans",
+   "count": 1
+  },
+  {
+   "type": "artillery",
+   "at": "Southern Europe",
+   "owner": "Germans",
+   "count": 1
+  },
+  {
+   "type": "factory",
+   "at": "Germany",
+   "owner": "Germans",
+   "count": 1
+  },
+  {
+   "type": "aaGun",
+   "at": "Germany",
+   "owner": "Germans",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Germany",
+   "owner": "Germans",
+   "count": 3
+  },
+  {
+   "type": "armour",
+   "at": "Germany",
+   "owner": "Germans",
+   "count": 2
+  },
+  {
+   "type": "bomber",
+   "at": "Germany",
+   "owner": "Germans",
+   "count": 1
+  },
+  {
+   "type": "fighter",
+   "at": "Germany",
+   "owner": "Germans",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Norway",
+   "owner": "Germans",
+   "count": 2
+  },
+  {
+   "type": "fighter",
+   "at": "Norway",
+   "owner": "Germans",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Finland",
+   "owner": "Germans",
+   "count": 3
+  },
+  {
+   "type": "infantry",
+   "at": "Bulgaria Romania",
+   "owner": "Germans",
+   "count": 2
+  },
+  {
+   "type": "fighter",
+   "at": "Bulgaria Romania",
+   "owner": "Germans",
+   "count": 1
+  },
+  {
+   "type": "armour",
+   "at": "Bulgaria Romania",
+   "owner": "Germans",
+   "count": 1
+  },
+  {
+   "type": "armour",
+   "at": "Poland",
+   "owner": "Germans",
+   "count": 1
+  },
+  {
+   "type": "fighter",
+   "at": "Poland",
+   "owner": "Germans",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Poland",
+   "owner": "Germans",
+   "count": 2
+  },
+  {
+   "type": "infantry",
+   "at": "Baltic States",
+   "owner": "Germans",
+   "count": 1
+  },
+  {
+   "type": "armour",
+   "at": "Baltic States",
+   "owner": "Germans",
+   "count": 1
+  },
+  {
+   "type": "artillery",
+   "at": "Ukraine S.S.R.",
+   "owner": "Germans",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Ukraine S.S.R.",
+   "owner": "Germans",
+   "count": 3
+  },
+  {
+   "type": "armour",
+   "at": "Ukraine S.S.R.",
+   "owner": "Germans",
+   "count": 1
+  },
+  {
+   "type": "fighter",
+   "at": "Ukraine S.S.R.",
+   "owner": "Germans",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Belorussia",
+   "owner": "Germans",
+   "count": 3
+  },
+  {
+   "type": "infantry",
+   "at": "West Russia",
+   "owner": "Germans",
+   "count": 3
+  },
+  {
+   "type": "artillery",
+   "at": "West Russia",
+   "owner": "Germans",
+   "count": 1
+  },
+  {
+   "type": "armour",
+   "at": "West Russia",
+   "owner": "Germans",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Morocco",
+   "owner": "Germans",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Libya",
+   "owner": "Germans",
+   "count": 1
+  },
+  {
+   "type": "armour",
+   "at": "Libya",
+   "owner": "Germans",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Algeria",
+   "owner": "Germans",
+   "count": 1
+  },
+  {
+   "type": "artillery",
+   "at": "Algeria",
+   "owner": "Germans",
+   "count": 1
+  },
+  {
+   "type": "transport",
+   "at": "5 Sea Zone",
+   "owner": "Germans",
+   "count": 1
+  },
+  {
+   "type": "submarine",
+   "at": "5 Sea Zone",
+   "owner": "Germans",
+   "count": 2
+  },
+  {
+   "type": "cruiser",
+   "at": "5 Sea Zone",
+   "owner": "Germans",
+   "count": 1
+  },
+  {
+   "type": "submarine",
+   "at": "9 Sea Zone",
+   "owner": "Germans",
+   "count": 2
+  },
+  {
+   "type": "transport",
+   "at": "15 Sea Zone",
+   "owner": "Germans",
+   "count": 1
+  },
+  {
+   "type": "battleship",
+   "at": "15 Sea Zone",
+   "owner": "Germans",
+   "count": 1
+  },
+  {
+   "type": "armour",
+   "at": "Eastern Canada",
+   "owner": "British",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "United Kingdom",
+   "owner": "British",
+   "count": 2
+  },
+  {
+   "type": "artillery",
+   "at": "United Kingdom",
+   "owner": "British",
+   "count": 1
+  },
+  {
+   "type": "armour",
+   "at": "United Kingdom",
+   "owner": "British",
+   "count": 1
+  },
+  {
+   "type": "factory",
+   "at": "United Kingdom",
+   "owner": "British",
+   "count": 1
+  },
+  {
+   "type": "aaGun",
+   "at": "United Kingdom",
+   "owner": "British",
+   "count": 1
+  },
+  {
+   "type": "fighter",
+   "at": "United Kingdom",
+   "owner": "British",
+   "count": 2
+  },
+  {
+   "type": "bomber",
+   "at": "United Kingdom",
+   "owner": "British",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Persia",
+   "owner": "British",
+   "count": 1
+  },
+  {
+   "type": "aaGun",
+   "at": "India",
+   "owner": "British",
+   "count": 1
+  },
+  {
+   "type": "factory",
+   "at": "India",
+   "owner": "British",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "India",
+   "owner": "British",
+   "count": 3
+  },
+  {
+   "type": "infantry",
+   "at": "Trans-Jordan",
+   "owner": "British",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Egypt",
+   "owner": "British",
+   "count": 1
+  },
+  {
+   "type": "artillery",
+   "at": "Egypt",
+   "owner": "British",
+   "count": 1
+  },
+  {
+   "type": "armour",
+   "at": "Egypt",
+   "owner": "British",
+   "count": 1
+  },
+  {
+   "type": "fighter",
+   "at": "Egypt",
+   "owner": "British",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Union of South Africa",
+   "owner": "British",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Eastern Australia",
+   "owner": "British",
+   "count": 2
+  },
+  {
+   "type": "infantry",
+   "at": "Western Australia",
+   "owner": "British",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Burma",
+   "owner": "British",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "New Zealand",
+   "owner": "British",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Western Canada",
+   "owner": "British",
+   "count": 1
+  },
+  {
+   "type": "transport",
+   "at": "10 Sea Zone",
+   "owner": "British",
+   "count": 1
+  },
+  {
+   "type": "destroyer",
+   "at": "10 Sea Zone",
+   "owner": "British",
+   "count": 1
+  },
+  {
+   "type": "battleship",
+   "at": "7 Sea Zone",
+   "owner": "British",
+   "count": 1
+  },
+  {
+   "type": "transport",
+   "at": "7 Sea Zone",
+   "owner": "British",
+   "count": 1
+  },
+  {
+   "type": "cruiser",
+   "at": "14 Sea Zone",
+   "owner": "British",
+   "count": 1
+  },
+  {
+   "type": "destroyer",
+   "at": "17 Sea Zone",
+   "owner": "British",
+   "count": 1
+  },
+  {
+   "type": "carrier",
+   "at": "35 Sea Zone",
+   "owner": "British",
+   "count": 1
+  },
+  {
+   "type": "transport",
+   "at": "35 Sea Zone",
+   "owner": "British",
+   "count": 1
+  },
+  {
+   "type": "fighter",
+   "at": "35 Sea Zone",
+   "owner": "British",
+   "count": 1
+  },
+  {
+   "type": "cruiser",
+   "at": "35 Sea Zone",
+   "owner": "British",
+   "count": 1
+  },
+  {
+   "type": "transport",
+   "at": "39 Sea Zone",
+   "owner": "British",
+   "count": 1
+  },
+  {
+   "type": "submarine",
+   "at": "39 Sea Zone",
+   "owner": "British",
+   "count": 1
+  },
+  {
+   "type": "cruiser",
+   "at": "39 Sea Zone",
+   "owner": "British",
+   "count": 1
+  },
+  {
+   "type": "fighter",
+   "at": "Manchuria",
+   "owner": "Japanese",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Manchuria",
+   "owner": "Japanese",
+   "count": 3
+  },
+  {
+   "type": "infantry",
+   "at": "Kwangtung",
+   "owner": "Japanese",
+   "count": 1
+  },
+  {
+   "type": "artillery",
+   "at": "Kwangtung",
+   "owner": "Japanese",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Kiangsu",
+   "owner": "Japanese",
+   "count": 4
+  },
+  {
+   "type": "fighter",
+   "at": "French Indo-China Thailand",
+   "owner": "Japanese",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "French Indo-China Thailand",
+   "owner": "Japanese",
+   "count": 2
+  },
+  {
+   "type": "artillery",
+   "at": "French Indo-China Thailand",
+   "owner": "Japanese",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Solomon Islands",
+   "owner": "Japanese",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "New Guinea",
+   "owner": "Japanese",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Borneo",
+   "owner": "Japanese",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "East Indies",
+   "owner": "Japanese",
+   "count": 2
+  },
+  {
+   "type": "infantry",
+   "at": "Philippine Islands",
+   "owner": "Japanese",
+   "count": 1
+  },
+  {
+   "type": "artillery",
+   "at": "Philippine Islands",
+   "owner": "Japanese",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Malaya",
+   "owner": "Japanese",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Iwo Jima",
+   "owner": "Japanese",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Caroline Islands",
+   "owner": "Japanese",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Okinawa",
+   "owner": "Japanese",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Wake Island",
+   "owner": "Japanese",
+   "count": 1
+  },
+  {
+   "type": "aaGun",
+   "at": "Japan",
+   "owner": "Japanese",
+   "count": 1
+  },
+  {
+   "type": "factory",
+   "at": "Japan",
+   "owner": "Japanese",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Japan",
+   "owner": "Japanese",
+   "count": 4
+  },
+  {
+   "type": "artillery",
+   "at": "Japan",
+   "owner": "Japanese",
+   "count": 1
+  },
+  {
+   "type": "armour",
+   "at": "Japan",
+   "owner": "Japanese",
+   "count": 1
+  },
+  {
+   "type": "fighter",
+   "at": "Japan",
+   "owner": "Japanese",
+   "count": 1
+  },
+  {
+   "type": "bomber",
+   "at": "Japan",
+   "owner": "Japanese",
+   "count": 1
+  },
+  {
+   "type": "battleship",
+   "at": "37 Sea Zone",
+   "owner": "Japanese",
+   "count": 1
+  },
+  {
+   "type": "fighter",
+   "at": "37 Sea Zone",
+   "owner": "Japanese",
+   "count": 2
+  },
+  {
+   "type": "carrier",
+   "at": "37 Sea Zone",
+   "owner": "Japanese",
+   "count": 1
+  },
+  {
+   "type": "transport",
+   "at": "61 Sea Zone",
+   "owner": "Japanese",
+   "count": 1
+  },
+  {
+   "type": "destroyer",
+   "at": "61 Sea Zone",
+   "owner": "Japanese",
+   "count": 1
+  },
+  {
+   "type": "transport",
+   "at": "60 Sea Zone",
+   "owner": "Japanese",
+   "count": 1
+  },
+  {
+   "type": "battleship",
+   "at": "60 Sea Zone",
+   "owner": "Japanese",
+   "count": 1
+  },
+  {
+   "type": "destroyer",
+   "at": "60 Sea Zone",
+   "owner": "Japanese",
+   "count": 1
+  },
+  {
+   "type": "fighter",
+   "at": "50 Sea Zone",
+   "owner": "Japanese",
+   "count": 1
+  },
+  {
+   "type": "cruiser",
+   "at": "50 Sea Zone",
+   "owner": "Japanese",
+   "count": 1
+  },
+  {
+   "type": "carrier",
+   "at": "50 Sea Zone",
+   "owner": "Japanese",
+   "count": 1
+  },
+  {
+   "type": "submarine",
+   "at": "44 Sea Zone",
+   "owner": "Japanese",
+   "count": 1
+  },
+  {
+   "type": "factory",
+   "at": "Eastern United States",
+   "owner": "Americans",
+   "count": 1
+  },
+  {
+   "type": "armour",
+   "at": "Eastern United States",
+   "owner": "Americans",
+   "count": 1
+  },
+  {
+   "type": "aaGun",
+   "at": "Eastern United States",
+   "owner": "Americans",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Eastern United States",
+   "owner": "Americans",
+   "count": 2
+  },
+  {
+   "type": "artillery",
+   "at": "Eastern United States",
+   "owner": "Americans",
+   "count": 1
+  },
+  {
+   "type": "fighter",
+   "at": "Eastern United States",
+   "owner": "Americans",
+   "count": 1
+  },
+  {
+   "type": "bomber",
+   "at": "Eastern United States",
+   "owner": "Americans",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Szechwan",
+   "owner": "Americans",
+   "count": 2
+  },
+  {
+   "type": "fighter",
+   "at": "Szechwan",
+   "owner": "Americans",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Yunnan",
+   "owner": "Americans",
+   "count": 2
+  },
+  {
+   "type": "infantry",
+   "at": "Anhwei",
+   "owner": "Americans",
+   "count": 2
+  },
+  {
+   "type": "infantry",
+   "at": "Midway",
+   "owner": "Americans",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Hawaiian Islands",
+   "owner": "Americans",
+   "count": 1
+  },
+  {
+   "type": "fighter",
+   "at": "Hawaiian Islands",
+   "owner": "Americans",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Alaska",
+   "owner": "Americans",
+   "count": 1
+  },
+  {
+   "type": "aaGun",
+   "at": "Western United States",
+   "owner": "Americans",
+   "count": 1
+  },
+  {
+   "type": "factory",
+   "at": "Western United States",
+   "owner": "Americans",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Western United States",
+   "owner": "Americans",
+   "count": 2
+  },
+  {
+   "type": "fighter",
+   "at": "Western United States",
+   "owner": "Americans",
+   "count": 1
+  },
+  {
+   "type": "infantry",
+   "at": "Central United States",
+   "owner": "Americans",
+   "count": 1
+  },
+  {
+   "type": "transport",
+   "at": "11 Sea Zone",
+   "owner": "Americans",
+   "count": 2
+  },
+  {
+   "type": "cruiser",
+   "at": "19 Sea Zone",
+   "owner": "Americans",
+   "count": 1
+  },
+  {
+   "type": "destroyer",
+   "at": "11 Sea Zone",
+   "owner": "Americans",
+   "count": 1
+  },
+  {
+   "type": "battleship",
+   "at": "56 Sea Zone",
+   "owner": "Americans",
+   "count": 1
+  },
+  {
+   "type": "destroyer",
+   "at": "56 Sea Zone",
+   "owner": "Americans",
+   "count": 1
+  },
+  {
+   "type": "transport",
+   "at": "56 Sea Zone",
+   "owner": "Americans",
+   "count": 1
+  },
+  {
+   "type": "fighter",
+   "at": "53 Sea Zone",
+   "owner": "Americans",
+   "count": 1
+  },
+  {
+   "type": "carrier",
+   "at": "53 Sea Zone",
+   "owner": "Americans",
+   "count": 1
+  },
+  {
+   "type": "submarine",
+   "at": "53 Sea Zone",
+   "owner": "Americans",
+   "count": 1
+  },
+  {
+   "type": "destroyer",
+   "at": "53 Sea Zone",
+   "owner": "Americans",
+   "count": 1
+  }
+ ]
+}

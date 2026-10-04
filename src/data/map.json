@@ -1,0 +1,2443 @@
+{
+ "spaces": [
+  {
+   "id": "1 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "10 Sea Zone",
+    "2 Sea Zone",
+    "Eastern Canada"
+   ]
+  },
+  {
+   "id": "2 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "1 Sea Zone",
+    "10 Sea Zone",
+    "3 Sea Zone",
+    "7 Sea Zone",
+    "9 Sea Zone",
+    "Greenland"
+   ]
+  },
+  {
+   "id": "3 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "2 Sea Zone",
+    "4 Sea Zone",
+    "6 Sea Zone",
+    "7 Sea Zone",
+    "Finland",
+    "Iceland",
+    "Norway"
+   ]
+  },
+  {
+   "id": "4 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "3 Sea Zone",
+    "Archangel",
+    "Karelia S.S.R."
+   ]
+  },
+  {
+   "id": "5 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "6 Sea Zone",
+    "Baltic States",
+    "Finland",
+    "Germany",
+    "Karelia S.S.R.",
+    "Northwestern Europe",
+    "Norway",
+    "Sweden"
+   ]
+  },
+  {
+   "id": "6 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "3 Sea Zone",
+    "5 Sea Zone",
+    "7 Sea Zone",
+    "8 Sea Zone",
+    "Northwestern Europe",
+    "Norway",
+    "United Kingdom"
+   ]
+  },
+  {
+   "id": "7 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "2 Sea Zone",
+    "3 Sea Zone",
+    "6 Sea Zone",
+    "8 Sea Zone",
+    "9 Sea Zone",
+    "Eire",
+    "United Kingdom"
+   ]
+  },
+  {
+   "id": "8 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "13 Sea Zone",
+    "6 Sea Zone",
+    "7 Sea Zone",
+    "9 Sea Zone",
+    "Eire",
+    "France",
+    "Northwestern Europe",
+    "United Kingdom"
+   ]
+  },
+  {
+   "id": "9 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "10 Sea Zone",
+    "12 Sea Zone",
+    "13 Sea Zone",
+    "2 Sea Zone",
+    "7 Sea Zone",
+    "8 Sea Zone"
+   ]
+  },
+  {
+   "id": "10 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "1 Sea Zone",
+    "11 Sea Zone",
+    "12 Sea Zone",
+    "2 Sea Zone",
+    "9 Sea Zone",
+    "Eastern Canada"
+   ]
+  },
+  {
+   "id": "11 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "10 Sea Zone",
+    "12 Sea Zone",
+    "18 Sea Zone",
+    "Central United States",
+    "East Mexico",
+    "Eastern United States"
+   ]
+  },
+  {
+   "id": "12 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "10 Sea Zone",
+    "11 Sea Zone",
+    "13 Sea Zone",
+    "18 Sea Zone",
+    "22 Sea Zone",
+    "23 Sea Zone",
+    "9 Sea Zone"
+   ]
+  },
+  {
+   "id": "13 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "12 Sea Zone",
+    "14 Sea Zone",
+    "23 Sea Zone",
+    "8 Sea Zone",
+    "9 Sea Zone",
+    "Gibraltar",
+    "Morocco",
+    "Spain Portugal"
+   ]
+  },
+  {
+   "id": "14 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "13 Sea Zone",
+    "15 Sea Zone",
+    "Algeria",
+    "France",
+    "Gibraltar",
+    "Morocco",
+    "Spain Portugal"
+   ]
+  },
+  {
+   "id": "15 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "14 Sea Zone",
+    "16 Sea Zone",
+    "17 Sea Zone",
+    "Italy",
+    "Libya",
+    "Southern Europe",
+    "Turkey"
+   ]
+  },
+  {
+   "id": "16 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "15 Sea Zone",
+    "Bulgaria Romania",
+    "Caucasus",
+    "Turkey",
+    "Ukraine S.S.R."
+   ]
+  },
+  {
+   "id": "17 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "15 Sea Zone",
+    "34 Sea Zone",
+    "Egypt",
+    "Trans-Jordan",
+    "Turkey"
+   ]
+  },
+  {
+   "id": "18 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "11 Sea Zone",
+    "12 Sea Zone",
+    "19 Sea Zone",
+    "22 Sea Zone",
+    "Central America",
+    "Colombia Equador",
+    "East Mexico",
+    "Venezuela",
+    "West Indies"
+   ]
+  },
+  {
+   "id": "19 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "18 Sea Zone",
+    "20 Sea Zone",
+    "55 Sea Zone",
+    "Central America",
+    "Colombia Equador",
+    "East Mexico",
+    "Peru Argentina"
+   ]
+  },
+  {
+   "id": "20 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "19 Sea Zone",
+    "21 Sea Zone",
+    "42 Sea Zone",
+    "Chile"
+   ]
+  },
+  {
+   "id": "21 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "20 Sea Zone",
+    "22 Sea Zone",
+    "25 Sea Zone",
+    "26 Sea Zone",
+    "41 Sea Zone",
+    "Chile",
+    "Peru Argentina"
+   ]
+  },
+  {
+   "id": "22 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "12 Sea Zone",
+    "18 Sea Zone",
+    "21 Sea Zone",
+    "23 Sea Zone",
+    "25 Sea Zone",
+    "Brazil"
+   ]
+  },
+  {
+   "id": "23 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "12 Sea Zone",
+    "13 Sea Zone",
+    "22 Sea Zone",
+    "24 Sea Zone",
+    "25 Sea Zone",
+    "French West Africa",
+    "Sahara"
+   ]
+  },
+  {
+   "id": "24 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "23 Sea Zone",
+    "25 Sea Zone",
+    "27 Sea Zone",
+    "Belgian Congo",
+    "French Equatorial Africa"
+   ]
+  },
+  {
+   "id": "25 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "21 Sea Zone",
+    "22 Sea Zone",
+    "23 Sea Zone",
+    "24 Sea Zone",
+    "26 Sea Zone",
+    "27 Sea Zone"
+   ]
+  },
+  {
+   "id": "26 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "21 Sea Zone",
+    "25 Sea Zone",
+    "27 Sea Zone"
+   ]
+  },
+  {
+   "id": "27 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "24 Sea Zone",
+    "25 Sea Zone",
+    "26 Sea Zone",
+    "28 Sea Zone",
+    "Angola",
+    "Union of South Africa"
+   ]
+  },
+  {
+   "id": "28 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "27 Sea Zone",
+    "29 Sea Zone",
+    "33 Sea Zone",
+    "French Madagascar",
+    "Mozambique",
+    "Union of South Africa"
+   ]
+  },
+  {
+   "id": "29 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "28 Sea Zone",
+    "30 Sea Zone",
+    "31 Sea Zone",
+    "32 Sea Zone",
+    "French Madagascar"
+   ]
+  },
+  {
+   "id": "30 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "29 Sea Zone",
+    "31 Sea Zone",
+    "37 Sea Zone",
+    "38 Sea Zone"
+   ]
+  },
+  {
+   "id": "31 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "29 Sea Zone",
+    "30 Sea Zone",
+    "32 Sea Zone",
+    "35 Sea Zone",
+    "37 Sea Zone"
+   ]
+  },
+  {
+   "id": "32 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "29 Sea Zone",
+    "31 Sea Zone",
+    "33 Sea Zone",
+    "34 Sea Zone",
+    "35 Sea Zone",
+    "French Madagascar"
+   ]
+  },
+  {
+   "id": "33 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "28 Sea Zone",
+    "32 Sea Zone",
+    "34 Sea Zone",
+    "French Madagascar",
+    "Italian East Africa",
+    "Mozambique",
+    "Rhodesia"
+   ]
+  },
+  {
+   "id": "34 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "17 Sea Zone",
+    "32 Sea Zone",
+    "33 Sea Zone",
+    "35 Sea Zone",
+    "Anglo-Egyptian Sudan",
+    "Egypt",
+    "Italian East Africa",
+    "Persia",
+    "Saudi Arabia",
+    "Trans-Jordan"
+   ]
+  },
+  {
+   "id": "35 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "31 Sea Zone",
+    "32 Sea Zone",
+    "34 Sea Zone",
+    "36 Sea Zone",
+    "37 Sea Zone",
+    "India"
+   ]
+  },
+  {
+   "id": "36 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "35 Sea Zone",
+    "37 Sea Zone",
+    "47 Sea Zone",
+    "48 Sea Zone",
+    "61 Sea Zone",
+    "Burma",
+    "French Indo-China Thailand",
+    "Malaya"
+   ]
+  },
+  {
+   "id": "37 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "30 Sea Zone",
+    "31 Sea Zone",
+    "35 Sea Zone",
+    "36 Sea Zone",
+    "38 Sea Zone",
+    "46 Sea Zone",
+    "47 Sea Zone",
+    "East Indies"
+   ]
+  },
+  {
+   "id": "38 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "30 Sea Zone",
+    "37 Sea Zone",
+    "39 Sea Zone",
+    "46 Sea Zone",
+    "Western Australia"
+   ]
+  },
+  {
+   "id": "39 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "38 Sea Zone",
+    "40 Sea Zone",
+    "45 Sea Zone",
+    "Eastern Australia"
+   ]
+  },
+  {
+   "id": "40 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "39 Sea Zone",
+    "41 Sea Zone",
+    "43 Sea Zone",
+    "44 Sea Zone",
+    "45 Sea Zone",
+    "New Zealand"
+   ]
+  },
+  {
+   "id": "41 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "21 Sea Zone",
+    "40 Sea Zone",
+    "42 Sea Zone",
+    "43 Sea Zone"
+   ]
+  },
+  {
+   "id": "42 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "20 Sea Zone",
+    "41 Sea Zone",
+    "43 Sea Zone",
+    "54 Sea Zone",
+    "55 Sea Zone"
+   ]
+  },
+  {
+   "id": "43 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "40 Sea Zone",
+    "41 Sea Zone",
+    "42 Sea Zone",
+    "44 Sea Zone",
+    "53 Sea Zone",
+    "54 Sea Zone"
+   ]
+  },
+  {
+   "id": "44 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "40 Sea Zone",
+    "43 Sea Zone",
+    "45 Sea Zone",
+    "49 Sea Zone",
+    "50 Sea Zone",
+    "52 Sea Zone",
+    "53 Sea Zone",
+    "Solomon Islands"
+   ]
+  },
+  {
+   "id": "45 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "39 Sea Zone",
+    "40 Sea Zone",
+    "44 Sea Zone",
+    "46 Sea Zone",
+    "49 Sea Zone",
+    "Eastern Australia"
+   ]
+  },
+  {
+   "id": "46 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "37 Sea Zone",
+    "38 Sea Zone",
+    "45 Sea Zone",
+    "47 Sea Zone",
+    "49 Sea Zone",
+    "Western Australia"
+   ]
+  },
+  {
+   "id": "47 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "36 Sea Zone",
+    "37 Sea Zone",
+    "46 Sea Zone",
+    "48 Sea Zone",
+    "49 Sea Zone",
+    "Borneo"
+   ]
+  },
+  {
+   "id": "48 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "36 Sea Zone",
+    "47 Sea Zone",
+    "49 Sea Zone",
+    "50 Sea Zone",
+    "51 Sea Zone",
+    "60 Sea Zone",
+    "61 Sea Zone",
+    "Philippine Islands"
+   ]
+  },
+  {
+   "id": "49 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "44 Sea Zone",
+    "45 Sea Zone",
+    "46 Sea Zone",
+    "47 Sea Zone",
+    "48 Sea Zone",
+    "50 Sea Zone",
+    "New Guinea"
+   ]
+  },
+  {
+   "id": "50 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "44 Sea Zone",
+    "48 Sea Zone",
+    "49 Sea Zone",
+    "51 Sea Zone",
+    "52 Sea Zone",
+    "Caroline Islands"
+   ]
+  },
+  {
+   "id": "51 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "48 Sea Zone",
+    "50 Sea Zone",
+    "52 Sea Zone",
+    "59 Sea Zone",
+    "60 Sea Zone",
+    "Okinawa"
+   ]
+  },
+  {
+   "id": "52 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "44 Sea Zone",
+    "50 Sea Zone",
+    "51 Sea Zone",
+    "53 Sea Zone",
+    "57 Sea Zone",
+    "59 Sea Zone",
+    "Wake Island"
+   ]
+  },
+  {
+   "id": "53 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "43 Sea Zone",
+    "44 Sea Zone",
+    "52 Sea Zone",
+    "54 Sea Zone",
+    "56 Sea Zone",
+    "57 Sea Zone",
+    "Hawaiian Islands"
+   ]
+  },
+  {
+   "id": "54 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "42 Sea Zone",
+    "43 Sea Zone",
+    "53 Sea Zone",
+    "55 Sea Zone",
+    "56 Sea Zone"
+   ]
+  },
+  {
+   "id": "55 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "19 Sea Zone",
+    "42 Sea Zone",
+    "54 Sea Zone",
+    "56 Sea Zone",
+    "Mexico"
+   ]
+  },
+  {
+   "id": "56 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "53 Sea Zone",
+    "54 Sea Zone",
+    "55 Sea Zone",
+    "57 Sea Zone",
+    "65 Sea Zone",
+    "Western United States"
+   ]
+  },
+  {
+   "id": "57 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "52 Sea Zone",
+    "53 Sea Zone",
+    "56 Sea Zone",
+    "58 Sea Zone",
+    "59 Sea Zone",
+    "64 Sea Zone",
+    "65 Sea Zone",
+    "Midway"
+   ]
+  },
+  {
+   "id": "58 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "57 Sea Zone",
+    "59 Sea Zone",
+    "60 Sea Zone",
+    "63 Sea Zone",
+    "64 Sea Zone"
+   ]
+  },
+  {
+   "id": "59 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "51 Sea Zone",
+    "52 Sea Zone",
+    "57 Sea Zone",
+    "58 Sea Zone",
+    "60 Sea Zone",
+    "Iwo Jima"
+   ]
+  },
+  {
+   "id": "60 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "48 Sea Zone",
+    "51 Sea Zone",
+    "58 Sea Zone",
+    "59 Sea Zone",
+    "61 Sea Zone",
+    "62 Sea Zone",
+    "63 Sea Zone",
+    "Japan"
+   ]
+  },
+  {
+   "id": "61 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "36 Sea Zone",
+    "48 Sea Zone",
+    "60 Sea Zone",
+    "62 Sea Zone",
+    "Formosa",
+    "Kiangsu",
+    "Kwangtung",
+    "Yunnan"
+   ]
+  },
+  {
+   "id": "62 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "60 Sea Zone",
+    "61 Sea Zone",
+    "63 Sea Zone",
+    "Buryatia S.S.R.",
+    "Japan",
+    "Manchuria"
+   ]
+  },
+  {
+   "id": "63 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "58 Sea Zone",
+    "60 Sea Zone",
+    "62 Sea Zone",
+    "64 Sea Zone",
+    "Buryatia S.S.R.",
+    "Soviet Far East"
+   ]
+  },
+  {
+   "id": "64 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "57 Sea Zone",
+    "58 Sea Zone",
+    "63 Sea Zone",
+    "65 Sea Zone",
+    "Alaska"
+   ]
+  },
+  {
+   "id": "65 Sea Zone",
+   "water": true,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "56 Sea Zone",
+    "57 Sea Zone",
+    "64 Sea Zone",
+    "Alaska",
+    "Western Canada"
+   ]
+  },
+  {
+   "id": "Afghanistan",
+   "water": false,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "Himalaya",
+    "India",
+    "Kazakh S.S.R.",
+    "Persia",
+    "Szechwan"
+   ]
+  },
+  {
+   "id": "Alaska",
+   "water": false,
+   "ipc": 2,
+   "originalOwner": "Americans",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "64 Sea Zone",
+    "65 Sea Zone",
+    "Western Canada"
+   ]
+  },
+  {
+   "id": "Algeria",
+   "water": false,
+   "ipc": 1,
+   "originalOwner": "Germans",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "14 Sea Zone",
+    "Libya",
+    "Morocco",
+    "Sahara"
+   ]
+  },
+  {
+   "id": "Anglo-Egyptian Sudan",
+   "water": false,
+   "ipc": 0,
+   "originalOwner": "British",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "34 Sea Zone",
+    "Belgian Congo",
+    "Egypt",
+    "French Equatorial Africa",
+    "Italian East Africa",
+    "Rhodesia",
+    "Sahara"
+   ]
+  },
+  {
+   "id": "Angola",
+   "water": false,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "27 Sea Zone",
+    "Belgian Congo",
+    "Union of South Africa"
+   ]
+  },
+  {
+   "id": "Anhwei",
+   "water": false,
+   "ipc": 1,
+   "originalOwner": "Americans",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "Kiangsu",
+    "Kwangtung",
+    "Manchuria",
+    "Mongolia",
+    "Sinkiang",
+    "Szechwan"
+   ]
+  },
+  {
+   "id": "Archangel",
+   "water": false,
+   "ipc": 1,
+   "originalOwner": "Russians",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "4 Sea Zone",
+    "Evenki National Okrug",
+    "Karelia S.S.R.",
+    "Russia",
+    "Vologda",
+    "West Russia"
+   ]
+  },
+  {
+   "id": "Baltic States",
+   "water": false,
+   "ipc": 2,
+   "originalOwner": "Germans",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "5 Sea Zone",
+    "Belorussia",
+    "Germany",
+    "Karelia S.S.R.",
+    "Poland"
+   ]
+  },
+  {
+   "id": "Belgian Congo",
+   "water": false,
+   "ipc": 1,
+   "originalOwner": "British",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "24 Sea Zone",
+    "Anglo-Egyptian Sudan",
+    "Angola",
+    "French Equatorial Africa",
+    "Rhodesia",
+    "Union of South Africa"
+   ]
+  },
+  {
+   "id": "Belorussia",
+   "water": false,
+   "ipc": 2,
+   "originalOwner": "Germans",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "Baltic States",
+    "Karelia S.S.R.",
+    "Poland",
+    "Ukraine S.S.R.",
+    "West Russia"
+   ]
+  },
+  {
+   "id": "Borneo",
+   "water": false,
+   "ipc": 4,
+   "originalOwner": "Japanese",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "47 Sea Zone"
+   ]
+  },
+  {
+   "id": "Brazil",
+   "water": false,
+   "ipc": 3,
+   "originalOwner": "Americans",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "22 Sea Zone",
+    "Colombia Equador",
+    "Peru Argentina",
+    "Venezuela"
+   ]
+  },
+  {
+   "id": "Bulgaria Romania",
+   "water": false,
+   "ipc": 2,
+   "originalOwner": "Germans",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "16 Sea Zone",
+    "Germany",
+    "Poland",
+    "Southern Europe",
+    "Turkey",
+    "Ukraine S.S.R."
+   ]
+  },
+  {
+   "id": "Burma",
+   "water": false,
+   "ipc": 1,
+   "originalOwner": "British",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "36 Sea Zone",
+    "French Indo-China Thailand",
+    "Himalaya",
+    "India",
+    "Yunnan"
+   ]
+  },
+  {
+   "id": "Buryatia S.S.R.",
+   "water": false,
+   "ipc": 1,
+   "originalOwner": "Russians",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "62 Sea Zone",
+    "63 Sea Zone",
+    "Manchuria",
+    "Mongolia",
+    "Soviet Far East",
+    "Yakut S.S.R."
+   ]
+  },
+  {
+   "id": "Caroline Islands",
+   "water": false,
+   "ipc": 0,
+   "originalOwner": "Japanese",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "50 Sea Zone"
+   ]
+  },
+  {
+   "id": "Caucasus",
+   "water": false,
+   "ipc": 4,
+   "originalOwner": "Russians",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "16 Sea Zone",
+    "Kazakh S.S.R.",
+    "Persia",
+    "Russia",
+    "Turkey",
+    "Ukraine S.S.R.",
+    "West Russia"
+   ]
+  },
+  {
+   "id": "Central America",
+   "water": false,
+   "ipc": 1,
+   "originalOwner": "Americans",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "18 Sea Zone",
+    "19 Sea Zone",
+    "Colombia Equador",
+    "East Mexico"
+   ]
+  },
+  {
+   "id": "Central United States",
+   "water": false,
+   "ipc": 6,
+   "originalOwner": "Americans",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "11 Sea Zone",
+    "East Mexico",
+    "Eastern Canada",
+    "Eastern United States",
+    "Western United States"
+   ]
+  },
+  {
+   "id": "Chile",
+   "water": false,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "20 Sea Zone",
+    "21 Sea Zone",
+    "Peru Argentina"
+   ]
+  },
+  {
+   "id": "Colombia Equador",
+   "water": false,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "18 Sea Zone",
+    "19 Sea Zone",
+    "Brazil",
+    "Central America",
+    "Peru Argentina",
+    "Venezuela"
+   ]
+  },
+  {
+   "id": "East Indies",
+   "water": false,
+   "ipc": 4,
+   "originalOwner": "Japanese",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "37 Sea Zone"
+   ]
+  },
+  {
+   "id": "East Mexico",
+   "water": false,
+   "ipc": 0,
+   "originalOwner": "Americans",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "11 Sea Zone",
+    "18 Sea Zone",
+    "19 Sea Zone",
+    "Central America",
+    "Central United States",
+    "Mexico"
+   ]
+  },
+  {
+   "id": "Eastern Australia",
+   "water": false,
+   "ipc": 1,
+   "originalOwner": "British",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "39 Sea Zone",
+    "45 Sea Zone",
+    "Western Australia"
+   ]
+  },
+  {
+   "id": "Eastern Canada",
+   "water": false,
+   "ipc": 3,
+   "originalOwner": "British",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "1 Sea Zone",
+    "10 Sea Zone",
+    "Central United States",
+    "Eastern United States",
+    "Western Canada"
+   ]
+  },
+  {
+   "id": "Eastern United States",
+   "water": false,
+   "ipc": 12,
+   "originalOwner": "Americans",
+   "capital": "Americans",
+   "victoryCity": true,
+   "neighbors": [
+    "11 Sea Zone",
+    "Central United States",
+    "Eastern Canada"
+   ]
+  },
+  {
+   "id": "Egypt",
+   "water": false,
+   "ipc": 2,
+   "originalOwner": "British",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "17 Sea Zone",
+    "34 Sea Zone",
+    "Anglo-Egyptian Sudan",
+    "Libya",
+    "Sahara",
+    "Trans-Jordan"
+   ]
+  },
+  {
+   "id": "Eire",
+   "water": false,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "7 Sea Zone",
+    "8 Sea Zone",
+    "United Kingdom"
+   ]
+  },
+  {
+   "id": "Evenki National Okrug",
+   "water": false,
+   "ipc": 1,
+   "originalOwner": "Russians",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "Archangel",
+    "Mongolia",
+    "Novosibirsk",
+    "Sinkiang",
+    "Vologda",
+    "Yakut S.S.R."
+   ]
+  },
+  {
+   "id": "Finland",
+   "water": false,
+   "ipc": 1,
+   "originalOwner": "Germans",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "3 Sea Zone",
+    "5 Sea Zone",
+    "Karelia S.S.R.",
+    "Norway",
+    "Sweden"
+   ]
+  },
+  {
+   "id": "Formosa",
+   "water": false,
+   "ipc": 0,
+   "originalOwner": "Japanese",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "61 Sea Zone"
+   ]
+  },
+  {
+   "id": "France",
+   "water": false,
+   "ipc": 6,
+   "originalOwner": "Germans",
+   "capital": null,
+   "victoryCity": true,
+   "neighbors": [
+    "14 Sea Zone",
+    "8 Sea Zone",
+    "Germany",
+    "Italy",
+    "Northwestern Europe",
+    "Spain Portugal",
+    "Switzerland"
+   ]
+  },
+  {
+   "id": "French Equatorial Africa",
+   "water": false,
+   "ipc": 1,
+   "originalOwner": "British",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "24 Sea Zone",
+    "Anglo-Egyptian Sudan",
+    "Belgian Congo",
+    "French West Africa",
+    "Sahara"
+   ]
+  },
+  {
+   "id": "French Indo-China Thailand",
+   "water": false,
+   "ipc": 2,
+   "originalOwner": "Japanese",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "36 Sea Zone",
+    "Burma",
+    "Malaya",
+    "Yunnan"
+   ]
+  },
+  {
+   "id": "French Madagascar",
+   "water": false,
+   "ipc": 1,
+   "originalOwner": "British",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "28 Sea Zone",
+    "29 Sea Zone",
+    "32 Sea Zone",
+    "33 Sea Zone"
+   ]
+  },
+  {
+   "id": "French West Africa",
+   "water": false,
+   "ipc": 1,
+   "originalOwner": "British",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "23 Sea Zone",
+    "French Equatorial Africa",
+    "Sahara"
+   ]
+  },
+  {
+   "id": "Germany",
+   "water": false,
+   "ipc": 10,
+   "originalOwner": "Germans",
+   "capital": "Germans",
+   "victoryCity": true,
+   "neighbors": [
+    "5 Sea Zone",
+    "Baltic States",
+    "Bulgaria Romania",
+    "France",
+    "Italy",
+    "Northwestern Europe",
+    "Poland",
+    "Southern Europe",
+    "Switzerland"
+   ]
+  },
+  {
+   "id": "Gibraltar",
+   "water": false,
+   "ipc": 0,
+   "originalOwner": "British",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "13 Sea Zone",
+    "14 Sea Zone",
+    "Spain Portugal"
+   ]
+  },
+  {
+   "id": "Greenland",
+   "water": false,
+   "ipc": 0,
+   "originalOwner": "Americans",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "2 Sea Zone"
+   ]
+  },
+  {
+   "id": "Hawaiian Islands",
+   "water": false,
+   "ipc": 1,
+   "originalOwner": "Americans",
+   "capital": null,
+   "victoryCity": true,
+   "neighbors": [
+    "53 Sea Zone"
+   ]
+  },
+  {
+   "id": "Himalaya",
+   "water": false,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "Afghanistan",
+    "Burma",
+    "India",
+    "Szechwan",
+    "Yunnan"
+   ]
+  },
+  {
+   "id": "Iceland",
+   "water": false,
+   "ipc": 0,
+   "originalOwner": "British",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "3 Sea Zone"
+   ]
+  },
+  {
+   "id": "India",
+   "water": false,
+   "ipc": 3,
+   "originalOwner": "British",
+   "capital": null,
+   "victoryCity": true,
+   "neighbors": [
+    "35 Sea Zone",
+    "Afghanistan",
+    "Burma",
+    "Himalaya",
+    "Persia"
+   ]
+  },
+  {
+   "id": "Italian East Africa",
+   "water": false,
+   "ipc": 1,
+   "originalOwner": "British",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "33 Sea Zone",
+    "34 Sea Zone",
+    "Anglo-Egyptian Sudan",
+    "Rhodesia"
+   ]
+  },
+  {
+   "id": "Italy",
+   "water": false,
+   "ipc": 3,
+   "originalOwner": "Germans",
+   "capital": null,
+   "victoryCity": true,
+   "neighbors": [
+    "15 Sea Zone",
+    "France",
+    "Germany",
+    "Southern Europe",
+    "Switzerland"
+   ]
+  },
+  {
+   "id": "Iwo Jima",
+   "water": false,
+   "ipc": 0,
+   "originalOwner": "Japanese",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "59 Sea Zone"
+   ]
+  },
+  {
+   "id": "Japan",
+   "water": false,
+   "ipc": 8,
+   "originalOwner": "Japanese",
+   "capital": "Japanese",
+   "victoryCity": true,
+   "neighbors": [
+    "60 Sea Zone",
+    "62 Sea Zone"
+   ]
+  },
+  {
+   "id": "Karelia S.S.R.",
+   "water": false,
+   "ipc": 2,
+   "originalOwner": "Russians",
+   "capital": null,
+   "victoryCity": true,
+   "neighbors": [
+    "4 Sea Zone",
+    "5 Sea Zone",
+    "Archangel",
+    "Baltic States",
+    "Belorussia",
+    "Finland",
+    "West Russia"
+   ]
+  },
+  {
+   "id": "Kazakh S.S.R.",
+   "water": false,
+   "ipc": 2,
+   "originalOwner": "Russians",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "Afghanistan",
+    "Caucasus",
+    "Novosibirsk",
+    "Persia",
+    "Russia",
+    "Sinkiang",
+    "Szechwan"
+   ]
+  },
+  {
+   "id": "Kiangsu",
+   "water": false,
+   "ipc": 2,
+   "originalOwner": "Japanese",
+   "capital": null,
+   "victoryCity": true,
+   "neighbors": [
+    "61 Sea Zone",
+    "Anhwei",
+    "Kwangtung",
+    "Manchuria"
+   ]
+  },
+  {
+   "id": "Kwangtung",
+   "water": false,
+   "ipc": 2,
+   "originalOwner": "Japanese",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "61 Sea Zone",
+    "Anhwei",
+    "Kiangsu",
+    "Szechwan",
+    "Yunnan"
+   ]
+  },
+  {
+   "id": "Libya",
+   "water": false,
+   "ipc": 1,
+   "originalOwner": "Germans",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "15 Sea Zone",
+    "Algeria",
+    "Egypt",
+    "Sahara"
+   ]
+  },
+  {
+   "id": "Malaya",
+   "water": false,
+   "ipc": 1,
+   "originalOwner": "Japanese",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "36 Sea Zone",
+    "French Indo-China Thailand"
+   ]
+  },
+  {
+   "id": "Manchuria",
+   "water": false,
+   "ipc": 3,
+   "originalOwner": "Japanese",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "62 Sea Zone",
+    "Anhwei",
+    "Buryatia S.S.R.",
+    "Kiangsu",
+    "Mongolia"
+   ]
+  },
+  {
+   "id": "Mexico",
+   "water": false,
+   "ipc": 2,
+   "originalOwner": "Americans",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "55 Sea Zone",
+    "East Mexico",
+    "Western United States"
+   ]
+  },
+  {
+   "id": "Midway",
+   "water": false,
+   "ipc": 0,
+   "originalOwner": "Americans",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "57 Sea Zone"
+   ]
+  },
+  {
+   "id": "Mongolia",
+   "water": false,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "Anhwei",
+    "Buryatia S.S.R.",
+    "Evenki National Okrug",
+    "Manchuria",
+    "Sinkiang",
+    "Yakut S.S.R."
+   ]
+  },
+  {
+   "id": "Morocco",
+   "water": false,
+   "ipc": 1,
+   "originalOwner": "Germans",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "13 Sea Zone",
+    "14 Sea Zone",
+    "Algeria",
+    "Sahara"
+   ]
+  },
+  {
+   "id": "Mozambique",
+   "water": false,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "28 Sea Zone",
+    "33 Sea Zone",
+    "Rhodesia",
+    "Union of South Africa"
+   ]
+  },
+  {
+   "id": "New Guinea",
+   "water": false,
+   "ipc": 1,
+   "originalOwner": "Japanese",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "49 Sea Zone"
+   ]
+  },
+  {
+   "id": "New Zealand",
+   "water": false,
+   "ipc": 1,
+   "originalOwner": "British",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "40 Sea Zone"
+   ]
+  },
+  {
+   "id": "Northwestern Europe",
+   "water": false,
+   "ipc": 2,
+   "originalOwner": "Germans",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "5 Sea Zone",
+    "6 Sea Zone",
+    "8 Sea Zone",
+    "France",
+    "Germany"
+   ]
+  },
+  {
+   "id": "Norway",
+   "water": false,
+   "ipc": 2,
+   "originalOwner": "Germans",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "3 Sea Zone",
+    "5 Sea Zone",
+    "6 Sea Zone",
+    "Finland",
+    "Sweden"
+   ]
+  },
+  {
+   "id": "Novosibirsk",
+   "water": false,
+   "ipc": 1,
+   "originalOwner": "Russians",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "Evenki National Okrug",
+    "Kazakh S.S.R.",
+    "Russia",
+    "Sinkiang",
+    "Vologda"
+   ]
+  },
+  {
+   "id": "Okinawa",
+   "water": false,
+   "ipc": 0,
+   "originalOwner": "Japanese",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "51 Sea Zone"
+   ]
+  },
+  {
+   "id": "Persia",
+   "water": false,
+   "ipc": 1,
+   "originalOwner": "British",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "34 Sea Zone",
+    "Afghanistan",
+    "Caucasus",
+    "India",
+    "Kazakh S.S.R.",
+    "Trans-Jordan",
+    "Turkey"
+   ]
+  },
+  {
+   "id": "Peru Argentina",
+   "water": false,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "19 Sea Zone",
+    "21 Sea Zone",
+    "Brazil",
+    "Chile",
+    "Colombia Equador"
+   ]
+  },
+  {
+   "id": "Philippine Islands",
+   "water": false,
+   "ipc": 3,
+   "originalOwner": "Japanese",
+   "capital": null,
+   "victoryCity": true,
+   "neighbors": [
+    "48 Sea Zone"
+   ]
+  },
+  {
+   "id": "Poland",
+   "water": false,
+   "ipc": 2,
+   "originalOwner": "Germans",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "Baltic States",
+    "Belorussia",
+    "Bulgaria Romania",
+    "Germany",
+    "Ukraine S.S.R."
+   ]
+  },
+  {
+   "id": "Rhodesia",
+   "water": false,
+   "ipc": 1,
+   "originalOwner": "British",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "33 Sea Zone",
+    "Anglo-Egyptian Sudan",
+    "Belgian Congo",
+    "Italian East Africa",
+    "Mozambique",
+    "Union of South Africa"
+   ]
+  },
+  {
+   "id": "Russia",
+   "water": false,
+   "ipc": 8,
+   "originalOwner": "Russians",
+   "capital": "Russians",
+   "victoryCity": true,
+   "neighbors": [
+    "Archangel",
+    "Caucasus",
+    "Kazakh S.S.R.",
+    "Novosibirsk",
+    "Vologda",
+    "West Russia"
+   ]
+  },
+  {
+   "id": "Sahara",
+   "water": false,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "23 Sea Zone",
+    "Algeria",
+    "Anglo-Egyptian Sudan",
+    "Egypt",
+    "French Equatorial Africa",
+    "French West Africa",
+    "Libya",
+    "Morocco"
+   ]
+  },
+  {
+   "id": "Saudi Arabia",
+   "water": false,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "34 Sea Zone",
+    "Trans-Jordan"
+   ]
+  },
+  {
+   "id": "Sinkiang",
+   "water": false,
+   "ipc": 1,
+   "originalOwner": "Americans",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "Anhwei",
+    "Evenki National Okrug",
+    "Kazakh S.S.R.",
+    "Mongolia",
+    "Novosibirsk",
+    "Szechwan"
+   ]
+  },
+  {
+   "id": "Solomon Islands",
+   "water": false,
+   "ipc": 0,
+   "originalOwner": "Japanese",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "44 Sea Zone"
+   ]
+  },
+  {
+   "id": "Southern Europe",
+   "water": false,
+   "ipc": 2,
+   "originalOwner": "Germans",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "15 Sea Zone",
+    "Bulgaria Romania",
+    "Germany",
+    "Italy",
+    "Turkey"
+   ]
+  },
+  {
+   "id": "Soviet Far East",
+   "water": false,
+   "ipc": 1,
+   "originalOwner": "Russians",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "63 Sea Zone",
+    "Buryatia S.S.R.",
+    "Yakut S.S.R."
+   ]
+  },
+  {
+   "id": "Spain Portugal",
+   "water": false,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "13 Sea Zone",
+    "14 Sea Zone",
+    "France",
+    "Gibraltar"
+   ]
+  },
+  {
+   "id": "Sweden",
+   "water": false,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "5 Sea Zone",
+    "Finland",
+    "Norway"
+   ]
+  },
+  {
+   "id": "Switzerland",
+   "water": false,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "France",
+    "Germany",
+    "Italy"
+   ]
+  },
+  {
+   "id": "Szechwan",
+   "water": false,
+   "ipc": 1,
+   "originalOwner": "Americans",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "Afghanistan",
+    "Anhwei",
+    "Himalaya",
+    "Kazakh S.S.R.",
+    "Kwangtung",
+    "Sinkiang",
+    "Yunnan"
+   ]
+  },
+  {
+   "id": "Trans-Jordan",
+   "water": false,
+   "ipc": 1,
+   "originalOwner": "British",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "17 Sea Zone",
+    "34 Sea Zone",
+    "Egypt",
+    "Persia",
+    "Saudi Arabia",
+    "Turkey"
+   ]
+  },
+  {
+   "id": "Turkey",
+   "water": false,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "15 Sea Zone",
+    "16 Sea Zone",
+    "17 Sea Zone",
+    "Bulgaria Romania",
+    "Caucasus",
+    "Persia",
+    "Southern Europe",
+    "Trans-Jordan"
+   ]
+  },
+  {
+   "id": "Ukraine S.S.R.",
+   "water": false,
+   "ipc": 2,
+   "originalOwner": "Germans",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "16 Sea Zone",
+    "Belorussia",
+    "Bulgaria Romania",
+    "Caucasus",
+    "Poland",
+    "West Russia"
+   ]
+  },
+  {
+   "id": "Union of South Africa",
+   "water": false,
+   "ipc": 2,
+   "originalOwner": "British",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "27 Sea Zone",
+    "28 Sea Zone",
+    "Angola",
+    "Belgian Congo",
+    "Mozambique",
+    "Rhodesia"
+   ]
+  },
+  {
+   "id": "United Kingdom",
+   "water": false,
+   "ipc": 8,
+   "originalOwner": "British",
+   "capital": "British",
+   "victoryCity": true,
+   "neighbors": [
+    "6 Sea Zone",
+    "7 Sea Zone",
+    "8 Sea Zone",
+    "Eire"
+   ]
+  },
+  {
+   "id": "Venezuela",
+   "water": false,
+   "ipc": 0,
+   "originalOwner": null,
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "18 Sea Zone",
+    "Brazil",
+    "Colombia Equador"
+   ]
+  },
+  {
+   "id": "Vologda",
+   "water": false,
+   "ipc": 2,
+   "originalOwner": "Russians",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "Archangel",
+    "Evenki National Okrug",
+    "Novosibirsk",
+    "Russia"
+   ]
+  },
+  {
+   "id": "Wake Island",
+   "water": false,
+   "ipc": 0,
+   "originalOwner": "Japanese",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "52 Sea Zone"
+   ]
+  },
+  {
+   "id": "West Indies",
+   "water": false,
+   "ipc": 1,
+   "originalOwner": "Americans",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "18 Sea Zone"
+   ]
+  },
+  {
+   "id": "West Russia",
+   "water": false,
+   "ipc": 2,
+   "originalOwner": "Germans",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "Archangel",
+    "Belorussia",
+    "Caucasus",
+    "Karelia S.S.R.",
+    "Russia",
+    "Ukraine S.S.R."
+   ]
+  },
+  {
+   "id": "Western Australia",
+   "water": false,
+   "ipc": 1,
+   "originalOwner": "British",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "38 Sea Zone",
+    "46 Sea Zone",
+    "Eastern Australia"
+   ]
+  },
+  {
+   "id": "Western Canada",
+   "water": false,
+   "ipc": 1,
+   "originalOwner": "British",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "65 Sea Zone",
+    "Alaska",
+    "Eastern Canada",
+    "Western United States"
+   ]
+  },
+  {
+   "id": "Western United States",
+   "water": false,
+   "ipc": 10,
+   "originalOwner": "Americans",
+   "capital": null,
+   "victoryCity": true,
+   "neighbors": [
+    "56 Sea Zone",
+    "Central United States",
+    "Mexico",
+    "Western Canada"
+   ]
+  },
+  {
+   "id": "Yakut S.S.R.",
+   "water": false,
+   "ipc": 1,
+   "originalOwner": "Russians",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "Buryatia S.S.R.",
+    "Evenki National Okrug",
+    "Mongolia",
+    "Soviet Far East"
+   ]
+  },
+  {
+   "id": "Yunnan",
+   "water": false,
+   "ipc": 1,
+   "originalOwner": "Americans",
+   "capital": null,
+   "victoryCity": false,
+   "neighbors": [
+    "61 Sea Zone",
+    "Burma",
+    "French Indo-China Thailand",
+    "Himalaya",
+    "Kwangtung",
+    "Szechwan"
+   ]
+  }
+ ],
+ "canals": [
+  {
+   "name": "Suez Canal",
+   "seaZones": [
+    "17 Sea Zone",
+    "34 Sea Zone"
+   ],
+   "landTerritories": [
+    "Egypt",
+    "Trans-Jordan"
+   ]
+  },
+  {
+   "name": "Panama Canal",
+   "seaZones": [
+    "19 Sea Zone",
+    "18 Sea Zone"
+   ],
+   "landTerritories": [
+    "Central America"
+   ]
+  }
+ ]
+}

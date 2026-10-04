@@ -1,0 +1,4 @@
+when	what	why	evidence	result
+2026-10-04	Target Axis & Allies 1942 Second Edition	TripleA ships this edition, so its XML is a machine-readable data source	triplea-maps/world_war_ii_v5_1942 exists	adopted
+2026-10-04	Rules spec = Hasbro 2021 rulebook + Nov 2014 FAQ errata; FAQ wins over rulebook, rulebook wins over TripleA	official sources outrank a fan engine	rulebook from instructions.hasbro.com; FAQ from media.wizards.com	adopted
+2026-10-04	Generate map/setup/geometry from TripleA XML via scripts/gen-data.ts	hand-typed data for 161 spaces would be unverifiable	generated incomes 24/41/31/30/42 and 13 VCs match FAQ errata	adopted
