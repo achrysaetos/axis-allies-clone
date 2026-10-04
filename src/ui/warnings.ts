@@ -12,7 +12,8 @@ export function endPhaseWarnings(state: GameState): string[] {
   const treasury = state.treasury[state.power];
   if (state.phase === 'purchase' && state.purchases.length === 0 && treasury >= 3 && capitalHeld(state, state.power))
     out.push(`You have not bought anything. Your ${treasury} IPCs will carry over to next turn.`);
-  if (state.phase === 'noncombatMove' || state.phase === 'mobilize') {
+  const carrierLeft = state.purchases.some((p) => p.type === 'carrier');
+  if (state.phase === 'noncombatMove' || (state.phase === 'mobilize' && carrierLeft)) {
     const doomed = doomedAir(state).map((id) => state.units.find((u) => u.id === id)!);
     if (doomed.length > 0) {
       const fighters = doomed.filter((u) => u.type === 'fighter').length;
@@ -20,7 +21,7 @@ export function endPhaseWarnings(state: GameState): string[] {
       const what = [fighters && plural(fighters, UNIT_GLYPH.fighter.name), bombers && plural(bombers, UNIT_GLYPH.bomber.name)].filter(Boolean).join(' and ');
       const where = [...new Set(doomed.map((u) => u.at))].join(', ');
       const rescue =
-        state.phase === 'noncombatMove' && state.purchases.some((p) => p.type === 'carrier') && doomed.some((u) => space(u.at).water)
+        carrierLeft && doomed.some((u) => space(u.at).water)
           ? ' A carrier you bought can still be placed under fighters at sea.'
           : '';
       out.push(`${what} in ${where} ${doomed.length === 1 ? 'has' : 'have'} nowhere to land and will be lost.${rescue}`);
