@@ -20,7 +20,6 @@ export interface Session {
 }
 
 const FALLEN_LIMIT = 400;
-const SAVE_KEY = 'aa1942.session.v1';
 
 export function newSession(state: GameState, controllers: Record<Power, Controller>): Session {
   return { state, controllers, undo: [], fallen: [] };
@@ -95,15 +94,15 @@ export function unreachable(x: never): never {
   throw new Error(`unhandled ${JSON.stringify(x)}`);
 }
 
-/** Fight a battle to the end, answering every decision on both sides with its default. */
-export function quickResolve(session: Session, battle: number): Step {
+/** Fight a battle to the end, answering every decision `decides` allows with its default. */
+export function quickResolve(session: Session, battle: number, decides: (p: Power) => boolean = () => true): Step {
   let cur = session;
   if (cur.state.activeBattle !== battle) {
     const r = act(cur, { type: 'startBattle', battle });
     if (!r.ok) return r;
     cur = r.session;
   }
-  for (let d = cur.state.pending; d && 'battle' in d && d.battle === battle; d = cur.state.pending) {
+  for (let d = cur.state.pending; d && 'battle' in d && d.battle === battle && decides(d.power); d = cur.state.pending) {
     const r = act(cur, d.kind === 'retreat' ? quickRetreat(cur.state, d) : defaultDecision(cur.state, d));
     if (!r.ok) return r;
     cur = r.session;
@@ -208,32 +207,4 @@ export function parseSession(text: string): Session | string {
     })),
   };
   return newSession(state, controllers);
-}
-
-export function loadAutosave(): Session | null {
-  try {
-    const text = localStorage.getItem(SAVE_KEY);
-    if (!text) return null;
-    const s = parseSession(text);
-    return typeof s === 'string' ? null : s;
-  } catch {
-    return null;
-  }
-}
-
-export function autosave(session: Session): void {
-  try {
-    localStorage.setItem(SAVE_KEY, serialize(session));
-  } catch {
-    // Storage can be full or blocked; the game keeps running and export still works.
-  }
-}
-
-export function downloadSave(session: Session): void {
-  const blob = new Blob([serialize(session)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `aa1942-round${session.state.round}-${session.state.power}.json`;
-  a.click();
-  URL.revokeObjectURL(a.href);
 }

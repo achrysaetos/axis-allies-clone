@@ -26,7 +26,8 @@ import { useDrag } from './drag';
 import { UnitSvg } from './icons';
 import { tally } from './units';
 import { POWER_STYLE } from './theme';
-import { act as step, aiBurst, autosave, downloadSave, loadAutosave, quickResolve, undo } from './session';
+import { act as step, aiBurst, quickResolve, undo } from './session';
+import { autosave, downloadSave, loadAutosave } from './saves';
 import type { Session } from './session';
 
 const AI_DELAY_MS = 120;
