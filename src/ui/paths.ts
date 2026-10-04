@@ -103,7 +103,15 @@ function pathFor(state: GameState, units: Unit[], sbr: boolean, from: SpaceId, t
       ok: false,
       error: `${to} cannot be reached over land. To cross water, first move the units into a sea zone with your transport.`,
     };
-  if (paths.length === 0) return { ok: false, error: `${to} is out of reach` };
+  if (paths.length === 0 && units.every((u) => isSea(u.type)) && !space(to).water)
+    return {
+      ok: false,
+      error: `Ships cannot enter ${to}. Battleships and cruisers next to a landing bombard it automatically.`,
+    };
+  if (paths.length === 0) {
+    const left = Math.min(...units.map(remainingMove));
+    return { ok: false, error: `${to} is out of reach: these units have ${left} move${left === 1 ? '' : 's'} left` };
+  }
   let firstError: string | null = null;
   const ids = units.map((u) => u.id);
   const raid = raids(state, units, to, sbr) || undefined;

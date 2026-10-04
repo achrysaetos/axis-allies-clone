@@ -33,6 +33,7 @@ const CONTROLS = [
     'Transports',
     'Drop land units on a sea zone to load. Drag cargo onto a coast to land it; shift-drag lands everything aboard.',
   ],
+  ['Shore bombardment', 'Battleships and cruisers in the sea zone a landing comes from fire at the beach automatically.'],
   ['Purchase and mobilize', 'Click cards to buy, then drag new units from the tray onto a highlighted space.'],
 ];
 

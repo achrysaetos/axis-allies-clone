@@ -175,9 +175,9 @@ path.sea:hover {
   filter: brightness(1.15);
 }
 path.highlight {
-  fill: rgba(255, 255, 255, 0.14);
-  stroke: #ffffff;
-  stroke-width: 2.5;
+  fill: rgba(255, 226, 122, 0.22);
+  stroke: #ffe27a;
+  stroke-width: 3;
   stroke-dasharray: 9 6;
 }
 path.selected {

@@ -51,8 +51,8 @@ export function stacksAt(state: GameState, units: Unit[]): Stack[] {
             out.push({ key: `${owner}|${type}|${+carried}|${+done}`, owner, type, carried, spent: done, units: here });
         }
     }
-  // Pieces that are done moving go to the back, so the stacks still in play keep their places as others leave.
-  return [...out.filter((st) => !st.spent), ...out.filter((st) => st.spent)];
+  // A stack that finishes moving fades in place rather than jumping to the back, so pieces stay where the eye left them.
+  return out;
 }
 
 export function stackAt(state: GameState, at: SpaceId, key: string): Stack | undefined {
