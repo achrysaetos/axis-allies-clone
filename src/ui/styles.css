@@ -661,3 +661,8 @@ table.buy tr.picked td {
   letter-spacing: 0.6px;
   color: var(--dim);
 }
+.turn-card.confirm ul {
+  margin: 8px 0 16px;
+  padding-left: 18px;
+  line-height: 1.5;
+}

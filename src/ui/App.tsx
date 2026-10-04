@@ -17,6 +17,8 @@ import { SpaceInfo } from './panels/SpaceInfo';
 import { TurnCard } from './panels/TurnCard';
 import { AttackPlan } from './panels/AttackPlan';
 import { forecasts } from './odds';
+import { ConfirmEnd } from './panels/ConfirmEnd';
+import { endPhaseWarnings } from './warnings';
 import { PHASE_GUIDE, powerName } from './theme';
 import { reachable, resolveMove } from './paths';
 import { act as step, aiBurst, autosave, downloadSave, loadAutosave, undo } from './session';
@@ -44,6 +46,7 @@ function Game({ initial, onMenu }: { initial: Session; onMenu: () => void }) {
   const [aiRetry, setAiRetry] = useState(0);
   const [focus, setFocus] = useState<{ id: SpaceId; nonce: number } | null>(null);
   const [greeted, setGreeted] = useState<string | null>(null);
+  const [warnings, setWarnings] = useState<string[] | null>(null);
   const { state, controllers } = session;
   const turnKey = `${state.round}:${state.power}`;
   const greeting = controllers[state.power] === 'human' && greeted !== turnKey && !state.winner;
@@ -161,9 +164,16 @@ function Game({ initial, onMenu }: { initial: Session; onMenu: () => void }) {
     setSelected([]);
   }, [commit]);
 
-  const onEndPhase = useCallback(() => {
+  const endPhase = useCallback(() => {
+    setWarnings(null);
     if (act({ type: 'endPhase' })) setSelected([]);
   }, [act]);
+
+  const onEndPhase = useCallback(() => {
+    const w = endPhaseWarnings(current.current.state);
+    if (w.length > 0) setWarnings(w);
+    else endPhase();
+  }, [endPhase]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -244,6 +254,7 @@ function Game({ initial, onMenu }: { initial: Session; onMenu: () => void }) {
           </div>
         )}
         {greeting && <TurnCard state={state} onStart={startTurn} />}
+        {warnings && <ConfirmEnd warnings={warnings} onConfirm={endPhase} onCancel={() => setWarnings(null)} />}
         {state.winner && (
           <div className="winner">
             <h1>The {state.winner} win!</h1>

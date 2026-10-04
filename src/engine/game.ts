@@ -263,8 +263,8 @@ function place(s: GameState, type: UnitType, at: SpaceId, count: number): string
   return null;
 }
 
-/** Air units that end the turn without a legal landing are destroyed. */
-function crashAir(s: GameState): void {
+/** Air units of the moving power that have no legal landing right now; they are destroyed when the turn ends. */
+export function doomedAir(s: GameState): UnitId[] {
   const power = s.power;
   const dead = new Set<UnitId>();
   for (const u of s.units) {
@@ -280,7 +280,12 @@ function crashAir(s: GameState): void {
     const mine = s.units.filter((u) => u.at === zone && u.owner === power && u.type === 'fighter');
     for (const f of mine.slice(0, excess)) dead.add(f.id);
   }
-  if (dead.size > 0) s.log.push(`${dead.size} ${power} air units had nowhere to land and were lost`);
+  return [...dead];
+}
+
+function crashAir(s: GameState): void {
+  const dead = new Set(doomedAir(s));
+  if (dead.size > 0) s.log.push(`${dead.size} ${s.power} air units had nowhere to land and were lost`);
   s.units = s.units.filter((u) => !dead.has(u.id));
 }
 
