@@ -11,6 +11,17 @@ npm run dev
 
 Open the printed local URL and press **Start new game**. The game autosaves in the browser after every action, so **Continue** on the start screen picks up where you left off. **Export save** in the ☰ menu saves the game to a file and **Import saved game** on the start screen loads one.
 
+## Play online
+
+Friends can also play through a link, live or over days. The server is a Cloudflare Worker with one Durable Object per game room. Run the Worker and the client locally, each in its own terminal:
+
+```bash
+npm run dev:worker
+npm run dev
+```
+
+Press **Play online with friends** on the start screen. The game opens at a `#/g/<id>` link. Enter a name, click a power in the seat strip under the top bar to take it, and use **Copy invite link** to send the link to friends. Each player acts only for the powers they hold, and a defender answers its own casualty choices. Reopening the link in the same browser keeps your seats. `npm run deploy` builds the client and deploys the Worker to your Cloudflare account.
+
 ## How a turn plays
 
 Each power's turn opens with a card that names the player, shows the money to spend, and recaps what the previous power did. Press **Start turn** or Enter, and the map centers on that power's capital. A hint line at the top of the map names the next step. The ☰ menu holds the game log (L), help (?), export and the main menu.
@@ -43,6 +54,7 @@ Optional rules from the rulebook are off by default and can be switched on from 
 - `src/engine` is the pure rules engine. `apply(state, action)` returns a new state or an error. It never mutates its input.
 - `src/ai` holds the computer opponent. `aiAction(state)` returns the next action for whoever must act. Its battle simulator also powers the win-chance preview.
 - `src/ui` is the React interface. `npm run format` formats the code with Prettier.
+- `src/net` holds the online protocol and the client's room connection. `worker` holds the Cloudflare Worker, and `worker/room.ts` is its pure, tested room logic.
 - `test` holds behavior tests named after rulebook pages.
 - `scripts` holds the data generator, the fuzzer, the mutation tester and the AI match runner.
 - `docs/decisions.tsv` records design decisions with their evidence.

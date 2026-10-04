@@ -3,6 +3,7 @@ import { SIDE } from '../../engine/data';
 import { newGame } from '../../engine/state';
 import { POWERS } from '../../engine/types';
 import type { Options, Power, Side } from '../../engine/types';
+import type { CreateRoomRequest, CreateRoomResponse } from '../../net/protocol';
 import { newSession, parseSession } from '../session';
 import type { Controller, Session } from '../session';
 import { powerName } from '../theme';
@@ -31,11 +32,32 @@ export function SetupScreen({ saved, onStart }: Props) {
 
   const [replacing, setReplacing] = useState(false);
 
+  const [creating, setCreating] = useState(false);
+  const options: Partial<Options> = { victory, turkishStraitsClosed: straits, sbrEscortsInterceptors: escorts };
+
+  const playOnline = async () => {
+    setCreating(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/rooms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ options } satisfies CreateRoomRequest),
+      });
+      if (!res.ok) throw new Error(`the server answered ${res.status}`);
+      const { id } = (await res.json()) as CreateRoomResponse;
+      location.hash = `#/g/${id}`;
+    } catch (e) {
+      setError(`Could not start an online game: ${e instanceof Error ? e.message : String(e)}`);
+      setCreating(false);
+    }
+  };
+
   const start = () => {
     if (saved && !replacing) return setReplacing(true);
     const controllers = Object.fromEntries(POWERS.map((p) => [p, players[SIDE[p]]])) as Record<Power, Controller>;
     const seed = Math.floor(Math.random() * 1_000_000_000);
-    onStart(newSession(newGame(seed, { victory, turkishStraitsClosed: straits, sbrEscortsInterceptors: escorts }), controllers));
+    onStart(newSession(newGame(seed, options), controllers));
   };
 
   return (
@@ -98,6 +120,9 @@ export function SetupScreen({ saved, onStart }: Props) {
         )}
         <button className="primary wide" onClick={start}>
           {replacing ? 'Replace saved game and start' : 'Start new game'}
+        </button>
+        <button className="wide" onClick={() => void playOnline()} disabled={creating}>
+          {creating ? 'Starting online game…' : 'Play online with friends'}
         </button>
         <label className="import">
           Import saved game…

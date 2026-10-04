@@ -8,7 +8,8 @@ import { DEFAULT_OPTIONS } from '../engine/state';
 import { POWERS } from '../engine/types';
 import type { Action, Battle, Decision, GameState, Power, Unit } from '../engine/types';
 
-export type Controller = 'human' | 'ai';
+/** Online, every power held by someone else, or by nobody yet, is 'remote'. */
+export type Controller = 'human' | 'ai' | 'remote';
 
 export interface Session {
   state: GameState;

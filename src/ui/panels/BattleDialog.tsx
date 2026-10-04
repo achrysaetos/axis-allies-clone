@@ -36,6 +36,8 @@ interface Props {
   controllers: Record<Power, Controller>;
   act: (a: Action) => boolean;
   onQuick: (battle: number) => void;
+  /** The power and who plays it, such as "Germany (computer)". */
+  playing: (p: Power) => string;
   onClose: () => void;
   forecast: Forecast | undefined;
   /** The next battle still to fight, offered once this one is over. */
@@ -145,10 +147,22 @@ function outcome(state: GameState, b: Battle): string {
     : `${b.space} is cleared, but only aircraft survived, so it cannot be taken`;
 }
 
-export function BattleDialog({ state, battle, fallen, controllers, act, onQuick, onClose, forecast, next, onOpen }: Props) {
+export function BattleDialog({
+  state,
+  battle,
+  fallen,
+  controllers,
+  playing,
+  act,
+  onQuick,
+  onClose,
+  forecast,
+  next,
+  onOpen,
+}: Props) {
   const d = state.pending;
   const mine = d && 'battle' in d && d.battle === battle.id ? d : null;
-  const waitingOnAi = mine !== null && controllers[mine.power] === 'ai';
+  const waiting = mine !== null && controllers[mine.power] !== 'human';
   const fresh = !battle.resolved && battle.round === 0 && state.activeBattle !== battle.id;
   const blocker = fresh ? battleBlocker(state, battle) : null;
   const human = controllers[battle.attacker] === 'human';
@@ -263,8 +277,8 @@ export function BattleDialog({ state, battle, fallen, controllers, act, onQuick,
         </div>
       )}
       {mine &&
-        (waitingOnAi ? (
-          <div className="dim">Waiting for {powerName(mine.power)} (computer)…</div>
+        (waiting ? (
+          <div className="dim">Waiting for {playing(mine.power)}…</div>
         ) : (
           <>
             <DecisionView state={state} d={mine} act={act} />

@@ -1046,3 +1046,80 @@ path.captured {
   border-radius: 4px;
   font-size: 12px;
 }
+
+.seats {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 12px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+button.seat {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 6px 2px 2px;
+  font-size: 12px;
+}
+button.seat.mine {
+  border-color: var(--accent);
+}
+.seat-tag {
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-weight: 700;
+  font-size: 11px;
+}
+.seat-name {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--dim);
+}
+.dot.on {
+  background: var(--good);
+}
+.reconnecting {
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--panel-2);
+  color: var(--accent);
+  font-size: 12px;
+}
+.seat-ask {
+  position: absolute;
+  left: 12px;
+  top: calc(100% + 4px);
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 260px;
+  padding: 10px;
+  white-space: normal;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+.name-prompt {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-color: var(--accent);
+}
+.name-prompt h2 {
+  margin: 0;
+}
+.name-prompt input {
+  padding: 8px;
+  font: inherit;
+}

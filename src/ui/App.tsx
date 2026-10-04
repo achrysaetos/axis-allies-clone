@@ -3,7 +3,8 @@ import { CAPITAL_OF, isAir } from '../engine/data';
 import { battleBlocker } from '../engine/combat';
 import { actingPower } from '../engine/game';
 import { areAllied, factoryAt } from '../engine/queries';
-import type { Action, Battle, GameState, SpaceId, UnitId, UnitType } from '../engine/types';
+import { POWERS } from '../engine/types';
+import type { Action, Battle, GameState, Power, SpaceId, UnitId, UnitType } from '../engine/types';
 import { MapView } from './map/MapView';
 import type { PieceEvent } from './map/MapView';
 import { BattleDialog } from './panels/BattleDialog';
@@ -28,7 +29,11 @@ import { tally } from './units';
 import { POWER_STYLE } from './theme';
 import { act as step, aiBurst, quickResolve, undo } from './session';
 import { autosave, downloadSave, loadAutosave } from './saves';
-import type { Session } from './session';
+import type { Controller, Session } from './session';
+import { useRoom } from '../net/client';
+import type { RoomConnection } from '../net/client';
+import { ROOM_ID } from '../net/protocol';
+import { NamePrompt, SeatStrip } from './panels/Seats';
 
 const AI_DELAY_MS = 120;
 const AI_BUDGET_MS = 30;
@@ -36,10 +41,95 @@ const TOAST_MS = 4500;
 /** Width the battle dialog covers on the right, kept clear when the map centers on a battle. */
 const BATTLE_DIALOG_W = 590;
 
+function roomInHash(): string | null {
+  const id = location.hash.match(/^#\/g\/([^/]+)$/)?.[1];
+  return id && ROOM_ID.test(id) ? id : null;
+}
+
 export function App() {
   const [session, setSession] = useState<Session | null>(null);
+  const [room, setRoom] = useState(roomInHash);
+  useEffect(() => {
+    const onHash = () => setRoom(roomInHash());
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+  if (room) {
+    const leave = () => {
+      history.pushState(null, '', location.pathname + location.search);
+      setRoom(null);
+    };
+    return <OnlineGame key={room} id={room} onLeave={leave} />;
+  }
   if (!session) return <SetupScreen saved={loadAutosave()} onStart={setSession} />;
   return <Game session={session} setSession={setSession} onMenu={() => setSession(null)} />;
+}
+
+const TITLE = document.title;
+
+function OnlineGame({ id, onLeave }: { id: string; onLeave: () => void }) {
+  const conn = useRoom(id);
+  const { room, me, synced } = conn;
+  const [local, setLocal] = useState<Pick<Session, 'state' | 'fallen'> | null>(null);
+  useEffect(() => {
+    // While this tab's own actions are in flight, its optimistic board is ahead of the server's last word.
+    if (room && synced) setLocal({ state: room.state, fallen: room.fallen });
+  }, [room, synced]);
+  const seats = room?.seats;
+  const controllers = useMemo(
+    () => Object.fromEntries(POWERS.map((p) => [p, me && seats?.[p] === me ? 'human' : 'remote'])) as Record<Power, Controller>,
+    [seats, me],
+  );
+
+  const myTurn = !!room && !!me && !room.state.winner && room.seats[actingPower(room.state)] === me;
+  // Null until the first room arrives, so opening the link on your own turn is not announced as a new turn.
+  const wasMyTurn = useRef<boolean | null>(null);
+  useEffect(() => {
+    if (!room) return;
+    if (myTurn && wasMyTurn.current === false && document.hidden) {
+      document.title = `▶ ${TITLE}`;
+      if ('Notification' in window && Notification.permission === 'granted')
+        new Notification(TITLE, { body: `Your move as ${powerName(actingPower(room.state))}.`, tag: `aa1942-${id}` });
+    }
+    wasMyTurn.current = myTurn;
+  }, [myTurn, room, id]);
+  useEffect(() => {
+    const clear = () => {
+      if (!document.hidden) document.title = TITLE;
+    };
+    window.addEventListener('focus', clear);
+    document.addEventListener('visibilitychange', clear);
+    return () => {
+      window.removeEventListener('focus', clear);
+      document.removeEventListener('visibilitychange', clear);
+      document.title = TITLE;
+    };
+  }, []);
+
+  if (!room || !local) {
+    return (
+      <div className="setup">
+        <div className="setup-card">
+          <h1>Axis &amp; Allies 1942</h1>
+          <p className={conn.lastError ? 'bad' : 'dim'}>{conn.lastError?.message ?? 'Connecting to the game…'}</p>
+          <button className="wide" onClick={onLeave}>
+            Main menu
+          </button>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <>
+      <Game
+        session={{ ...local, controllers, undo: [] }}
+        setSession={(s) => setLocal({ state: s.state, fallen: s.fallen })}
+        onMenu={onLeave}
+        online={{ ...conn, room }}
+      />
+      {conn.status === 'open' && !me && <NamePrompt onJoin={(name) => conn.send({ t: 'join', name })} />}
+    </>
+  );
 }
 
 const byOrder = (a: Battle, b: Battle) => a.tier - b.tier || a.id - b.id;
@@ -67,7 +157,19 @@ const HINT: Partial<Record<GameState['phase'], string>> = {
   mobilize: 'Drag new units from the tray onto a highlighted space. Anything left unplaced is refunded.',
 };
 
-function Game({ session, setSession, onMenu }: { session: Session; setSession: (s: Session) => void; onMenu: () => void }) {
+type Online = RoomConnection & { room: NonNullable<RoomConnection['room']> };
+
+function Game({
+  session,
+  setSession,
+  onMenu,
+  online,
+}: {
+  session: Session;
+  setSession: (s: Session) => void;
+  onMenu: () => void;
+  online?: Online;
+}) {
   const current = useRef(session);
   current.current = session;
   const [hand, setHand] = useState<Hand | null>(null);
@@ -100,6 +202,7 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
   );
 
   const showError = useCallback((text: string) => setToast({ text, id: Date.now() }), []);
+  const send = online?.send;
 
   const act = useCallback(
     (a: Action): boolean => {
@@ -108,15 +211,26 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
         showError(r.error);
         return false;
       }
-      commit(r.session);
+      if (!send) {
+        commit(r.session);
+        return true;
+      }
+      // Only the server knows the dice, so a roll waits for its answer; everything else shows at once.
+      if (r.session.state.rng === current.current.state.rng) commit(r.session);
+      send({ t: 'act', action: a });
       return true;
     },
-    [commit, showError],
+    [commit, showError, send],
   );
 
   useEffect(() => {
-    autosave(session);
-  }, [session]);
+    if (!send) autosave(session);
+  }, [session, send]);
+
+  const serverError = online?.lastError;
+  useEffect(() => {
+    if (serverError) setToast({ text: serverError.message, id: serverError.id });
+  }, [serverError]);
 
   useEffect(() => {
     if (!toast) return;
@@ -296,12 +410,16 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
 
   const quick = useCallback(
     (battle: number) => {
+      if (send) {
+        send({ t: 'resolve', battle });
+        return setBattleView(battle);
+      }
       const r = quickResolve(current.current, battle);
       if (!r.ok) return showError(r.error);
       commit(r.session);
       setBattleView(battle);
     },
-    [commit, showError],
+    [commit, showError, send],
   );
 
   const startTurn = useCallback(() => {
@@ -313,12 +431,14 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
     );
   }, [turnKey, state.power, viewedSpace]);
 
+  const canUndo = online ? online.room.canUndo && controllers[state.power] === 'human' : session.undo.length > 0;
   const onUndo = useCallback(() => {
-    if (current.current.undo.length === 0) return;
-    commit(undo(current.current));
+    if (!canUndo) return;
+    if (send) send({ t: 'undo' });
+    else commit(undo(current.current));
     setHand(null);
     setToast({ text: 'Last move undone', id: Date.now(), info: true });
-  }, [commit]);
+  }, [commit, send, canUndo]);
 
   const endPhase = useCallback(() => {
     setWarnings(null);
@@ -348,13 +468,20 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
     return () => window.removeEventListener('keydown', onKey);
   }, [onUndo, onEndPhase, endable]);
 
+  const playing = (p: Power) => {
+    if (controllers[p] === 'ai') return `${powerName(p)} (computer)`;
+    const holder = online?.room.players.find((x) => x.id === online.room.seats[p]);
+    return holder ? `${powerName(p)} (${holder.name})` : powerName(p);
+  };
   const viewed = battleView !== null ? state.battles.find((b) => b.id === battleView) : undefined;
   const stranded = state.pending?.kind === 'landStranded' ? state.pending : null;
   const openBattles = state.battles.some((b) => !b.resolved);
   const hint = state.winner
     ? `The ${state.winner} won. Open the ☰ menu for a new game.`
     : !humanActs
-      ? `${powerName(actingPower(state))} (computer) is playing…`
+      ? online && !online.room.seats[actingPower(state)]
+        ? `Nobody holds ${powerName(actingPower(state))} yet. Take the seat, or copy the invite link for a friend.`
+        : `${playing(actingPower(state))} is playing…`
       : hand?.kind === 'units'
         ? 'Drop on a highlighted space. Click a piece for one more, right-click to put one back, Esc to let go.'
         : state.phase === 'combat'
@@ -369,7 +496,7 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
       <PhaseBar
         state={state}
         controllers={controllers}
-        canUndo={session.undo.length > 0}
+        canUndo={canUndo}
         onEndPhase={onEndPhase}
         onUndo={onUndo}
         onExport={() => downloadSave(session)}
@@ -377,6 +504,15 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
         onHelp={() => setOverlay('help')}
         onLog={() => setOverlay('log')}
       />
+      {online && (
+        <SeatStrip
+          room={online.room}
+          me={online.me}
+          status={online.status}
+          send={online.send}
+          onInfo={(text) => setToast({ text, id: Date.now(), info: true })}
+        />
+      )}
       <div className="main">
         <MapView
           state={state}
@@ -452,6 +588,7 @@ function Game({ session, setSession, onMenu }: { session: Session; setSession: (
             battle={viewed}
             fallen={session.fallen}
             controllers={controllers}
+            playing={playing}
             act={act}
             onQuick={quick}
             onClose={() => setBattleView(null)}
