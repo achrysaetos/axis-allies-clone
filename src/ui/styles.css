@@ -621,3 +621,12 @@ table.buy tr.picked td {
   border-radius: 8px;
   line-height: 1.6;
 }
+.land-label {
+  font-size: 10px;
+  font-weight: 600;
+  fill: rgba(255, 255, 255, 0.82);
+  paint-order: stroke;
+  stroke: rgba(0, 0, 0, 0.55);
+  stroke-width: 2.5px;
+  letter-spacing: 0.2px;
+}

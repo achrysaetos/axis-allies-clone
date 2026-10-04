@@ -172,11 +172,16 @@ export const World = memo(function World({ state, selected, highlights }: WorldP
       {SHAPES.filter((s) => s.id === selected).map((s) => (
         <path key={`s-${s.id}`} d={s.d} className="selected" pointerEvents="none" />
       ))}
+      {SHAPES.filter((s) => !s.water).map((s) => (
+        <text key={`n-${s.id}`} x={s.center[0]} y={s.center[1] + 3} textAnchor="middle" className="land-label" pointerEvents="none">
+          {s.id}
+        </text>
+      ))}
       {SHAPES.map((s) => (
         <Marks key={`m-${s.id}`} s={s} factory={factories.get(s.id)} battle={battles.has(s.id)} />
       ))}
       {SHAPES.map((s) => (
-        <Badges key={`b-${s.id}`} id={s.id} x={s.center[0]} y={s.center[1] - 2} units={byAt.get(s.id) ?? []} />
+        <Badges key={`b-${s.id}`} id={s.id} x={s.center[0]} y={s.center[1] + (s.water ? -2 : 8)} units={byAt.get(s.id) ?? []} />
       ))}
     </g>
   );
