@@ -80,7 +80,8 @@ function groups(state: GameState, ids: UnitId[]): Unit[][] {
   const units = ids.map((id) => state.units.find((u) => u.id === id)).filter((u): u is Unit => !!u);
   const byDomain = new Map<string, Unit[]>();
   for (const u of units) byDomain.set(domainOf(u), [...(byDomain.get(domainOf(u)) ?? []), u]);
-  return ['land', 'sea', 'air'].map((d) => byDomain.get(d)).filter((g): g is Unit[] => !!g);
+  // Aircraft take off before their carrier sails; otherwise they become its cargo and cannot fight.
+  return ['air', 'land', 'sea'].map((d) => byDomain.get(d)).filter((g): g is Unit[] => !!g);
 }
 
 function pathFor(
