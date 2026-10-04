@@ -1237,3 +1237,16 @@ button.bell.blocked svg {
 .card-less:hover {
   border-color: var(--accent);
 }
+.glide {
+  animation: glide 0.55s ease-in-out;
+}
+@keyframes glide {
+  from {
+    transform: translate(var(--dx), var(--dy));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .glide {
+    animation: none;
+  }
+}

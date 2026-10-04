@@ -11,7 +11,7 @@ Powers set to `Computer` play their own turns automatically, one visible step at
 ## How to get to it (user POV)
 
 - Choose `Computer` for a side (Allies or Axis) on the setup screen, or generate a scenario with `--ai` for individual powers.
-- The top bar shows the acting power with `(AI)`, the hint pill reads `<Power> (computer) is playing…`, the end button is disabled, and no tray or turn card appears while the AI acts.
+- The top bar shows the acting power with `(computer)`, the hint pill reads `<Power> (computer) is playing…`, the end button is disabled, and no tray or turn card appears while the AI acts.
 - A battle decision that belongs to an AI power shows `Waiting for <Power> (computer)…` in the dialog.
 
 ## Driving it with the browser pane
@@ -21,7 +21,7 @@ Preconditions:
 - Run `npx tsx scripts/verify/scenario.ts opening --ai Germans,Japanese,Americans` and load it. Russians and British stay human.
 - Bring the tab to the front with `tabs_select`. Hidden panes throttle the AI's timers.
 
-- **Hand over.** Press `Start turn`, then press the end button (or E) through every phase, answering the end-phase warnings with `End anyway`, until `End turn`. The top bar changes to `Germany (AI)`, the hint reads `Germany (computer) is playing…`, and the phases advance on their own.
+- **Hand over.** Press `Start turn`, then press the end button (or E) through every phase, answering the end-phase warnings with `End anyway`, until `End turn`. The top bar changes to `Germany (computer)`, the hint reads `Germany (computer) is playing…`, and the phases advance on their own. Pieces the computer (or a remote player) moves slide into place (`.glide` wrappers inside `[data-stack]` for about half a second); your own moves never slide.
 - **Defender handoff.** When the state snippet shows `pending.power` of `Russians` or `British`, the battle dialog is open for that power, titled `<Power> (Allies player): N hits to take`. Answer it with `Remove casualties` or `Finish this battle automatically`. The handoff repeats each round. The AI turn then continues.
 - **Turn completes.** Poll the state snippet every few seconds. The log gains `Germans collects N IPCs`, and `power` becomes `British` with the United Kingdom's turn card.
 

@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import type { CSSProperties } from 'react';
 import { SIDE, space } from '../../engine/data';
 import type { GameState, SpaceId, Unit, UnitId } from '../../engine/types';
 import { UnitIcon } from '../icons';
@@ -7,6 +8,7 @@ import type { Stack } from '../pieces';
 import { NEUTRAL_FILL, POWER_STYLE, SEA_FILL, UNIT_GLYPH } from '../theme';
 import { CENTER, MAP_WIDTH, SHAPES, seaNumber } from './geometry';
 import type { SpaceShape } from './geometry';
+import { glideKey } from './glide';
 
 export interface WorldProps {
   state: GameState;
@@ -20,6 +22,8 @@ export interface WorldProps {
   route: SpaceId[] | null;
   /** Territories that just changed hands, pulsed once so the capture is noticed. */
   captured: ReadonlySet<SpaceId>;
+  /** Offsets back to where arriving stacks came from, keyed by glideKey, while they slide in. */
+  glides: ReadonlyMap<string, [number, number]>;
 }
 
 const GAP = 2;
@@ -35,7 +39,21 @@ function fillOf(state: GameState, s: SpaceShape): string {
 
 const widthOf = (st: Stack) => 4 + ICON_W + (st.units.length > 1 ? 3 + String(st.units.length).length * 6.5 : 2);
 
-function Pieces({ id, x, y, stacks, held }: { id: SpaceId; x: number; y: number; stacks: Stack[]; held: ReadonlySet<UnitId> }) {
+function Pieces({
+  id,
+  x,
+  y,
+  stacks,
+  held,
+  glides,
+}: {
+  id: SpaceId;
+  x: number;
+  y: number;
+  stacks: Stack[];
+  held: ReadonlySet<UnitId>;
+  glides: WorldProps['glides'];
+}) {
   if (stacks.length === 0) return null;
   // Each side gets its own rows, so attackers and defenders in a contested space read apart.
   const rows: Stack[][] = [];
@@ -54,6 +72,7 @@ function Pieces({ id, x, y, stacks, held }: { id: SpaceId; x: number; y: number;
           const at = bx;
           bx += w + GAP;
           const picked = st.units.filter((u) => held.has(u.id)).length;
+          const glide = glides.get(glideKey(id, st.owner, st.type));
           return (
             <g
               key={st.key}
@@ -61,33 +80,38 @@ function Pieces({ id, x, y, stacks, held }: { id: SpaceId; x: number; y: number;
               className={st.spent ? 'piece spent' : 'piece'}
               transform={`translate(${at},${y + r * (PIECE_H + 2)})`}
             >
-              <title>
-                {`${style.name} ${UNIT_GLYPH[st.type].name.toLowerCase()} ×${st.units.length}${st.carried ? ' (aboard a transport)' : ''}${st.spent ? ' (done for now)' : ''}`}
-              </title>
-              <rect x={-GAP / 2} y={-3} width={w + GAP} height={PIECE_H + 6} fill="transparent" />
-              <rect
-                width={w}
-                height={PIECE_H}
-                rx={3}
-                fill={style.color}
-                stroke={picked > 0 ? '#ffe27a' : st.carried ? '#fff' : '#111'}
-                strokeDasharray={st.carried && picked === 0 ? '3 2' : undefined}
-                strokeWidth={picked > 0 ? 2.2 : 1}
-              />
-              <UnitIcon type={st.type} x={2} y={2} fill={style.ink} />
-              {st.units.length > 1 && (
-                <text x={ICON_W + 4} y={12} fill={style.ink} className="piece-count">
-                  {st.units.length}
-                </text>
-              )}
-              {picked > 0 && (
-                <g transform={`translate(${w - 4},-5)`}>
-                  <circle r={6.5} fill="#ffe27a" stroke="#3a2c00" strokeWidth={0.8} />
-                  <text y={3.2} textAnchor="middle" className="picked-count">
-                    {picked}
+              <g
+                className={glide ? 'glide' : undefined}
+                style={glide ? ({ '--dx': `${glide[0]}px`, '--dy': `${glide[1]}px` } as CSSProperties) : undefined}
+              >
+                <title>
+                  {`${style.name} ${UNIT_GLYPH[st.type].name.toLowerCase()} ×${st.units.length}${st.carried ? ' (aboard a transport)' : ''}${st.spent ? ' (done for now)' : ''}`}
+                </title>
+                <rect x={-GAP / 2} y={-3} width={w + GAP} height={PIECE_H + 6} fill="transparent" />
+                <rect
+                  width={w}
+                  height={PIECE_H}
+                  rx={3}
+                  fill={style.color}
+                  stroke={picked > 0 ? '#ffe27a' : st.carried ? '#fff' : '#111'}
+                  strokeDasharray={st.carried && picked === 0 ? '3 2' : undefined}
+                  strokeWidth={picked > 0 ? 2.2 : 1}
+                />
+                <UnitIcon type={st.type} x={2} y={2} fill={style.ink} />
+                {st.units.length > 1 && (
+                  <text x={ICON_W + 4} y={12} fill={style.ink} className="piece-count">
+                    {st.units.length}
                   </text>
-                </g>
-              )}
+                )}
+                {picked > 0 && (
+                  <g transform={`translate(${w - 4},-5)`}>
+                    <circle r={6.5} fill="#ffe27a" stroke="#3a2c00" strokeWidth={0.8} />
+                    <text y={3.2} textAnchor="middle" className="picked-count">
+                      {picked}
+                    </text>
+                  </g>
+                )}
+              </g>
             </g>
           );
         });
@@ -230,7 +254,7 @@ export function NeutralPattern() {
   );
 }
 
-export const World = memo(function World({ state, selected, highlights, held, tags, route, captured }: WorldProps) {
+export const World = memo(function World({ state, selected, highlights, held, tags, route, captured, glides }: WorldProps) {
   const byAt = new Map<SpaceId, Unit[]>();
   const factories = new Map<SpaceId, Unit>();
   for (const u of state.units) {
@@ -283,6 +307,7 @@ export const World = memo(function World({ state, selected, highlights, held, ta
           y={s.center[1] + (s.water ? -2 : 8)}
           stacks={stacksAt(state, byAt.get(s.id) ?? [])}
           held={held}
+          glides={glides}
         />
       ))}
       {SHAPES.filter((s) => tags.has(s.id)).map((s) => (

@@ -559,6 +559,7 @@ function Game({
           onBackground={() => setHand(null)}
           focus={focus}
           reveal={revealed}
+          animate={!humanActs}
         />
         {hover && !drag.at && !viewed && <SpaceInfo state={state} id={hover} />}
         {hint && !viewed && <div className="hint-line">{hint}</div>}

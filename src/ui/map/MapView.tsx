@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent, MouseEvent as ReactMouseEvent } from 'react';
 import type { GameState, SpaceId } from '../../engine/types';
 import { CENTER, MAP_HEIGHT, MAP_WIDTH } from './geometry';
+import { glidesBetween } from './glide';
 import { NeutralPattern, TrailHead, World } from './World';
 import type { WorldProps } from './World';
 
@@ -20,7 +21,9 @@ export interface PieceEvent {
   putBack: boolean;
 }
 
-interface Props extends Omit<WorldProps, 'captured'> {
+interface Props extends Omit<WorldProps, 'captured' | 'glides'> {
+  /** Slide pieces that arrive into place, for moves the player did not make themselves. */
+  animate: boolean;
   onSpace: (id: SpaceId) => void;
   onPiece: (e: PieceEvent) => void;
   /** A press on a piece; returning true means the piece can be dragged, so the map does not pan. */
@@ -50,6 +53,25 @@ function useCaptured(owner: GameState['owner']): ReadonlySet<SpaceId> {
   }, [owner]);
   return captured;
 }
+const GLIDE_MS = 600;
+
+/** Stacks that just arrived from elsewhere, held while they slide into place. */
+function useGlides(units: GameState['units'], animate: boolean): ReadonlyMap<string, [number, number]> {
+  const [glides, setGlides] = useState<ReadonlyMap<string, [number, number]>>(new Map());
+  const last = useRef(units);
+  useEffect(() => {
+    const prev = last.current;
+    last.current = units;
+    if (!animate) return;
+    const next = glidesBetween(prev, units);
+    if (next.size === 0) return;
+    setGlides(next);
+    const t = setTimeout(() => setGlides(new Map()), GLIDE_MS);
+    return () => clearTimeout(t);
+  }, [units, animate]);
+  return glides;
+}
+
 const DRAG_SLOP = 4;
 const START_ZOOM = 1.35;
 /** Smaller screens open zoomed out in proportion, but not so far that pieces become too small to touch. */
@@ -96,7 +118,7 @@ function pieceOf(target: EventTarget): { space: SpaceId; stack: string } | null 
   return space && stack ? { space, stack } : null;
 }
 
-export function MapView({ onSpace, onPiece, onPieceDown, onHover, onBackground, focus, reveal, ...world }: Props) {
+export function MapView({ onSpace, onPiece, onPieceDown, onHover, onBackground, focus, reveal, animate, ...world }: Props) {
   const box = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 1000, h: 700 });
   const [view, setView] = useState<View | null>(null);
@@ -259,7 +281,8 @@ export function MapView({ onSpace, onPiece, onPieceDown, onHover, onBackground, 
   };
 
   const captured = useCaptured(world.state.owner);
-  const content = <World {...world} captured={captured} />;
+  const glides = useGlides(world.state.units, animate);
+  const content = <World {...world} captured={captured} glides={glides} />;
   return (
     <div
       ref={box}
