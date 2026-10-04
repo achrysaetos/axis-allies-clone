@@ -128,6 +128,18 @@ describe('air movement (p.13, 26-27)', () => {
     fails(s, { type: 'move', units: ids(s, 'Germans', 'fighter', 'Germany'), path: ['Germany', 'Poland', 'Ukraine S.S.R.', 'Caucasus'] }, /cannot land/);
   });
 
+  it('fighters that have not taken off ride a moving carrier as cargo and sit out the battle', () => {
+    let s = scenario({
+      power: 'Americans',
+      units: [['Americans', 'carrier', '11 Sea Zone'], ['Americans', 'fighter', '11 Sea Zone', 2], ['Americans', 'destroyer', '11 Sea Zone'], ['Germans', 'submarine', '12 Sea Zone']],
+    });
+    s = move(s, [...ids(s, 'Americans', 'carrier', '11 Sea Zone'), ...ids(s, 'Americans', 'destroyer', '11 Sea Zone')], ['11 Sea Zone', '12 Sea Zone']);
+    expect(count(s, 'Americans', 'fighter', '12 Sea Zone')).toBe(2);
+    s = ok(s, { type: 'endPhase' });
+    s = ok(s, { type: 'startBattle', battle: s.battles[0]!.id });
+    expect(s.battles[0]!.attackers).toHaveLength(2);
+  });
+
   it('air units without a landing space at end of turn are destroyed', () => {
     let s = scenario({ power: 'Germans', phase: 'noncombatMove', units: [['Germans', 'fighter', 'Germany']] });
     s = move(s, ids(s, 'Germans', 'fighter', 'Germany'), ['Germany', '5 Sea Zone']);

@@ -353,7 +353,7 @@ function start(s: GameState, b: Battle): void {
   }
   const here = unitsAt(s, b.space);
   b.attackers = here
-    .filter((u) => u.owner === power && !isCargo(u) && !u.sbr && (b.kind === 'sea' || u.movedInCombat || b.seaborne.includes(u.id)))
+    .filter((u) => u.owner === power && u.carriedBy === null && !u.sbr && (b.kind === 'sea' || u.movedInCombat || b.seaborne.includes(u.id)))
     .map((u) => u.id);
   b.defenders = here.filter((u) => !areAllied(u.owner, power) && u.type !== 'factory' && !isCargo(u)).map((u) => u.id);
   b.origins = [

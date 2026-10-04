@@ -295,6 +295,7 @@ export function applyMove(draft: GameState, plan: Plan, action: MoveAction): voi
       }
       return;
     case 'sea': {
+      boardWaitingFighters(draft, plan.units);
       const moving = new Set(plan.units.map((u) => u.id));
       for (const u of plan.units) {
         if (combat && u.moved === 0 && isHostileSea(draft, u.at, power)) u.escaped = true;
@@ -316,6 +317,20 @@ export function applyMove(draft: GameState, plan: Plan, action: MoveAction): voi
         if (action.sbr) u.sbr = true;
       }
       return;
+  }
+}
+
+/** Fighters still aboard a carrier when it sails become its cargo; to fight they must take off first. */
+function boardWaitingFighters(draft: GameState, ships: Unit[]): void {
+  for (const c of ships) {
+    if (c.type !== 'carrier') continue;
+    let room = CARRIER_CAPACITY - draft.units.filter((u) => u.carriedBy === c.id).length;
+    for (const f of draft.units) {
+      if (room <= 0) break;
+      if (f.at !== c.at || f.type !== 'fighter' || f.owner !== c.owner || f.moved > 0 || f.carriedBy !== null) continue;
+      f.carriedBy = c.id;
+      room -= 1;
+    }
   }
 }
 
