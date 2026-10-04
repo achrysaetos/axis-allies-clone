@@ -2,8 +2,8 @@ import { CAPITAL_OF, STATS, TRANSPORT_CAPACITY, isAir, isLand, isNeutral, isSea,
 import { combatMoveErrors } from '../engine/movement';
 import { canLandAir, enemyUnitsAt, isHostileSea, seaPassageOpen } from '../engine/queries';
 import type { Action, GameState, Power, SpaceId, Unit, UnitId } from '../engine/types';
-import { Draft, enemiesAt, isEnemyLand, isFriendly, mine, ownFactories } from './board';
-import { type Combatant, asCombatants, dangerAt, simulate, threatTo } from './eval';
+import { Draft, enemiesAt, garrison, isEnemyLand, isFriendly, mine } from './board';
+import { type Combatant, asCombatants, simulate, threatTo } from './eval';
 import { airDist, landDist, paths, seaDist } from './geo';
 
 /** One self-contained way to commit force to a target: a unit walking or flying in, or a loaded transport. */
@@ -29,7 +29,6 @@ interface Target {
 const WIN_LAND = 0.8;
 const WIN_CAPITAL = 0.6;
 const WIN_SEA = 0.7;
-const GARRISON_DANGER = 0.25;
 
 const ORDER: Partial<Record<string, number>> = { infantry: 0, artillery: 1, armour: 2, submarine: 3, destroyer: 3, cruiser: 4, battleship: 5, fighter: 6, bomber: 7 };
 
@@ -71,31 +70,6 @@ function evacuate(d: Draft): UnitId[] {
     }
   }
   return moved;
-}
-
-/** Units that must stay home so that no factory is likely to fall next turn. */
-function garrison(s: GameState): UnitId[] {
-  const kept: UnitId[] = [];
-  for (const f of ownFactories(s, s.power)) {
-    const home = s.units
-      .filter((u) => u.at === f && u.owner === s.power && isLand(u.type))
-      .sort((a, b) => STATS[a.type].cost / STATS[a.type].defense - STATS[b.type].cost / STATS[b.type].defense);
-    // Danger falls as the garrison grows, so binary-search the smallest safe prefix of `home`.
-    const safeWith = (k: number) => {
-      const keep = new Set(home.slice(0, k).map((u) => u.id));
-      return dangerAt(s, f, s.power, [], (x) => x.owner !== s.power || !isLand(x.type) || keep.has(x.id)).win < GARRISON_DANGER;
-    };
-    let lo = 0;
-    let hi = home.length;
-    if (!safeWith(hi)) lo = hi;
-    while (lo < hi) {
-      const mid = (lo + hi) >> 1;
-      if (safeWith(mid)) hi = mid;
-      else lo = mid + 1;
-    }
-    kept.push(...home.slice(0, lo).map((u) => u.id));
-  }
-  return kept;
 }
 
 function targets(s: GameState): Target[] {

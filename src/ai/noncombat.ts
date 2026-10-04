@@ -1,19 +1,18 @@
 import { STATS, TRANSPORT_CAPACITY, isAir, isLand, isNeutral, isSea, space } from '../engine/data';
 import { carrierRoom, isHostileSea, seaPassageOpen } from '../engine/queries';
-import type { GameState, Power, SpaceId, Unit } from '../engine/types';
-import { Draft, frontDistance, isEnemyLand, isFriendly, mine, ownFactories, safeLanding } from './board';
+import type { GameState, Power, SpaceId, Unit, UnitId } from '../engine/types';
+import { Draft, frontDistance, garrison, isEnemyLand, isFriendly, mine, ownFactories, safeLanding } from './board';
 import { dangerAt } from './eval';
 import { paths, seaDist } from './geo';
-
-const GARRISON_DANGER = 0.25;
 
 /** Ferry troops, escort transports, land every aircraft, then march land units toward the front. */
 export function planNoncombat(s: GameState): Draft {
   const d = new Draft(s);
-  ferry(d);
+  const kept = new Set(garrison(s));
+  ferry(d, kept);
   escort(d);
   landAir(d);
-  advance(d);
+  advance(d, kept);
   return d;
 }
 
@@ -25,14 +24,6 @@ const idle = (u: Unit) => !u.movedInCombat && !u.fought && !u.retreated;
 const transportsOf = (s: GameState) =>
   mine(s).filter((u) => u.type === 'transport' && idle(u) && u.offloadedTo === null && u.moved < STATS.transport.move);
 
-/** May `u` leave its territory without leaving a factory there likely to fall? */
-function canLeave(s: GameState, u: Unit): boolean {
-  if (!ownFactories(s, s.power).includes(u.at)) return true;
-  const stay = s.units.filter((x) => x.at === u.at && x.owner === s.power && x.id !== u.id && isLand(x.type));
-  if (stay.length > 4 && dangerAt(s, u.at, s.power).win < 0.05) return true;
-  const without = { ...s, units: s.units.filter((x) => x.id !== u.id) };
-  return dangerAt(without, u.at, s.power).win < GARRISON_DANGER;
-}
 
 /** Zones next to coasts worth delivering troops to: enemy shores and our own front line. */
 function landingGoals(s: GameState, front: Map<SpaceId, number>): Set<SpaceId> {
@@ -48,14 +39,14 @@ function landingGoals(s: GameState, front: Map<SpaceId, number>): Set<SpaceId> {
 
 const nearestGoal = (zone: SpaceId, goals: Set<SpaceId>) => Math.min(99, ...[...goals].map((g) => seaDist(zone, g)));
 
-function ferry(d: Draft): void {
+function ferry(d: Draft, kept: Set<UnitId>): void {
   const front = frontDistance(d.state, d.state.power);
   const goals = landingGoals(d.state, front);
   for (const t0 of transportsOf(d.state)) {
     let t = d.state.units.find((u) => u.id === t0.id)!;
     if (!t || t.offloadedTo !== null) continue;
     if (d.state.units.every((u) => u.carriedBy !== t.id)) {
-      if (!pickUp(d, t, goals)) continue;
+      if (!pickUp(d, t, goals, kept)) continue;
       t = d.state.units.find((u) => u.id === t0.id)!;
     }
     deliver(d, t, front, goals);
@@ -63,7 +54,7 @@ function ferry(d: Draft): void {
 }
 
 /** Sail an empty transport to the nearest coast with spare troops and load them. */
-function pickUp(d: Draft, t: Unit, goals: Set<SpaceId>): boolean {
+function pickUp(d: Draft, t: Unit, goals: Set<SpaceId>, kept: Set<UnitId>): boolean {
   const s = d.state;
   const reach = paths(t.at, STATS.transport.move - t.moved, canSail(s, s.power), (id) => !isHostileSea(s, id, s.power));
   const zones: [SpaceId, SpaceId[]][] = [[t.at, [t.at]], ...reach];
@@ -71,7 +62,7 @@ function pickUp(d: Draft, t: Unit, goals: Set<SpaceId>): boolean {
   for (const [zone, path] of zones) {
     for (const land of space(zone).neighbors) {
       if (space(land).water || !isFriendly(s, land, s.power)) continue;
-      const units = cargoFrom(s, land);
+      const units = cargoFrom(s, land, kept);
       if (units.length === 0) continue;
       const score = units.length * 2 - path.length + 1 - nearestGoal(zone, goals) / 2;
       if (!best || score > best.score) best = { zone, path, from: land, units, score };
@@ -90,15 +81,15 @@ function pickUp(d: Draft, t: Unit, goals: Set<SpaceId>): boolean {
   return true;
 }
 
-/** Up to a transport's load of idle troops in `land`: a heavy unit plus infantry when possible. */
-function cargoFrom(s: GameState, land: SpaceId): Unit[] {
-  const pool = s.units.filter((u) => u.at === land && u.owner === s.power && isLand(u.type) && u.type !== 'aaGun' && u.moved === 0 && idle(u) && u.carriedBy === null);
+/** Up to a transport's load of idle, ungarrisoned troops in `land`: a heavy unit plus infantry when possible. */
+function cargoFrom(s: GameState, land: SpaceId, kept: Set<UnitId>): Unit[] {
+  const pool = s.units.filter((u) => u.at === land && u.owner === s.power && isLand(u.type) && u.type !== 'aaGun' && u.moved === 0 && idle(u) && u.carriedBy === null && !kept.has(u.id));
   const picked: Unit[] = [];
   let room = TRANSPORT_CAPACITY;
   const order = ['armour', 'artillery', 'infantry', 'infantry'] as const;
   for (const type of order) {
     const u = pool.find((x) => x.type === type && !picked.includes(x) && (STATS[x.type].transportCost ?? 99) <= room);
-    if (!u || !canLeave({ ...s, units: s.units.filter((x) => !picked.includes(x)) }, u)) continue;
+    if (!u) continue;
     picked.push(u);
     room -= STATS[u.type].transportCost!;
     if (picked.length === 2) break;
@@ -192,7 +183,7 @@ function landAir(d: Draft): void {
 }
 
 /** Move idle land units one hop at a time toward the front, keeping factory garrisons. */
-function advance(d: Draft): void {
+function advance(d: Draft, kept: Set<UnitId>): void {
   const front = frontDistance(d.state, d.state.power);
   for (const u0 of mine(d.state).filter((u) => isLand(u.type) && u.type !== 'aaGun')) {
     const s = d.state;
@@ -203,7 +194,7 @@ function advance(d: Draft): void {
     const reach = paths(u.at, STATS[u.type].move - u.moved, (_p, n) => isFriendly(s, n, s.power) && !isNeutral(n), (n) => isFriendly(s, n, s.power));
     const best = [...reach].sort((a, b) => (front.get(a[0]) ?? 99) - (front.get(b[0]) ?? 99) || a[1].length - b[1].length)[0];
     if (!best || (front.get(best[0]) ?? 99) >= here) continue;
-    if (!canLeave(s, u)) continue;
+    if (kept.has(u.id)) continue;
     d.try({ type: 'move', units: [u.id], path: best[1] });
   }
 }

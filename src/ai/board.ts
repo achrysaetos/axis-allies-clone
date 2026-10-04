@@ -1,7 +1,8 @@
-import { CAPITAL_OF, isAir, space } from '../engine/data';
+import { CAPITAL_OF, STATS, isAir, isLand, space } from '../engine/data';
 import { apply } from '../engine/game';
 import { areAllied, carrierRoom, canLandAir, factoryAt } from '../engine/queries';
-import type { Action, GameState, Power, SpaceId, Unit } from '../engine/types';
+import type { Action, GameState, Power, SpaceId, Unit, UnitId } from '../engine/types';
+import { dangerAt } from './eval';
 
 /** A scratch copy of the game that records each legal action applied to it. */
 export class Draft {
@@ -96,3 +97,31 @@ export const productionLeft = (s: GameState, at: SpaceId) => {
   const f = factoryAt(s, at);
   return f ? Math.max(0, space(at).ipc - f.damage - (s.placements[at] ?? 0)) : 0;
 };
+
+/** A factory counts as safe while the strongest plausible strike takes it less often than this. */
+export const GARRISON_DANGER = 0.25;
+
+/** Units that must stay home so that no factory is likely to fall next turn. */
+export function garrison(s: GameState): UnitId[] {
+  const kept: UnitId[] = [];
+  for (const f of ownFactories(s, s.power)) {
+    const home = s.units
+      .filter((u) => u.at === f && u.owner === s.power && isLand(u.type))
+      .sort((a, b) => STATS[a.type].cost / STATS[a.type].defense - STATS[b.type].cost / STATS[b.type].defense);
+    // Danger falls as the garrison grows, so binary-search the smallest safe prefix of `home`.
+    const safeWith = (k: number) => {
+      const keep = new Set(home.slice(0, k).map((u) => u.id));
+      return dangerAt(s, f, s.power, [], (x) => x.owner !== s.power || !isLand(x.type) || keep.has(x.id)).win < GARRISON_DANGER;
+    };
+    let lo = 0;
+    let hi = home.length;
+    if (!safeWith(hi)) lo = hi;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (safeWith(mid)) hi = mid;
+      else lo = mid + 1;
+    }
+    kept.push(...home.slice(0, lo).map((u) => u.id));
+  }
+  return kept;
+}
