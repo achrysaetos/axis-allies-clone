@@ -1149,7 +1149,8 @@ button.seat.mine {
 /* Phones: friends open invite links wherever they are, so every card fits the width and the map keeps the rest. */
 @media (max-width: 640px) {
   .setup-card,
-  .turn-card {
+  .turn-card,
+  .turn-card.help {
     width: auto;
     max-width: calc(100vw - 32px);
     margin: 16px;
@@ -1201,6 +1202,10 @@ button.seat.mine {
     left: 8px;
     top: auto;
     bottom: 8px;
+  }
+  .help-units {
+    display: block;
+    overflow-x: auto;
   }
 }
 .card-less {

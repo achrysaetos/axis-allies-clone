@@ -114,7 +114,7 @@ export function BuyTray({ state, act }: { state: GameState; act: (a: Action) => 
               <span className="card-cost">{s.cost}</span>
               {t !== 'factory' && (
                 <span className="card-stats">
-                  {s.attack}·{s.defense}·{s.move}
+                  A{s.attack} D{s.defense} M{s.move}
                 </span>
               )}
               {n > 0 && <span className="card-count">{n}</span>}

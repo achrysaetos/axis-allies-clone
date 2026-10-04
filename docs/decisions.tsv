@@ -28,3 +28,4 @@ when	what	why	evidence	result
 2026-10-04	tap-to-inspect	Tapping a space with nothing in hand shows its info card, since touch screens cannot hover	kept: click on Archangel with no hover showed its card
 2026-10-04	phone-layout	Phones: cards fit, bar keeps controls, battle dialog is a bottom sheet with the battle centered above, touch hints, opening zoom scales with screen (floor 0.6x)	kept: 375x812 tap-tap attack Poland->Belorussia and battle sheet; 1440 dialog still docked right
 2026-10-04	card-less-badge	Bought cards get a − badge to take one back (touch has no right-click); tray row padded so corner badges are not clipped	kept: 375px buy 2 inf+tank, − on infantry -> 1 inf, 15 IPCs; badges fully visible desktop and phone
+2026-10-04	readable-stats-touch-help	Purchase cards read A1 D2 M1; help explains touch gestures and fits a phone	kept: 375px cards show A/D/M, help card 339 wide with no overflow

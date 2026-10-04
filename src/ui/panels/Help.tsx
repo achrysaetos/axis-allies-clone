@@ -35,6 +35,10 @@ const CONTROLS = [
   ],
   ['Shore bombardment', 'Battleships and cruisers in the sea zone a landing comes from fire at the beach automatically.'],
   ['Purchase and mobilize', 'Click cards to buy, then drag new units from the tray onto a highlighted space.'],
+  [
+    'On a touch screen',
+    'Tap a piece to pick up one and double-tap for all of that type, then tap a space to move there or their own space to put them back. Pinch to zoom, tap a space to read it, and tap − on a bought card to take one back.',
+  ],
 ];
 
 const SHORTCUTS = [
