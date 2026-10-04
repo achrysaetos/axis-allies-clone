@@ -169,7 +169,28 @@ export function MapView({ onSpace, onPiece, onPieceDown, onHover, onBackground, 
   }, []);
 
   const hovered = useRef<SpaceId | null>(null);
+  const touches = useRef(new Map<number, { x: number; y: number }>());
+  const pinch = useRef<{ dist: number; mx: number; my: number; view: View } | null>(null);
+  const spread = () => {
+    const [a, b] = [...touches.current.values()];
+    return { dist: Math.hypot(a!.x - b!.x, a!.y - b!.y), mx: (a!.x + b!.x) / 2, my: (a!.y + b!.y) / 2 };
+  };
+  const lift = (e: ReactPointerEvent) => {
+    touches.current.delete(e.pointerId);
+    if (touches.current.size < 2) pinch.current = null;
+  };
+
   const onPointerDown = (e: ReactPointerEvent) => {
+    if (e.pointerType === 'touch') {
+      touches.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (touches.current.size === 2) {
+        const r = box.current!.getBoundingClientRect();
+        const { dist, mx, my } = spread();
+        pinch.current = { dist, mx: mx - r.left, my: my - r.top, view: v };
+        drag.current = null;
+        return;
+      }
+    }
     if (e.button !== 0) return;
     const p = pieceOf(e.target) ?? pieceNear(e.clientX, e.clientY);
     if (p && onPieceDown(p.space, p.stack, e.clientX, e.clientY, e.shiftKey)) {
@@ -179,6 +200,18 @@ export function MapView({ onSpace, onPiece, onPieceDown, onHover, onBackground, 
     drag.current = { x: e.clientX, y: e.clientY, tx: v.tx, ty: v.ty, moved: false };
   };
   const onPointerMove = (e: ReactPointerEvent) => {
+    if (touches.current.has(e.pointerId)) touches.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const p = pinch.current;
+    if (p && touches.current.size === 2) {
+      const r = box.current!.getBoundingClientRect();
+      const { dist, mx, my } = spread();
+      const k = normalize({ ...p.view, k: (p.view.k * dist) / p.dist }, size.w, size.h).k;
+      const f = k / p.view.k;
+      setView(
+        normalize({ tx: mx - r.left - (p.mx - p.view.tx) * f, ty: my - r.top - (p.my - p.view.ty) * f, k }, size.w, size.h),
+      );
+      return;
+    }
     const d = drag.current;
     if (!d || (e.buttons & 1) === 0) {
       const id = (e.target as Element).closest('[data-space]')?.getAttribute('data-space') ?? null;
@@ -226,6 +259,8 @@ export function MapView({ onSpace, onPiece, onPieceDown, onHover, onBackground, 
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerLeave={onLeave}
+      onPointerUp={lift}
+      onPointerCancel={lift}
       onClick={onClick}
       onContextMenu={onContextMenu}
     >
