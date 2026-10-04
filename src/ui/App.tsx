@@ -1,0 +1,241 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { aiAction } from '../ai';
+import { actingPower } from '../engine/game';
+import { remainingMove } from '../engine/queries';
+import type { Action, SpaceId, UnitId, UnitType } from '../engine/types';
+import { MapView } from './map/MapView';
+import { BattleDialog } from './panels/BattleDialog';
+import { CombatPanel } from './panels/CombatPanel';
+import { DecisionView } from './panels/Decisions';
+import { LogPanel } from './panels/LogPanel';
+import { MobilizePanel, placementOptions } from './panels/MobilizePanel';
+import { MovePanel } from './panels/MovePanel';
+import { PhaseBar } from './panels/PhaseBar';
+import { PurchasePanel } from './panels/PurchasePanel';
+import { SetupScreen } from './panels/SetupScreen';
+import { SpaceInfo } from './panels/SpaceInfo';
+import { reachable, resolveMove } from './paths';
+import { act as step, autosave, downloadSave, fallbackAction, loadAutosave, undo } from './session';
+import type { Session } from './session';
+
+const AI_DELAY_MS = 250;
+const TOAST_MS = 4500;
+
+export function App() {
+  const [session, setSession] = useState<Session | null>(null);
+  if (!session) return <SetupScreen saved={loadAutosave()} onStart={setSession} />;
+  return <Game initial={session} onMenu={() => setSession(null)} />;
+}
+
+function Game({ initial, onMenu }: { initial: Session; onMenu: () => void }) {
+  const [session, setSession] = useState(initial);
+  const current = useRef(session);
+  const [inspect, setInspect] = useState<SpaceId | null>(null);
+  const [selected, setSelected] = useState<UnitId[]>([]);
+  const [sbr, setSbr] = useState(false);
+  const [placeType, setPlaceType] = useState<UnitType | null>(null);
+  const [battleView, setBattleView] = useState<number | null>(null);
+  const [toast, setToast] = useState<{ text: string; id: number } | null>(null);
+  const [focus, setFocus] = useState<{ id: SpaceId; nonce: number } | null>(null);
+  const { state, controllers } = session;
+  const humanActs = controllers[actingPower(state)] === 'human';
+  const moving = state.phase === 'combatMove' || state.phase === 'noncombatMove';
+  const endable = humanActs && state.pending === null && !state.winner;
+
+  const commit = useCallback((next: Session) => {
+    current.current = next;
+    setSession(next);
+  }, []);
+
+  const showError = useCallback((text: string) => setToast({ text, id: Date.now() }), []);
+
+  const act = useCallback(
+    (a: Action): boolean => {
+      const r = step(current.current, a);
+      if (!r.ok) {
+        showError(r.error);
+        return false;
+      }
+      commit(r.session);
+      return true;
+    },
+    [commit, showError],
+  );
+
+  useEffect(() => {
+    autosave(session);
+  }, [session]);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), TOAST_MS);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  useEffect(() => {
+    if (state.winner || controllers[actingPower(state)] !== 'ai') return;
+    const t = setTimeout(() => {
+      const cur = current.current;
+      const proposed = aiAction(cur.state);
+      const r = step(cur, proposed);
+      if (r.ok) return commit(r.session);
+      console.warn(`AI ${proposed.type} rejected: ${r.error}`);
+      const fallback = step(cur, fallbackAction(cur.state));
+      if (fallback.ok) commit(fallback.session);
+      else showError(`AI is stuck: ${fallback.error}`);
+    }, AI_DELAY_MS);
+    return () => clearTimeout(t);
+  }, [state, controllers, commit, showError]);
+
+  useEffect(() => {
+    const d = state.pending;
+    if (d && 'battle' in d) setBattleView(d.battle);
+    else if (state.activeBattle !== null) setBattleView(state.activeBattle);
+  }, [state.pending, state.activeBattle]);
+
+  useEffect(() => {
+    setSelected([]);
+    setSbr(false);
+    if (state.phase !== 'combat') setBattleView(null);
+  }, [state.phase, state.power]);
+
+  useEffect(() => {
+    if (state.phase !== 'mobilize') return;
+    if (!placeType || !state.purchases.some((p) => p.type === placeType)) setPlaceType(state.purchases[0]?.type ?? null);
+  }, [state.phase, state.purchases, placeType]);
+
+  const intent = useMemo(() => ({ units: selected, sbr }), [selected, sbr]);
+  const reach = useMemo(
+    () => (moving && inspect && selected.length > 0 ? reachable(state, intent, inspect) : new Set<SpaceId>()),
+    [moving, inspect, selected.length, state, intent],
+  );
+  const placements = useMemo(
+    () => (state.phase === 'mobilize' && placeType && humanActs ? placementOptions(state, placeType) : []),
+    [state, placeType, humanActs],
+  );
+  const highlights = useMemo(
+    () => (state.phase === 'mobilize' ? new Set(placements.map((p) => p.at)) : reach),
+    [state.phase, placements, reach],
+  );
+
+  const inspectSpace = (id: SpaceId | null) => {
+    setInspect(id);
+    setSelected([]);
+    setSbr(false);
+  };
+
+  const onSpace = (id: SpaceId) => {
+    if (humanActs && state.phase === 'mobilize' && placeType && highlights.has(id)) {
+      act({ type: 'place', unitType: placeType, at: id, count: 1 });
+      return;
+    }
+    if (humanActs && moving && inspect && selected.length > 0 && id !== inspect) {
+      const r = resolveMove(state, intent, inspect, id);
+      if (!r.ok) return showError(r.error);
+      if (!act({ type: 'move', units: selected, path: r.path, sbr: sbr || undefined })) return;
+      const after = current.current.state;
+      const left = after.units.some((u) => u.at === inspect && u.owner === after.power && u.type !== 'factory' && remainingMove(u) > 0);
+      inspectSpace(left ? inspect : id);
+      return;
+    }
+    if (id !== inspect) inspectSpace(id);
+  };
+
+  const onUndo = useCallback(() => {
+    if (current.current.undo.length === 0) return;
+    commit(undo(current.current));
+    setSelected([]);
+  }, [commit]);
+
+  const onEndPhase = useCallback(() => {
+    if (act({ type: 'endPhase' })) setSelected([]);
+  }, [act]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) return;
+      if ((e.metaKey || e.ctrlKey) && e.key === 'z') {
+        e.preventDefault();
+        onUndo();
+      } else if (e.key === 'Escape') setSelected([]);
+      else if (e.key === 'e' && !e.metaKey && !e.ctrlKey && endable) onEndPhase();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onUndo, onEndPhase, endable]);
+
+  const viewed = battleView !== null ? state.battles.find((b) => b.id === battleView) : undefined;
+  const stranded = state.pending?.kind === 'landStranded' ? state.pending : null;
+  const focusOn = (id: SpaceId) => {
+    setInspect(id);
+    setFocus({ id, nonce: Date.now() });
+  };
+
+  return (
+    <div className="app">
+      <PhaseBar
+        state={state}
+        controllers={controllers}
+        canUndo={session.undo.length > 0}
+        onEndPhase={onEndPhase}
+        onUndo={onUndo}
+        onExport={() => downloadSave(session)}
+        onMenu={onMenu}
+      />
+      <div className="main">
+        <MapView
+          state={state}
+          selected={inspect}
+          highlights={highlights}
+          onSpace={onSpace}
+          onBackground={() => inspectSpace(null)}
+          focus={focus}
+        />
+        <aside className="sidebar">
+          {!humanActs && !state.winner && (
+            <section className="panel thinking">{actingPower(state)} (AI) is playing…</section>
+          )}
+          {humanActs && state.phase === 'purchase' && <PurchasePanel state={state} act={act} />}
+          {state.phase === 'combat' && <CombatPanel state={state} act={act} onView={setBattleView} onFocus={focusOn} />}
+          {humanActs && state.phase === 'mobilize' && (
+            <MobilizePanel state={state} type={placeType} options={placements} onType={setPlaceType} act={act} />
+          )}
+          {humanActs && moving && !stranded && inspect && (
+            <MovePanel state={state} at={inspect} selected={selected} sbr={sbr} onSelect={setSelected} onSbr={setSbr} />
+          )}
+          {humanActs && moving && !inspect && <section className="panel hint">Click a space to pick units to move.</section>}
+          {inspect && !(humanActs && moving) && <SpaceInfo state={state} id={inspect} />}
+          <LogPanel lines={state.log} />
+        </aside>
+        {viewed && (
+          <BattleDialog
+            state={state}
+            battle={viewed}
+            fallen={session.fallen}
+            controllers={controllers}
+            act={act}
+            onClose={() => setBattleView(null)}
+          />
+        )}
+        {stranded && controllers[stranded.power] === 'human' && (
+          <div className="battle-dialog">
+            <DecisionView state={state} d={stranded} act={act} />
+          </div>
+        )}
+        {toast && (
+          <div key={toast.id} className="toast" onClick={() => setToast(null)}>
+            {toast.text}
+          </div>
+        )}
+        {state.winner && (
+          <div className="winner">
+            <h1>The {state.winner} win!</h1>
+            <button className="primary" onClick={onMenu}>
+              New game
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
