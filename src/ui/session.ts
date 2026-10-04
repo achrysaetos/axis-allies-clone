@@ -1,6 +1,8 @@
+import { aiAction } from '../ai';
 import { autoCasualties } from '../engine/casualties';
 import { battleBlocker } from '../engine/combat';
-import { apply } from '../engine/game';
+import { actingPower, apply } from '../engine/game';
+import { DEFAULT_OPTIONS } from '../engine/state';
 import { POWERS } from '../engine/types';
 import type { Action, Battle, Decision, GameState, Power, Unit } from '../engine/types';
 
@@ -64,9 +66,17 @@ export function defaultDecision(state: GameState, d: Decision): Action {
       return { type: 'retreat', to: null };
     case 'bombard':
       return { type: 'bombard', ships: d.ships.slice(0, d.max) };
+    case 'intercept':
+      return { type: 'intercept', units: [] };
     case 'landStranded':
       return { type: 'landStranded', landings: Object.fromEntries(d.fighters.map((f) => [f, d.options[f]?.[0] ?? null])) };
+    default:
+      return unreachable(d);
   }
+}
+
+export function unreachable(x: never): never {
+  throw new Error(`unhandled ${JSON.stringify(x)}`);
 }
 
 /** Keeps an AI turn moving when its own action is rejected. */
@@ -77,6 +87,36 @@ export function fallbackAction(state: GameState): Action {
     if (open) return { type: 'startBattle', battle: open.id };
   }
   return { type: 'endPhase' };
+}
+
+/** One AI action; rejected actions fall back to a default, then to replaying the movement phase from its start. */
+export function aiStep(session: Session): Step {
+  const proposed = aiAction(session.state);
+  const r = act(session, proposed);
+  if (r.ok) return r;
+  console.warn(`AI ${proposed.type} rejected: ${r.error}`);
+  const fallback = act(session, fallbackAction(session.state));
+  if (fallback.ok) return fallback;
+  const phaseStart = session.undo[0];
+  if (!phaseStart) return fallback;
+  console.warn(`AI cannot end the phase (${fallback.error}); undoing its moves`);
+  return act({ ...session, state: phaseStart, undo: [] }, { type: 'endPhase' });
+}
+
+/** AI actions until a phase or turn boundary, a human's decision, or the time budget, so each step stays visible. */
+export function aiBurst(session: Session, budgetMs: number): Step {
+  const start = performance.now();
+  const { phase, power } = session.state;
+  let cur = session;
+  for (;;) {
+    const r = aiStep(cur);
+    if (!r.ok) return cur === session ? r : { ok: true, session: cur };
+    cur = r.session;
+    const s = cur.state;
+    if (s.winner || s.phase !== phase || s.power !== power || cur.controllers[actingPower(s)] !== 'ai') break;
+    if (s.activeBattle !== null || performance.now() - start > budgetMs) break;
+  }
+  return { ok: true, session: cur };
 }
 
 interface SavedSession {
@@ -105,7 +145,13 @@ export function parseSession(text: string): Session | string {
   const controllers = Object.fromEntries(
     POWERS.map((p) => [p, r.controllers?.[p] === 'ai' ? 'ai' : 'human']),
   ) as Record<Power, Controller>;
-  return newSession(s, controllers);
+  const state: GameState = {
+    ...s,
+    options: { ...DEFAULT_OPTIONS, ...s.options },
+    hostileSeaAtTurnStart: s.hostileSeaAtTurnStart ?? [],
+    mobilized: s.mobilized ?? [],
+  };
+  return newSession(state, controllers);
 }
 
 export function loadAutosave(): Session | null {

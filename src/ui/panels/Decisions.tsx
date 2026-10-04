@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { STATS } from '../../engine/data';
 import { assignable, autoCasualties } from '../../engine/casualties';
 import type { Action, Decision, GameState, HitCategory, Unit, UnitId } from '../../engine/types';
-import { casualtyPool } from '../session';
+import { casualtyPool, unreachable } from '../session';
 import { UNIT_GLYPH } from '../theme';
 import { Chip, Stepper } from '../units';
 
@@ -89,7 +89,7 @@ export function CasualtyPicker({ state, d, act }: { state: GameState; d: Of<'cas
   );
 }
 
-function ShipChecklist({
+function UnitChecklist({
   state,
   ids,
   max,
@@ -185,20 +185,20 @@ export function DecisionView({ state, d, act }: { state: GameState; d: Decision;
       return <CasualtyPicker key={key} state={state} d={d} act={act} />;
     case 'submerge':
       return (
-        <ShipChecklist
+        <UnitChecklist
           key={key}
           state={state}
           ids={d.subs}
           max={d.subs.length}
           initial={[]}
-          title={`${d.power}: submerge submarines before they fire?`}
+          title={`${d.power}: submerge submarines? Checked subs leave the battle.`}
           confirm="Confirm"
           onConfirm={(units) => act({ type: 'submerge', units })}
         />
       );
     case 'bombard':
       return (
-        <ShipChecklist
+        <UnitChecklist
           key={key}
           state={state}
           ids={d.ships}
@@ -225,7 +225,22 @@ export function DecisionView({ state, d, act }: { state: GameState; d: Decision;
           </div>
         </div>
       );
+    case 'intercept':
+      return (
+        <UnitChecklist
+          key={key}
+          state={state}
+          ids={d.fighters}
+          max={d.fighters.length}
+          initial={d.fighters}
+          title={`${d.power}: which fighters intercept the raid?`}
+          confirm="Intercept"
+          onConfirm={(units) => act({ type: 'intercept', units })}
+        />
+      );
     case 'landStranded':
       return <LandStranded key={key} state={state} d={d} act={act} />;
+    default:
+      return unreachable(d);
   }
 }

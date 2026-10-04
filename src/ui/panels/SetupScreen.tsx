@@ -24,6 +24,7 @@ export function SetupScreen({ saved, onStart }: Props) {
   });
   const [victory, setVictory] = useState<Options['victory']>('standard');
   const [straits, setStraits] = useState(false);
+  const [escorts, setEscorts] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const importFile = async (file: File | undefined) => {
@@ -77,13 +78,17 @@ export function SetupScreen({ saved, onStart }: Props) {
           <span className="grow">Turkish straits closed</span>
         </label>
         <label className="row">
+          <input type="checkbox" checked={escorts} onChange={(e) => setEscorts(e.target.checked)} />
+          <span className="grow">Bombing raid escorts and interceptors</span>
+        </label>
+        <label className="row">
           <span className="grow">Dice seed</span>
           <input type="number" value={seed} onChange={(e) => setSeed(Number(e.target.value) || 0)} />
           <button onClick={() => setSeed(randomSeed())}>↻</button>
         </label>
         <button
           className="primary wide"
-          onClick={() => onStart(newSession(newGame(seed, { victory, turkishStraitsClosed: straits }), controllers))}
+          onClick={() => onStart(newSession(newGame(seed, { victory, turkishStraitsClosed: straits, sbrEscortsInterceptors: escorts }), controllers))}
         >
           Start new game
         </button>

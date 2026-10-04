@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { isLand } from '../../engine/data';
 import { cargoOf, remainingMove, unitsAt } from '../../engine/queries';
 import { UNIT_TYPES } from '../../engine/types';
@@ -44,7 +45,12 @@ export function MovePanel({ state, at, selected, sbr, onSelect, onSbr }: Props) 
   };
   const toggle = (id: UnitId) => onSelect(chosen.has(id) ? selected.filter((x) => x !== id) : [...selected, id]);
   const selectedUnits = mine.filter((u) => chosen.has(u.id));
-  const allBombers = selectedUnits.length > 0 && selectedUnits.every((u) => u.type === 'bomber');
+  const raiders = state.options.sbrEscortsInterceptors ? ['bomber', 'fighter'] : ['bomber'];
+  const canRaid =
+    selectedUnits.some((u) => u.type === 'bomber') && selectedUnits.every((u) => raiders.includes(u.type));
+  useEffect(() => {
+    if (sbr && !canRaid) onSbr(false);
+  }, [sbr, canRaid, onSbr]);
 
   return (
     <section className="panel">
@@ -102,7 +108,7 @@ export function MovePanel({ state, at, selected, sbr, onSelect, onSbr }: Props) 
           </button>
         </div>
       )}
-      {allBombers && state.phase === 'combatMove' && (
+      {canRaid && state.phase === 'combatMove' && (
         <label className="row">
           <input type="checkbox" checked={sbr} onChange={(e) => onSbr(e.target.checked)} />
           Strategic bombing raid

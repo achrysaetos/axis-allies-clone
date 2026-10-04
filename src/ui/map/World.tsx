@@ -77,10 +77,9 @@ function Badges({ id, x, y, units }: { id: SpaceId; x: number; y: number; units:
   );
 }
 
-function Marks({ state, s, battle }: { state: GameState; s: SpaceShape; battle: boolean }) {
+function Marks({ s, factory, battle }: { s: SpaceShape; factory: Unit | undefined; battle: boolean }) {
   const def = space(s.id);
   const [x, y] = s.center;
-  const factory = state.units.find((u) => u.at === s.id && u.type === 'factory');
   if (def.water)
     return (
       <g data-space={s.id} pointerEvents="none">
@@ -149,8 +148,12 @@ export function NeutralPattern() {
 
 export const World = memo(function World({ state, selected, highlights }: WorldProps) {
   const byAt = new Map<SpaceId, Unit[]>();
+  const factories = new Map<SpaceId, Unit>();
   for (const u of state.units) {
-    if (u.type === 'factory') continue;
+    if (u.type === 'factory') {
+      factories.set(u.at, u);
+      continue;
+    }
     const list = byAt.get(u.at);
     if (list) list.push(u);
     else byAt.set(u.at, [u]);
@@ -170,7 +173,7 @@ export const World = memo(function World({ state, selected, highlights }: WorldP
         <path key={`s-${s.id}`} d={s.d} className="selected" pointerEvents="none" />
       ))}
       {SHAPES.map((s) => (
-        <Marks key={`m-${s.id}`} state={state} s={s} battle={battles.has(s.id)} />
+        <Marks key={`m-${s.id}`} s={s} factory={factories.get(s.id)} battle={battles.has(s.id)} />
       ))}
       {SHAPES.map((s) => (
         <Badges key={`b-${s.id}`} id={s.id} x={s.center[0]} y={s.center[1] - 2} units={byAt.get(s.id) ?? []} />

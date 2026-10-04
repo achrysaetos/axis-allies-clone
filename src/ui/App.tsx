@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { aiAction } from '../ai';
 import { actingPower } from '../engine/game';
 import { remainingMove } from '../engine/queries';
 import type { Action, SpaceId, UnitId, UnitType } from '../engine/types';
@@ -15,10 +14,11 @@ import { PurchasePanel } from './panels/PurchasePanel';
 import { SetupScreen } from './panels/SetupScreen';
 import { SpaceInfo } from './panels/SpaceInfo';
 import { reachable, resolveMove } from './paths';
-import { act as step, autosave, downloadSave, fallbackAction, loadAutosave, undo } from './session';
+import { act as step, aiBurst, autosave, downloadSave, loadAutosave, undo } from './session';
 import type { Session } from './session';
 
-const AI_DELAY_MS = 250;
+const AI_DELAY_MS = 120;
+const AI_BUDGET_MS = 30;
 const TOAST_MS = 4500;
 
 export function App() {
@@ -36,6 +36,7 @@ function Game({ initial, onMenu }: { initial: Session; onMenu: () => void }) {
   const [placeType, setPlaceType] = useState<UnitType | null>(null);
   const [battleView, setBattleView] = useState<number | null>(null);
   const [toast, setToast] = useState<{ text: string; id: number } | null>(null);
+  const [aiRetry, setAiRetry] = useState(0);
   const [focus, setFocus] = useState<{ id: SpaceId; nonce: number } | null>(null);
   const { state, controllers } = session;
   const humanActs = controllers[actingPower(state)] === 'human';
@@ -75,17 +76,13 @@ function Game({ initial, onMenu }: { initial: Session; onMenu: () => void }) {
   useEffect(() => {
     if (state.winner || controllers[actingPower(state)] !== 'ai') return;
     const t = setTimeout(() => {
-      const cur = current.current;
-      const proposed = aiAction(cur.state);
-      const r = step(cur, proposed);
+      const r = aiBurst(current.current, AI_BUDGET_MS);
       if (r.ok) return commit(r.session);
-      console.warn(`AI ${proposed.type} rejected: ${r.error}`);
-      const fallback = step(cur, fallbackAction(cur.state));
-      if (fallback.ok) commit(fallback.session);
-      else showError(`AI is stuck: ${fallback.error}`);
+      showError(`AI is stuck: ${r.error}`);
+      setAiRetry((n) => n + 1);
     }, AI_DELAY_MS);
     return () => clearTimeout(t);
-  }, [state, controllers, commit, showError]);
+  }, [state, controllers, commit, showError, aiRetry]);
 
   useEffect(() => {
     const d = state.pending;
