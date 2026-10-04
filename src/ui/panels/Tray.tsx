@@ -95,6 +95,7 @@ export function BuyTray({ state, act }: { state: GameState; act: (a: Action) => 
           const can = left >= s.cost && room(t) > 0;
           const less = (e: ReactMouseEvent) => {
             e.preventDefault();
+            e.stopPropagation();
             if (n > 0) setCount(t, n - 1);
           };
           return (
@@ -117,6 +118,11 @@ export function BuyTray({ state, act }: { state: GameState; act: (a: Action) => 
                 </span>
               )}
               {n > 0 && <span className="card-count">{n}</span>}
+              {n > 0 && (
+                <span className="card-less" role="button" aria-label={`Remove one ${UNIT_GLYPH[t].name}`} onClick={less}>
+                  −
+                </span>
+              )}
             </button>
           );
         })}

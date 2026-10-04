@@ -755,6 +755,9 @@ kbd {
   display: flex;
   gap: 5px;
   overflow-x: auto;
+  /* Room inside the scroll box for the badges that sit on the cards' corners. */
+  padding: 8px 8px 2px;
+  margin: -8px -8px 0;
 }
 .card {
   position: relative;
@@ -1199,4 +1202,20 @@ button.seat.mine {
     top: auto;
     bottom: 8px;
   }
+}
+.card-less {
+  position: absolute;
+  top: -7px;
+  left: -7px;
+  width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  color: var(--text);
+  font-weight: 800;
+  line-height: 18px;
+}
+.card-less:hover {
+  border-color: var(--accent);
 }
