@@ -20,7 +20,7 @@ In the combat phase the player resolves battles in the rulebook's order: strateg
 - A not-yet-started battle shows both sides, the forecast line, and `Roll dice`, `Fight it out automatically` and `Skip` (optional battles only).
 - A finished battle shows `Next: <space>` or `Back to the map`.
 - The casualty picker lists the side's units as `button.tile` tiles under "In the fight, click to take a hit" with a dashed `Casualty zone · n/m` row below. Clicking a tile in the fight moves one hit into the zone. Clicking a tile in the zone, or right-clicking it, moves it back.
-- The battle dialog's decision area: `Remove casualties`, `Suggest`, `Press on`, retreat destination buttons, and checkboxes for submerge, bombard and intercept.
+- The battle dialog's decision area: `Remove casualties`, `Suggest`, `Press on`, retreat destination buttons, and piece tiles (`button.tile`, `aria-pressed`) that toggle submerge, bombard and intercept choices.
 
 ## Driving it with the browser pane
 
@@ -38,6 +38,6 @@ Preconditions:
 
 - The dialog opens automatically at the start of combat and after `Next: <space>`. A click on a map space with no battle does nothing.
 - Decisions alternate between attacker and defender. Read `pending.power` before answering.
-- The casualty zone starts filled with the cheapest legal choice, so pressing `Remove casualties` without changes is a valid answer. Once `n/m` is full, further tile clicks have no effect until a tile is moved back.
+- The casualty zone starts filled with the cheapest legal choice, so pressing `Remove casualties` without changes is a valid answer. Once `n/m` is full, clicking a tile in the fight swaps it for a piece already in the zone.
 - A battle that ends with no attacking land units never captures, even if the defenders are gone.
 - Dice are random unless the scenario scripts them. Prove rules from the dice rows actually shown, not from the outcome alone.

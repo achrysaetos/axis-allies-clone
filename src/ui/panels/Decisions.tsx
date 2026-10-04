@@ -180,28 +180,30 @@ function UnitChecklist({
   return (
     <div className="decision">
       <div className="decision-title">{title}</div>
-      {ids.map((id) => {
-        const u = unitOf(state, id);
-        if (!u) return null;
-        const checked = on.includes(id);
-        const sameType = ids.filter((x) => unitOf(state, x)?.type === u.type);
-        return (
-          <label key={id} className="row">
-            <input
-              type="checkbox"
-              checked={checked}
+      <div className="tiles">
+        {ids.map((id) => {
+          const u = unitOf(state, id);
+          if (!u) return null;
+          const checked = on.includes(id);
+          const style = POWER_STYLE[u.owner];
+          return (
+            <button
+              key={id}
+              className={checked ? 'tile on' : 'tile'}
+              aria-pressed={checked}
+              style={{ background: style.color, color: style.ink }}
               disabled={!checked && on.length >= max}
-              onChange={() => setOn(checked ? on.filter((x) => x !== id) : [...on, id])}
-            />
-            <Chip owner={u.owner} type={u.type} />
-            <span className="grow">
-              {UNIT_GLYPH[u.type].name} {sameType.length > 1 ? sameType.indexOf(id) + 1 : ''}
-            </span>
-          </label>
-        );
-      })}
+              onClick={() => setOn(checked ? on.filter((x) => x !== id) : [...on, id])}
+              title={UNIT_GLYPH[u.type].name}
+            >
+              <UnitSvg type={u.type} color={style.ink} size={30} />
+              <span className="tile-label">{checked ? '✓' : ' '}</span>
+            </button>
+          );
+        })}
+      </div>
       <div className="row actions">
-        <span className="grow" />
+        <span className="dim grow">Click pieces to choose them.</span>
         <button className="primary" onClick={() => onConfirm(on)}>
           {confirm}
         </button>
@@ -259,7 +261,7 @@ export function DecisionView({ state, d, act }: { state: GameState; d: Decision;
           ids={d.subs}
           max={d.subs.length}
           initial={[]}
-          title={`${powerName(d.power)}: submerge submarines? Checked subs leave the battle.`}
+          title={`${powerName(d.power)}: submerge submarines? Chosen subs leave the battle.`}
           confirm="Confirm"
           onConfirm={(units) => act({ type: 'submerge', units })}
         />
