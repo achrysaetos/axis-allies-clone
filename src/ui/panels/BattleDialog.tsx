@@ -293,6 +293,7 @@ export function BattleDialog({
           )}
         </div>
       )}
+      {fresh && !human && !blocker && <div className="dim">Waiting for {playing(battle.attacker)} to fight this battle…</div>}
       {battle.resolved && (
         <div className="battle-actions">
           {next ? (

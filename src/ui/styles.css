@@ -1249,7 +1249,8 @@ button.bell.blocked svg {
     transform: none;
   }
   .hover-card {
-    left: 8px;
+    left: auto;
+    right: 8px;
     top: auto;
     bottom: 8px;
   }

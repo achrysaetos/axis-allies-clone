@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { CAPITAL_OF, isAir, unitCount } from '../engine/data';
+import { CAPITAL_OF, SIDE, isAir, space, unitCount } from '../engine/data';
 import { battleBlocker } from '../engine/combat';
 import { actingPower, productionLeft } from '../engine/game';
 import { areAllied, capitalHeld, factoryAt } from '../engine/queries';
@@ -76,6 +76,8 @@ const PHASE_HINT: typeof HINT = TOUCH
       purchase: 'Tap units in the chart below to buy them. They arrive at Mobilize.',
       combatMove:
         'Drag pieces into enemy spaces to attack. Tap a piece to pick up one at a time, or double-tap to take them all.',
+      mobilize:
+        'Tap a unit in the tray (double-tap for all of them), then tap a highlighted space. Anything left unplaced is refunded.',
     }
   : HINT;
 const HAND_HINT = TOUCH
@@ -295,7 +297,7 @@ export function Game({
       );
       if (full.length > 0 && after.purchases.length > 0)
         setToast({
-          text: `${full.join(' and ')} has placed all it can this turn (ships launched from it count too)`,
+          text: `${full.join(' and ')} has placed all it can this turn${full.some((f) => space(f).neighbors.some((n) => space(n).water)) ? ' (ships launched from it count too)' : ''}`,
           id: Date.now(),
           info: true,
         });
@@ -420,24 +422,36 @@ export function Game({
   }, [turnKey, state.power, viewedSpace]);
 
   const canUndo = online ? online.room.canUndo && controllers[state.power] === 'human' : session.undo.length > 0;
-  const onUndo = useCallback(() => {
-    if (!canUndo) return;
-    setHand(null);
-    if (send) {
-      send({ t: 'undo' });
-      return setToast({ text: 'Last move undone', id: Date.now(), info: true });
-    }
-    const now = current.current.state;
-    const back = undo(current.current);
-    commit(back);
-    const where = new Map(now.units.map((u) => [u.id, u.at]));
-    const returned = back.state.units.filter((u) => where.get(u.id) !== u.at && u.carriedBy === null);
+  const undoneFrom = useRef<GameState | null>(null);
+  const reportUndo = useCallback((before: GameState, after: GameState) => {
+    const where = new Map(before.units.map((u) => [u.id, u.at]));
+    const returned = after.units.filter((u) => where.get(u.id) !== u.at && u.carriedBy === null);
     const to = returned[0]?.at;
     const names = tally(returned)
       .map((t) => unitCount(t.count, t.type))
       .join(', ');
-    setToast({ text: to ? `Undone: ${names} back in ${to}` : 'Last move undone', id: Date.now(), info: true });
-  }, [commit, send, canUndo]);
+    if (to) setToast({ text: `Undone: ${names} back in ${to}`, id: Date.now(), info: true });
+  }, []);
+  // Online the server replays the phase, so what went back is known only once its answer arrives.
+  useEffect(() => {
+    const before = undoneFrom.current;
+    if (!before || before === state) return;
+    undoneFrom.current = null;
+    reportUndo(before, state);
+  }, [state, reportUndo]);
+
+  const onUndo = useCallback(() => {
+    if (!canUndo) return;
+    setHand(null);
+    if (send) {
+      undoneFrom.current = current.current.state;
+      return send({ t: 'undo' });
+    }
+    const before = current.current.state;
+    const back = undo(current.current);
+    commit(back);
+    reportUndo(before, back.state);
+  }, [commit, send, canUndo, reportUndo]);
 
   const endPhase = useCallback(() => {
     setWarnings(null);
@@ -616,7 +630,13 @@ export function Game({
             {toast.text}
           </div>
         )}
-        {greeting && !overlay && <TurnCard state={state} onStart={startTurn} />}
+        {greeting && !overlay && (
+          <TurnCard
+            state={state}
+            onStart={startTurn}
+            playedHere={(p) => controllers[p] === 'human' && (online !== undefined || SIDE[p] === SIDE[state.power])}
+          />
+        )}
         {overlay === 'help' && <Help options={state.options} onClose={() => setOverlay(null)} />}
         {overlay === 'log' && <LogPanel lines={state.log} onClose={() => setOverlay(null)} />}
         {warnings && <ConfirmEnd warnings={warnings} onConfirm={endPhase} onCancel={() => setWarnings(null)} />}

@@ -61,6 +61,7 @@ function OnlineGame({ id, onLeave }: { id: string; onLeave: () => void }) {
       if ('Notification' in window && Notification.permission === 'granted')
         new Notification(TITLE, { body: `Your move as ${powerName(actingPower(room.state))}.`, tag: `aa1942-${id}` });
     }
+    if (!myTurn) document.title = TITLE;
     wasMyTurn.current = myTurn;
   }, [myTurn, room, id]);
   useEffect(() => {

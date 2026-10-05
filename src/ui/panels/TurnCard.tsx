@@ -31,9 +31,18 @@ export function sinceLastTurn(log: string[], power: Power): { power: Power; line
   return out;
 }
 
-export function TurnCard({ state, onStart }: { state: GameState; onStart: () => void }) {
+export function TurnCard({
+  state,
+  onStart,
+  playedHere,
+}: {
+  state: GameState;
+  onStart: () => void;
+  /** Powers whose turns this same player just played, so the recap skips news they already saw. */
+  playedHere: (p: Power) => boolean;
+}) {
   const style = POWER_STYLE[state.power];
-  const recap = sinceLastTurn(state.log, state.power);
+  const recap = sinceLastTurn(state.log, state.power).filter((g) => !playedHere(g.power));
   const exiled = !capitalHeld(state, state.power);
 
   useEffect(() => {

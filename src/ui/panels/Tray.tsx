@@ -166,7 +166,7 @@ export function PlaceTray({
               className={held > 0 ? 'card picked' : 'card'}
               disabled={left === 0}
               onPointerDown={(e) => e.button === 0 && left > 0 && onDragStart(type, e.clientX, e.clientY)}
-              onClick={(e) => onPick(type, e.shiftKey ? left : Math.min(left, held + 1))}
+              onClick={(e) => onPick(type, e.shiftKey || e.detail === 2 ? left : Math.min(left, held + 1))}
               onContextMenu={(e) => {
                 e.preventDefault();
                 onPick(type, Math.max(0, held - 1));

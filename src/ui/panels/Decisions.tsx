@@ -321,7 +321,7 @@ function RetreatChoice({ state, d, act }: { state: GameState; d: Of<'retreat'>; 
       <div className={odds ? oddsClass(odds.win) : 'dim'}>
         {odds
           ? `${Math.round(odds.win * 100)}% to win if you press on · you lose about ${Math.round(odds.attLoss)} more IPCs, the defender about ${Math.round(odds.defLoss)}`
-          : `Only aircraft are left, so pressing on cannot take ${b.space}.`}
+          : `Only aircraft are left, so pressing on cannot take ${b.space.replace(/\.$/, '')}.`}
       </div>
       <div className="row actions wrap">
         <button className="primary" onClick={() => act({ type: 'retreat', to: null })}>

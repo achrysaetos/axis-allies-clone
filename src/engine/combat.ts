@@ -666,8 +666,15 @@ function retreat(s: GameState, b: Battle, to: SpaceId): void {
   }
   b.attackers = b.attackers.filter((id) => !leaving.some((u) => u.id === id));
   b.retreatedTo = to;
-  const types = [...new Set(leaving.map((u) => u.type))];
-  const what = types.map((t) => unitCount(leaving.filter((u) => u.type === t).length, t)).join(', ');
-  s.log.push(`${b.attacker} retreats ${what} from ${b.space}${to === b.space ? '' : ` to ${to}`}`);
+  const what = (us: Unit[]) =>
+    [...new Set(us.map((u) => u.type))].map((t) => unitCount(us.filter((u) => u.type === t).length, t)).join(', ');
+  const ground = leaving.filter((u) => !isAir(u.type));
+  const air = leaving.filter((u) => isAir(u.type));
+  const parts = [
+    ...(ground.length > 0 ? [`${what(ground)} from ${b.space}${to === b.space ? '' : ` to ${to}`}`] : []),
+    // Planes stay over the battle until they fly off to land in noncombat, wherever the ground troops went.
+    ...(air.length > 0 ? [`${what(air)} from ${b.space}, to land elsewhere`] : []),
+  ];
+  s.log.push(`${b.attacker} retreats ${parts.join(' and ')}`);
   if (liveAttackers(s, b).length === 0) finish(s, b, 'defender');
 }
