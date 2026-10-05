@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { PUSHES_PER_PLAYER, handle, newRoom, parseClientMsg, view, whoToNotify } from '../worker/room';
+import { PUSHES_PER_PLAYER, computerTurn, handle, newRoom, parseClientMsg, view, whoToNotify } from '../worker/room';
 import type { RoomRecord } from '../worker/room';
+import { COMPUTER } from '../src/net/protocol';
 import type { ClientMsg, PlayerId, PushSubscriptionKeys } from '../src/net/protocol';
 import type { Action } from '../src/engine/types';
 import { ids, move, ok, scenario } from './helpers';
@@ -29,8 +30,8 @@ function twoPlayers(): { r: RoomRecord; alex: PlayerId; bea: PlayerId } {
   let alex: PlayerId, bea: PlayerId;
   [r, alex] = join(r, 'Alex');
   [r, bea] = join(r, 'Bea');
-  r = accepted(r, alex, { t: 'seat', power: 'Germans', take: true });
-  r = accepted(r, bea, { t: 'seat', power: 'Russians', take: true });
+  r = accepted(r, alex, { t: 'seat', power: 'Germans', to: 'me' });
+  r = accepted(r, bea, { t: 'seat', power: 'Russians', to: 'me' });
   return { r, alex, bea };
 }
 
@@ -46,21 +47,21 @@ describe('players and seats', () => {
 
   it('a seat held by an online player cannot be taken, but one held by an offline player can', () => {
     const { r, alex, bea } = twoPlayers();
-    expect(send(r, bea, { t: 'seat', power: 'Germans', take: true }, new Set([alex])).error).toMatch(/another player/);
-    const taken = accepted(r, bea, { t: 'seat', power: 'Germans', take: true }, new Set([bea]));
+    expect(send(r, bea, { t: 'seat', power: 'Germans', to: 'me' }, new Set([alex])).error).toMatch(/another player/);
+    const taken = accepted(r, bea, { t: 'seat', power: 'Germans', to: 'me' }, new Set([bea]));
     expect(taken.seats.Germans).toBe(bea);
   });
 
   it('only the holder releases a seat, and someone who has not joined holds nothing', () => {
     const { r, alex, bea } = twoPlayers();
-    expect(send(r, bea, { t: 'seat', power: 'Germans', take: false }).error).toBeDefined();
-    expect(accepted(r, alex, { t: 'seat', power: 'Germans', take: false }).seats.Germans).toBeNull();
-    expect(send(r, null, { t: 'seat', power: 'British', take: true }).error).toBeDefined();
+    expect(send(r, bea, { t: 'seat', power: 'Germans', to: 'open' }).error).toBeDefined();
+    expect(accepted(r, alex, { t: 'seat', power: 'Germans', to: 'open' }).seats.Germans).toBeNull();
+    expect(send(r, null, { t: 'seat', power: 'British', to: 'me' }).error).toBeDefined();
   });
 
   it('seat changes keep the game version, so an action already in flight still lands', () => {
     const { r, alex } = twoPlayers();
-    const after = accepted(r, alex, { t: 'seat', power: 'British', take: true });
+    const after = accepted(r, alex, { t: 'seat', power: 'British', to: 'me' });
     expect(after.version).toBe(r.version);
   });
 });
@@ -188,7 +189,7 @@ describe('the room view', () => {
 describe('messages from the wire', () => {
   it('rejects malformed envelopes', () => {
     expect(parseClientMsg('nope')).toBeNull();
-    expect(parseClientMsg(JSON.stringify({ t: 'seat', power: 'Italians', take: true }))).toBeNull();
+    expect(parseClientMsg(JSON.stringify({ t: 'seat', power: 'Italians', to: 'me' }))).toBeNull();
     expect(parseClientMsg(JSON.stringify({ t: 'act', version: '1', actions: [{ type: 'endPhase' }] }))).toBeNull();
     expect(parseClientMsg(JSON.stringify({ t: 'undo', version: 3 }))).toEqual({ t: 'undo', version: 3 });
   });
@@ -217,7 +218,7 @@ describe('who hears about a change by push', () => {
 
   it('nobody hears about their own move, even when their next power is up', () => {
     const { r: base, bea } = twoPlayers();
-    const r = accepted(base, bea, { t: 'seat', power: 'Germans', take: true }, new Set([bea]));
+    const r = accepted(base, bea, { t: 'seat', power: 'Germans', to: 'me' }, new Set([bea]));
     expect(whoToNotify(r, endSovietTurn(r, bea), nobody)).toEqual([]);
   });
 
@@ -284,5 +285,43 @@ describe('push subscriptions', () => {
     expect(parse({ ...sub(1), keys: { p256dh: 'B'.repeat(86) + '=', auth: 'a'.repeat(22) } })).toBeNull();
     expect(parse({ ...sub(1), keys: { p256dh: 'B'.repeat(87), auth: 'a'.repeat(23) } })).toBeNull();
     expect(parse({ endpoint: sub(1).endpoint })).toBeNull();
+  });
+});
+
+describe('computer seats', () => {
+  it('any player can hand an open seat to the computer, take it back, or open it again', () => {
+    const { r, alex, bea } = twoPlayers();
+    const r1 = accepted(r, alex, { t: 'seat', power: 'British', to: 'computer' });
+    expect(r1.seats.British).toBe(COMPUTER);
+    expect(accepted(r1, bea, { t: 'seat', power: 'British', to: 'me' }).seats.British).toBe(bea);
+    expect(accepted(r1, bea, { t: 'seat', power: 'British', to: 'open' }).seats.British).toBeNull();
+    expect(send(r, bea, { t: 'seat', power: 'Germans', to: 'computer' }, new Set([alex])).error).toMatch(/another player/);
+  });
+
+  it('the computer plays its power through to the next human, who is then notified', () => {
+    const players = twoPlayers();
+    let r: RoomRecord = { ...players.r, seats: { ...players.r.seats, Russians: COMPUTER } };
+    expect(computerTurn(r, 50)).not.toBeNull();
+    let before = r;
+    for (let i = 0; i < 500; i++) {
+      const out = computerTurn(r, 50);
+      if (!out) break;
+      expect(out.error).toBeUndefined();
+      before = r;
+      r = out.record;
+    }
+    expect(r.session.state.power).toBe('Germans');
+    expect(computerTurn(r, 50)).toBeNull();
+    expect(r.moves).toEqual([]);
+    expect(whoToNotify(before, r, nobody)).toEqual([
+      { player: players.alex, title: 'Your move: Germany', body: 'Round 1 · The computer finished the Soviet turn' },
+    ]);
+  });
+
+  it('a human is never asked to act for the computer, and the computer never acts for a human', () => {
+    const { r, bea } = twoPlayers();
+    const r1 = { ...r, seats: { ...r.seats, Russians: COMPUTER } };
+    expect(send(r1, bea, { t: 'act', version: r1.version, actions: [{ type: 'endPhase' }] }).error).toMatch(/not your move/);
+    expect(computerTurn(r, 50)).toBeNull();
   });
 });

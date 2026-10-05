@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { POWERS } from '../../engine/types';
 import type { Power } from '../../engine/types';
 import type { RoomConnection } from '../../net/client';
-import { NAME_MAX } from '../../net/protocol';
+import { COMPUTER, NAME_MAX } from '../../net/protocol';
 import { usePush } from '../../net/push';
 import type { Bell } from '../../net/push';
 import type { RoomView } from '../../net/protocol';
@@ -22,25 +22,62 @@ const BELL_TITLE: Record<Bell, string> = {
   blocked: "Notify me when it's my move: blocked in this browser's site settings",
 };
 
-/** Who holds each power; clicking a seat takes, reclaims or releases it. */
+type SeatTo = 'me' | 'computer' | 'open';
+
+/** Who holds each power; clicking a seat offers what can be done with it. */
 export function SeatStrip({ room, me, status, send, onInfo }: Props) {
-  const [asking, setAsking] = useState<{ power: Power; release: boolean } | null>(null);
-  const holder = (p: Power) => room.players.find((x) => x.id === room.seats[p]);
+  const [asking, setAsking] = useState<Power | null>(null);
+  const player = (p: Power) => room.players.find((x) => x.id === room.seats[p]);
   const push = usePush(me, send);
 
-  const take = (power: Power) => {
+  const seat = (power: Power, to: SeatTo) => {
     setAsking(null);
-    if ('Notification' in window && Notification.permission === 'default') void push.enable();
-    send({ t: 'seat', power, take: true });
+    if (to === 'me' && 'Notification' in window && Notification.permission === 'default') void push.enable();
+    send({ t: 'seat', power, to });
   };
 
   const onSeat = (p: Power) => {
-    const h = holder(p);
     if (!me) return onInfo('Pick a name first.');
-    if (!h) return take(p);
-    if (h.id === me) return setAsking({ power: p, release: true });
-    if (h.online) return onInfo(`${h.name} is playing ${powerName(p)}.`);
-    setAsking({ power: p, release: false });
+    const h = player(p);
+    if (h && h.id !== me && h.online) return onInfo(`${h.name} is playing ${powerName(p)}.`);
+    setAsking(p);
+  };
+
+  /** The question and the choices for a seat, by who holds it now. */
+  const choices = (p: Power): { question: string; options: [SeatTo, string][] } => {
+    const name = powerName(p);
+    const holder = room.seats[p];
+    if (holder === null)
+      return {
+        question: `${name} is open.`,
+        options: [
+          ['me', `Play ${name}`],
+          ['computer', 'Let the computer play it'],
+        ],
+      };
+    if (holder === COMPUTER)
+      return {
+        question: `The computer plays ${name}.`,
+        options: [
+          ['me', `Take ${name}`],
+          ['open', 'Open the seat'],
+        ],
+      };
+    if (holder === me)
+      return {
+        question: `You play ${name}.`,
+        options: [
+          ['computer', 'Hand it to the computer'],
+          ['open', `Release ${name}`],
+        ],
+      };
+    return {
+      question: `${player(p)?.name ?? 'Someone'} holds ${name} but is offline.`,
+      options: [
+        ['me', `Take ${name}`],
+        ['computer', 'Hand it to the computer'],
+      ],
+    };
   };
 
   const copyInvite = () => {
@@ -50,26 +87,26 @@ export function SeatStrip({ room, me, status, send, onInfo }: Props) {
     );
   };
 
-  const asked = asking && holder(asking.power);
+  const ask = asking && choices(asking);
   return (
     <div className="seats">
       {POWERS.map((p) => {
-        const h = holder(p);
+        const h = player(p);
+        const computer = room.seats[p] === COMPUTER;
         const style = POWER_STYLE[p];
+        const label = computer ? 'Computer' : h ? h.name : 'open';
         return (
           <button
             key={p}
             className={h?.id === me && me ? 'seat mine' : 'seat'}
             onClick={() => onSeat(p)}
-            title={
-              h ? `${powerName(p)}: ${h.name}${h.online ? '' : ' (offline)'}` : `${powerName(p)}: open seat, click to take it`
-            }
+            title={`${powerName(p)}: ${computer ? 'played by the computer' : h ? `${h.name}${h.online ? '' : ' (offline)'}` : 'open seat'}`}
           >
             <span className="seat-tag" style={{ background: style.color, color: style.ink }}>
               {style.short}
             </span>
-            <span className={h ? 'seat-name' : 'seat-name dim'}>{h ? h.name : 'open'}</span>
-            {h && <span className={h.online ? 'dot on' : 'dot'} />}
+            <span className={h || computer ? 'seat-name' : 'seat-name dim'}>{label}</span>
+            {(h || computer) && <span className={computer || h?.online ? 'dot on' : 'dot'} />}
           </button>
         );
       })}
@@ -94,24 +131,14 @@ export function SeatStrip({ room, me, status, send, onInfo }: Props) {
         </button>
       )}
       {status !== 'open' && <span className="reconnecting">Reconnecting…</span>}
-      {asking && (
+      {asking && ask && (
         <div className="seat-ask">
-          <div className="dim">
-            {asking.release
-              ? `Give up ${powerName(asking.power)}? Anyone can then take it.`
-              : `${asked?.name ?? 'Someone'} holds ${powerName(asking.power)} but is offline. Take it over?`}
-          </div>
-          <button
-            className="primary"
-            autoFocus
-            onClick={() => {
-              setAsking(null);
-              if (asking.release) send({ t: 'seat', power: asking.power, take: false });
-              else take(asking.power);
-            }}
-          >
-            {asking.release ? `Release ${powerName(asking.power)}` : `Take ${powerName(asking.power)}`}
-          </button>
+          <div className="dim">{ask.question}</div>
+          {ask.options.map(([to, text], i) => (
+            <button key={to} className={i === 0 ? 'primary' : undefined} autoFocus={i === 0} onClick={() => seat(asking, to)}>
+              {text}
+            </button>
+          ))}
           <button onClick={() => setAsking(null)}>Cancel</button>
         </div>
       )}

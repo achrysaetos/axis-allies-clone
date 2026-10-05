@@ -73,14 +73,14 @@ console.log(`subscribed at ${new URL(pushEndpoint).host}`);
 
 const { id } = (await (await fetch(`${base}/api/rooms`, { method: 'POST', body: '{}' })).json()) as { id: string };
 const alex = await player(id, 'Alex');
-alex.send({ t: 'seat', power: 'Germans', take: true });
+alex.send({ t: 'seat', power: 'Germans', to: 'me' });
 const p256dh = b64url(new Uint8Array(await crypto.subtle.exportKey('raw', ua.publicKey)));
 alex.send({ t: 'subscribe', subscription: { endpoint: pushEndpoint, keys: { p256dh, auth: b64url(auth) } } });
 await alex.roomMsg();
 alex.ws.close();
 
 const bea = await player(id, 'Bea');
-bea.send({ t: 'seat', power: 'Russians', take: true });
+bea.send({ t: 'seat', power: 'Russians', to: 'me' });
 let room = await bea.roomMsg();
 while (room.seats.Russians === null) room = await bea.roomMsg();
 while (room.state.power === 'Russians') {

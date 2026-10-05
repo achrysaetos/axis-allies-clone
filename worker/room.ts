@@ -2,16 +2,16 @@ import { actingPower } from '../src/engine/game';
 import { newGame } from '../src/engine/state';
 import { POWERS } from '../src/engine/types';
 import type { Action, Decision, GameState, Options, Power, Unit } from '../src/engine/types';
-import { NAME_MAX } from '../src/net/protocol';
-import type { ClientMsg, PlayerId, PushSubscriptionKeys, RoomView, ServerMsg } from '../src/net/protocol';
+import { COMPUTER, NAME_MAX } from '../src/net/protocol';
+import type { ClientMsg, Holder, PlayerId, PushSubscriptionKeys, RoomView, ServerMsg } from '../src/net/protocol';
 import { powerName } from '../src/ui/theme';
-import { actAll, quickResolve } from '../src/ui/session';
+import { actAll, aiBurst, quickResolve } from '../src/ui/session';
 import type { Controller, Session } from '../src/ui/session';
 
 export interface RoomRecord {
   id: string;
   version: number;
-  seats: Record<Power, PlayerId | null>;
+  seats: Record<Power, Holder>;
   players: { id: PlayerId; name: string; token: string }[];
   session: { state: GameState; fallen: Unit[] };
   /** The state before the first move of the current phase; undo replays `moves` from here, one drop at a time. */
@@ -31,7 +31,7 @@ export function newRoom(id: string, seed: number, options: Partial<Options>): Ro
   return {
     id,
     version: 0,
-    seats: Object.fromEntries(POWERS.map((p) => [p, null])) as Record<Power, PlayerId | null>,
+    seats: Object.fromEntries(POWERS.map((p) => [p, null])) as Record<Power, Holder>,
     players: [],
     session: { state: newGame(seed, options), fallen: [] },
     phaseStart: null,
@@ -52,8 +52,14 @@ export function view(r: RoomRecord, online: ReadonlySet<PlayerId>): RoomView {
   };
 }
 
-const HUMANS = Object.fromEntries(POWERS.map((p) => [p, 'human'])) as Record<Power, Controller>;
-const asSession = (r: RoomRecord, state = r.session.state): Session => ({ ...r.session, state, controllers: HUMANS, undo: [] });
+const controllersOf = (r: RoomRecord) =>
+  Object.fromEntries(POWERS.map((p) => [p, r.seats[p] === COMPUTER ? 'ai' : 'human'])) as Record<Power, Controller>;
+const asSession = (r: RoomRecord, state = r.session.state): Session => ({
+  ...r.session,
+  state,
+  controllers: controllersOf(r),
+  undo: [],
+});
 
 function played(r: RoomRecord, s: Session, actions: Action[]): RoomRecord {
   const move = actions.length > 0 && actions.every((a) => a.type === 'move');
@@ -83,13 +89,12 @@ export function handle(r: RoomRecord, me: PlayerId | null, msg: ClientMsg, onlin
     case 'seat': {
       if (!me) return refuse('pick a name first');
       const holder = r.seats[msg.power];
-      if (!msg.take) {
-        if (holder !== me) return refuse('that seat is not yours');
-        return { record: { ...r, seats: { ...r.seats, [msg.power]: null } } };
-      }
-      if (holder === me) return { record: r };
-      if (holder && online.has(holder)) return refuse('another player holds that seat');
-      return { record: { ...r, seats: { ...r.seats, [msg.power]: me } } };
+      if (msg.to === 'open' && holder !== me && holder !== COMPUTER) return refuse('that seat is not yours');
+      if (msg.to !== 'open' && holder !== null && holder !== COMPUTER && holder !== me && online.has(holder))
+        return refuse('another player holds that seat');
+      const next = msg.to === 'me' ? me : msg.to === 'computer' ? COMPUTER : null;
+      if (holder === next) return { record: r };
+      return { record: { ...r, seats: { ...r.seats, [msg.power]: next } } };
     }
     case 'act':
     case 'resolve': {
@@ -138,6 +143,17 @@ export function handle(r: RoomRecord, me: PlayerId | null, msg: ClientMsg, onlin
 /** Browsers a player can be reached on; the oldest drops off past this. */
 export const PUSHES_PER_PLAYER = 5;
 
+export const computerToMove = (r: RoomRecord) => !r.session.state.winner && r.seats[actingPower(r.session.state)] === COMPUTER;
+
+/** The computer's next stretch of play when one of its seats must act, or null when no computer is to move. */
+export function computerTurn(r: RoomRecord, budgetMs: number): Outcome | null {
+  if (!computerToMove(r)) return null;
+  const step = aiBurst(asSession(r), budgetMs);
+  if (!step.ok) return { record: r, error: step.error };
+  const { state: next, fallen } = step.session;
+  return { record: { ...r, version: r.version + 1, session: { state: next, fallen }, phaseStart: null, moves: [] } };
+}
+
 export interface Notice {
   player: PlayerId;
   title: string;
@@ -165,7 +181,7 @@ const DECISION: { [K in Decision['kind']]: (power: string, space: string) => str
 export function whoToNotify(before: RoomRecord, after: RoomRecord, online: ReadonlySet<PlayerId>): Notice[] {
   const was = before.session.state;
   const now = after.session.state;
-  const name = (id: PlayerId | null) => after.players.find((p) => p.id === id)?.name ?? 'Someone';
+  const name = (id: Holder) => (id === COMPUTER ? 'The computer' : (after.players.find((p) => p.id === id)?.name ?? 'Someone'));
   const actor = name(before.seats[actingPower(was)]);
   if (now.winner) {
     if (was.winner) return [];
@@ -175,7 +191,7 @@ export function whoToNotify(before: RoomRecord, after: RoomRecord, online: Reado
   }
   const acting = actingPower(now);
   const player = after.seats[acting];
-  if (!player || player === before.seats[actingPower(was)] || online.has(player)) return [];
+  if (!player || player === COMPUTER || player === before.seats[actingPower(was)] || online.has(player)) return [];
   const d = now.pending;
   const space = d && 'battle' in d ? (now.battles.find((b) => b.id === d.battle)?.space ?? '') : '';
   const body = d
@@ -218,8 +234,8 @@ export function parseClientMsg(text: string): ClientMsg | null {
     case 'join':
       return typeof m.name === 'string' ? { t: 'join', name: m.name } : null;
     case 'seat':
-      return POWERS.includes(m.power as Power) && typeof m.take === 'boolean'
-        ? { t: 'seat', power: m.power as Power, take: m.take }
+      return POWERS.includes(m.power as Power) && (m.to === 'me' || m.to === 'computer' || m.to === 'open')
+        ? { t: 'seat', power: m.power as Power, to: m.to }
         : null;
     case 'act':
       return isVersion(m.version) &&

@@ -30,6 +30,7 @@ import { actAll, aiBurst, quickResolve, undo } from './session';
 import { autosave, downloadSave } from './saves';
 import type { Session } from './session';
 import type { RoomConnection } from '../net/client';
+import { COMPUTER } from '../net/protocol';
 import { SeatStrip } from './panels/Seats';
 
 const AI_DELAY_MS = 120;
@@ -403,9 +404,10 @@ export function Game({
   }, [onUndo, onEndPhase, endable]);
 
   const playing = (p: Power) => {
-    if (controllers[p] === 'ai') return `${powerName(p)} (computer)`;
+    if (controllers[p] === 'ai' || online?.room.seats[p] === COMPUTER) return `${powerName(p)} (computer)`;
     const holder = online?.room.players.find((x) => x.id === online.room.seats[p]);
-    return holder ? `${powerName(p)} (${holder.name})` : powerName(p);
+    if (holder) return `${powerName(p)} (${holder.name})`;
+    return online ? `${powerName(p)}, an open seat: take it above or hand it to the computer` : powerName(p);
   };
   const viewed = battleView !== null ? state.battles.find((b) => b.id === battleView) : undefined;
   const stranded = state.pending?.kind === 'landStranded' ? state.pending : null;
@@ -414,7 +416,7 @@ export function Game({
     ? `The ${state.winner} won. Open the ☰ menu for a new game.`
     : !humanActs
       ? online && !online.room.seats[actingPower(state)]
-        ? `Nobody holds ${powerName(actingPower(state))} yet. Take the seat, or copy the invite link for a friend.`
+        ? `Nobody holds ${powerName(actingPower(state))} yet. Click its seat above to play it or hand it to the computer, or invite a friend.`
         : `${playing(actingPower(state))} is playing…`
       : hand?.kind === 'units'
         ? HAND_HINT

@@ -2,6 +2,11 @@ import type { Action, GameState, Options, Power, Unit } from '../engine/types';
 
 export type PlayerId = string;
 
+/** The server plays a seat the players handed to it. Player ids are UUIDs, so this never clashes with one. */
+export const COMPUTER = 'computer';
+/** Who holds a power: a player, the computer, or nobody yet. */
+export type Holder = PlayerId | typeof COMPUTER | null;
+
 export interface PublicPlayer {
   id: PlayerId;
   name: string;
@@ -12,7 +17,7 @@ export interface RoomView {
   id: string;
   /** Bumps on every accepted change to the game. */
   version: number;
-  seats: Record<Power, PlayerId | null>;
+  seats: Record<Power, Holder>;
   players: PublicPlayer[];
   /** rng = 0 and scriptedDice = [] so the dice stay secret. */
   state: GameState;
@@ -29,7 +34,7 @@ export interface PushSubscriptionKeys {
 export type ClientMsg =
   | { t: 'hello'; token: string | null }
   | { t: 'join'; name: string }
-  | { t: 'seat'; power: Power; take: boolean }
+  | { t: 'seat'; power: Power; to: 'me' | 'computer' | 'open' }
   | { t: 'act'; version: number; actions: Action[] }
   | { t: 'resolve'; version: number; battle: number }
   | { t: 'undo'; version: number }

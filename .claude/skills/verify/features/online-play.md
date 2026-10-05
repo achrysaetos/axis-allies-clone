@@ -6,7 +6,8 @@ Friends play one game from separate browsers. One player creates a room from the
 
 - Creating a room with `Play online with friends`, which opens `#/g/<room id>`.
 - The `Join this game` name prompt on first visit. A reload keeps the player and their seats.
-- The seat strip under the top bar. It shows each power's holder and an online dot, and `Copy invite link`. Clicking an open seat takes it, clicking your own seat offers to release it, and clicking an offline player's seat asks before taking it over.
+- Computer seats. Clicking an open seat offers `Play <power>` or `Let the computer play it`. The server then plays that power in short bursts (its pieces slide in, the hint reads `<Power> (computer) is playing…`), and human defenders still answer their own decisions. A computer seat can be taken back (`Take <power>`) or opened (`Open the seat`), and your own seat can be handed over (`Hand it to the computer`).
+- The seat strip under the top bar. It shows each power's holder and an online dot, and `Copy invite link`. Clicking a seat opens a small `.seat-ask` question with the choices that fit who holds it.
 - The hint line while someone else acts, `Soviet Union (Alex) is playing…`, or `Nobody holds Soviet Union yet…` for an empty seat.
 - Live moves, purchases, phase changes and Undo arriving on the other screen.
 - Cross-player battles. The attacker sees `Waiting for Germany (Bea)…` while the defender gets the casualty decision.

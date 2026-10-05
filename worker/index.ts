@@ -4,7 +4,7 @@ import type { CreateRoomResponse, PlayerId, PushKeyResponse, PushPayload, Server
 import type { Options } from '../src/engine/types';
 import { loadVapid, pushRequest } from './push';
 import type { VapidEnv } from './push';
-import { handle, newRoom, parseClientMsg, parseOptions, view, whoToNotify } from './room';
+import { computerToMove, computerTurn, handle, newRoom, parseClientMsg, parseOptions, view, whoToNotify } from './room';
 import type { Notice, Outcome, RoomRecord } from './room';
 
 interface Env extends VapidEnv {
@@ -16,6 +16,9 @@ interface Attachment {
 }
 
 const RECORD_KEY = 'room';
+const COMPUTER_PAUSE_MS = 150;
+const COMPUTER_BURST_MS = 200;
+const COMPUTER_RETRY_MS = 3000;
 const BASE32 = 'abcdefghijklmnopqrstuvwxyz234567';
 
 const roomId = () => [...crypto.getRandomValues(new Uint8Array(10))].map((b) => BASE32[b & 31]).join('');
@@ -95,14 +98,33 @@ export class Room extends DurableObject<Env> {
       send({ t: 'error', message: out.error });
       return send({ t: 'room', room: view(record, this.online()) });
     }
-    if (out.record !== record) {
-      this.record = out.record;
-      await this.ctx.storage.put(RECORD_KEY, out.record);
-      const notices = whoToNotify(record, out.record, this.online());
-      if (notices.length > 0) this.ctx.waitUntil(this.push(notices));
-    }
+    if (out.record !== record) await this.commit(record, out.record);
     // A welcome changes who is online even when the record stays the same.
-    if (out.record !== record || out.reply?.t === 'welcome') this.broadcast();
+    else if (out.reply?.t === 'welcome') this.broadcast();
+  }
+
+  /** Stores an accepted change, tells everyone, and wakes the computer if one of its seats is now to act. */
+  private async commit(before: RoomRecord, after: RoomRecord): Promise<void> {
+    this.record = after;
+    await this.ctx.storage.put(RECORD_KEY, after);
+    const notices = whoToNotify(before, after, this.online());
+    if (notices.length > 0) this.ctx.waitUntil(this.push(notices));
+    this.broadcast();
+    if (computerToMove(after)) await this.ctx.storage.setAlarm(Date.now() + COMPUTER_PAUSE_MS);
+  }
+
+  /** The computer plays in short bursts, so friends watch its moves arrive one after another. */
+  override async alarm(): Promise<void> {
+    const record = this.record;
+    if (!record) return;
+    const out = computerTurn(record, COMPUTER_BURST_MS);
+    if (!out) return;
+    if (out.error) {
+      console.warn(`computer is stuck: ${out.error}`);
+      await this.ctx.storage.setAlarm(Date.now() + COMPUTER_RETRY_MS);
+      return;
+    }
+    await this.commit(record, out.record);
   }
 
   override async webSocketClose(ws: WebSocket, code: number): Promise<void> {
