@@ -1262,3 +1262,14 @@ button.bell.blocked svg {
 .hit-pad {
   fill: transparent;
 }
+.recap-turn {
+  margin-top: 6px;
+}
+.recap-turn ul {
+  margin: 2px 0 0;
+  padding-left: 18px;
+  line-height: 1.45;
+}
+.recap-turn li.capture {
+  color: var(--accent);
+}

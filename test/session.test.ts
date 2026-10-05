@@ -68,7 +68,7 @@ describe('quick resolve', () => {
 });
 
 describe('turn recap', () => {
-  it('covers everything since this power last ended a turn', () => {
+  it('groups everything since this power last ended a turn by the turn it happened in, leaving out a turn in progress', () => {
     const log = [
       'Germans captures Karelia S.S.R.',
       'Russians collects 20 IPCs',
@@ -77,8 +77,12 @@ describe('turn recap', () => {
       'British bombs Germany for 4 damage, losing 0 bombers',
       'British collects 31 IPCs',
     ];
-    expect(sinceLastTurn(log, 'Russians')).toEqual([log[2], log[4]]);
-    expect(sinceLastTurn(log.slice(0, 1), 'Russians')).toEqual([log[0]]);
+    expect(sinceLastTurn(log, 'Russians')).toEqual([
+      { power: 'Germans', lines: [log[2]] },
+      { power: 'British', lines: [log[4]] },
+    ]);
+    expect(sinceLastTurn([...log, 'Japanese captures Buryatia S.S.R.'], 'Russians')).toHaveLength(2);
+    expect(sinceLastTurn(log, 'British')).toEqual([]);
   });
 });
 

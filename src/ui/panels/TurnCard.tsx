@@ -3,14 +3,32 @@ import { SIDE } from '../../engine/data';
 import { capitalHeld, income } from '../../engine/queries';
 import type { GameState, Power } from '../../engine/types';
 import { POWER_STYLE, readable } from '../theme';
+import { PowerTag } from '../units';
 
 const NOTABLE = /captures|liberates|seizes|bombs|battle for|holds against|retreats|clears|lost|win with|cannot collect/;
-/** Everything notable since this power's last turn ended, so the returning player catches up at a glance. */
-export function sinceLastTurn(log: string[], power: Power): string[] {
-  const ended = new RegExp(`^${power} (collects \\d+ IPCs|cannot collect income)`);
+const RECAP_PER_TURN = 4;
+/** Territory changing hands is the news a returning player needs first. */
+const captured = (l: string) => /captures|liberates|seizes/.test(l);
+const ENDED = /^(\w+) (collects \d+ IPCs|cannot collect income)/;
+
+/**
+ * Everything notable since this power's last turn ended, grouped by the turn it happened in, so the returning player
+ * catches up at a glance. Lines from a turn still in progress are left out.
+ */
+export function sinceLastTurn(log: string[], power: Power): { power: Power; lines: string[] }[] {
+  const endedMine = (l: string) => l.match(ENDED)?.[1] === power;
   let start = log.length;
-  while (start > 0 && !ended.test(log[start - 1]!)) start -= 1;
-  return log.slice(start).filter((l) => NOTABLE.test(l));
+  while (start > 0 && !endedMine(log[start - 1]!)) start -= 1;
+  const out: { power: Power; lines: string[] }[] = [];
+  let lines: string[] = [];
+  for (const l of log.slice(start)) {
+    if (NOTABLE.test(l)) lines.push(l);
+    const end = l.match(ENDED);
+    if (!end) continue;
+    if (lines.length > 0) out.push({ power: end[1] as Power, lines });
+    lines = [];
+  }
+  return out;
 }
 
 export function TurnCard({ state, onStart }: { state: GameState; onStart: () => void }) {
@@ -51,8 +69,20 @@ export function TurnCard({ state, onStart }: { state: GameState; onStart: () => 
         {recap.length > 0 && (
           <div className="turn-recap">
             <div className="dim">Since your last turn</div>
-            {recap.slice(-12).map((l, i) => (
-              <div key={i}>{readable(l)}</div>
+            {recap.map((g, i) => (
+              <div key={i} className="recap-turn">
+                <PowerTag power={g.power} />
+                <ul>
+                  {[...g.lines.filter(captured), ...g.lines.filter((l) => !captured(l))].slice(0, RECAP_PER_TURN).map((l, j) => (
+                    <li key={j} className={captured(l) ? 'capture' : undefined}>
+                      {readable(l)}
+                    </li>
+                  ))}
+                  {g.lines.length > RECAP_PER_TURN && (
+                    <li className="dim">and {g.lines.length - RECAP_PER_TURN} more in the game log</li>
+                  )}
+                </ul>
+              </div>
             ))}
           </div>
         )}
