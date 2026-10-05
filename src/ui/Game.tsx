@@ -37,6 +37,9 @@ import { SeatStrip } from './panels/Seats';
 const AI_DELAY_MS = 120;
 const AI_BUDGET_MS = 30;
 const TOAST_MS = 4500;
+/** Room the raid-or-attack choice needs, so it never opens past the edge of the screen. */
+const CHOICE_W = 250;
+const CHOICE_H = 100;
 /** Width the battle dialog covers on the right, kept clear when the map centers on a battle; phones show it as a bottom sheet. */
 const dialogInset = (): Inset => (window.innerWidth > 640 ? { right: 590 } : { bottom: window.innerHeight * 0.5 });
 
@@ -527,7 +530,13 @@ export function Game({
           </div>
         )}
         {raidChoice && (
-          <div className="choice" style={{ left: raidChoice.x, top: raidChoice.y }}>
+          <div
+            className="choice"
+            style={{
+              left: Math.min(raidChoice.x, window.innerWidth - CHOICE_W),
+              top: Math.min(raidChoice.y, window.innerHeight - CHOICE_H),
+            }}
+          >
             <button
               className="primary"
               autoFocus
