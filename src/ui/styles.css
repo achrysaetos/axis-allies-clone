@@ -1259,3 +1259,6 @@ button.bell.blocked svg {
     animation: none;
   }
 }
+.hit-pad {
+  fill: transparent;
+}

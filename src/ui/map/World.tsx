@@ -10,6 +10,8 @@ import { CENTER, MAP_WIDTH, SHAPES, seaNumber } from './geometry';
 import type { SpaceShape } from './geometry';
 import { glideKey } from './glide';
 
+const TINY_PAD = 26;
+
 export interface WorldProps {
   state: GameState;
   selected: SpaceId | null;
@@ -293,6 +295,10 @@ export const World = memo(function World({ state, selected, highlights, held, ta
             <path key={`s-${s.id}`} d={s.d} className="selected" pointerEvents="none" />
           ))}
         </g>
+      ))}
+      {/* While something is held, only tiny spaces it can reach get a pad, so a fleet dropped by an island still lands at sea. */}
+      {SHAPES.filter((s) => s.tiny && (highlights.size === 0 || highlights.has(s.id))).map((s) => (
+        <circle key={`p-${s.id}`} cx={s.center[0]} cy={s.center[1]} r={TINY_PAD} data-space={s.id} className="hit-pad" />
       ))}
       {SHAPES.filter((s) => !s.water).map((s) => (
         <text key={`n-${s.id}`} x={s.center[0]} y={s.center[1] + 3} textAnchor="middle" className="land-label" data-space={s.id}>
