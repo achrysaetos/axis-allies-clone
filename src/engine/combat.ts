@@ -141,6 +141,9 @@ function rollGroup(s: GameState, b: Battle, side: 'attacker' | 'defender', label
   return hits;
 }
 
+/** Ground and sea fire first, then submarines, then planes, so every battle log reads in the same order. */
+const FIRE_ORDER: HitCategory[] = ['any', 'notAir', 'notSub', 'air'];
+
 function fire(s: GameState, b: Battle, side: 'attacker' | 'defender', firers: Unit[]): HitGroup[] {
   const friendlyDestroyer = (side === 'attacker' ? liveAttackers(s, b) : liveDefenders(s, b)).some((u) => u.type === 'destroyer');
   const infantrySupported =
@@ -161,7 +164,9 @@ function fire(s: GameState, b: Battle, side: 'attacker' | 'defender', firers: Un
   }
   const groups: HitGroup[] = [];
   const targets = casualtyPool(s, b, side === 'attacker' ? 'defender' : 'attacker');
-  for (const [category, values] of byCategory) {
+  for (const category of FIRE_ORDER) {
+    const values = byCategory.get(category);
+    if (!values) continue;
     const hits = rollGroup(s, b, side, category, values);
     if (hits > 0 && !targets.some((t) => canTake(category, t))) b.dice[b.dice.length - 1]!.wasted = true;
     if (hits > 0) groups.push({ category, hits });
