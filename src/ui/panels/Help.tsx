@@ -28,6 +28,7 @@ const CONTROLS = [
   ],
   ['Click a piece', 'Pick up one unit; click again for more. Shift-click takes all of that type, right-click puts one back.'],
   ['Click a space', 'Move what you are holding there. Highlighted spaces are in reach.'],
+  ['Scroll the wheel', 'Zoom the map around the pointer. Drag the board itself to pan.'],
   ['Hover an enemy space', 'While holding units, see your chance to win if you attack.'],
   [
     'Transports',
