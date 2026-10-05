@@ -20,7 +20,7 @@ npm run dev:worker
 npm run dev
 ```
 
-Press **Play online with friends** on the start screen. The game opens at a `#/g/<id>` link. Enter a name, click a power in the seat strip under the top bar to take it, and use **Copy invite link** to send the link to friends. Each player acts only for the powers they hold, and a defender answers its own casualty choices. Reopening the link in the same browser keeps your seats. `npm run deploy` builds the client and deploys the Worker to your Cloudflare account.
+Press **Play online with friends** on the start screen. The game opens at a `#/g/<id>` link. Enter a name, click a power in the seat strip under the top bar to take it, and use **Copy invite link** to send the link to friends. Each player acts only for the powers they hold, and a defender answers its own casualty choices. Click an open seat to hand it to the computer instead, which the server then plays; the start screen's Player/Computer choice per side presets this. Reopening the link in the same browser keeps your seats. `npm run deploy` builds the client and deploys the Worker to your Cloudflare account.
 
 ### Push notifications
 
