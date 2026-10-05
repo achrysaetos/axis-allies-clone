@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CAPITAL_OF, SIDE, isAir, space, unitCount } from '../engine/data';
 import { battleBlocker } from '../engine/combat';
 import { actingPower, productionLeft } from '../engine/game';
-import { areAllied, capitalHeld, factoryAt } from '../engine/queries';
+import { areAllied, factoryAt } from '../engine/queries';
 import type { Action, Battle, GameState, Power, SpaceId, UnitId, UnitType } from '../engine/types';
 import { MapView } from './map/MapView';
 import type { Inset, PieceEvent } from './map/MapView';
@@ -25,6 +25,8 @@ import type { Hand } from './pieces';
 import { useDrag } from './drag';
 import { UnitSvg } from './icons';
 import { tally } from './units';
+import { hintFor } from './hints';
+import type { Actor } from './hints';
 import { cuesBetween, play } from './sound';
 import { POWER_STYLE } from './theme';
 import { actAll, aiBurst, quickResolve, undo } from './session';
@@ -60,29 +62,8 @@ function raidPossible(state: GameState, ids: UnitId[], to: SpaceId): boolean {
   return units.some((u) => u.type === 'bomber') && units.every((u) => raiders.includes(u.type) && isAir(u.type));
 }
 
-const HINT: Partial<Record<GameState['phase'], string>> = {
-  purchase: 'Click units in the chart below to buy them; shift-click buys as many as you can afford. They arrive at Mobilize.',
-  combatMove:
-    'Drag pieces into enemy spaces to attack; shift-drag brings everything in the space. Click a piece to pick up one at a time.',
-  noncombatMove: 'Move units that did not attack, and land every plane on friendly ground or a carrier.',
-  mobilize: 'Drag new units from the tray onto a highlighted space. Anything left unplaced is refunded.',
-};
-
 /** A finger has no shift key, right button or Esc, so touch screens get the gestures they can make. */
 const TOUCH = typeof matchMedia !== 'undefined' && matchMedia('(pointer: coarse)').matches;
-const PHASE_HINT: typeof HINT = TOUCH
-  ? {
-      ...HINT,
-      purchase: 'Tap units in the chart below to buy them. They arrive at Mobilize.',
-      combatMove:
-        'Drag pieces into enemy spaces to attack. Tap a piece to pick up one at a time, or double-tap to take them all.',
-      mobilize:
-        'Tap a unit in the tray (double-tap for all of them), then tap a highlighted space. Anything left unplaced is refunded.',
-    }
-  : HINT;
-const HAND_HINT = TOUCH
-  ? 'Tap a highlighted space to move there, or the space they came from to put them back. Tap a piece for one more.'
-  : 'Drop on a highlighted space. Click a piece for one more, right-click to put one back, Esc to let go.';
 
 export type Online = RoomConnection & { room: NonNullable<RoomConnection['room']> };
 
@@ -489,22 +470,12 @@ export function Game({
   };
   const viewed = battleView !== null ? state.battles.find((b) => b.id === battleView) : undefined;
   const stranded = state.pending?.kind === 'landStranded' ? state.pending : null;
-  const openBattles = state.battles.some((b) => !b.resolved);
-  const hint = state.winner
-    ? `The ${state.winner} won. Open the ☰ menu for a new game.`
-    : !humanActs
-      ? online && !online.room.seats[actingPower(state)]
-        ? `Nobody holds ${powerName(actingPower(state))} yet. Click its seat above to play it or hand it to the computer, or invite a friend.`
-        : `${playing(actingPower(state))} is playing…`
-      : hand?.kind === 'units'
-        ? HAND_HINT
-        : state.phase === 'combat'
-          ? openBattles
-            ? 'Click a ⚔ to fight that battle.'
-            : 'Every battle is fought. End the phase.'
-          : state.phase === 'purchase' && !capitalHeld(state, state.power)
-            ? undefined
-            : PHASE_HINT[state.phase];
+  const actor: Actor = humanActs
+    ? { kind: 'me' }
+    : online && !online.room.seats[actingPower(state)]
+      ? { kind: 'empty' }
+      : { kind: 'other', who: playing(actingPower(state)) };
+  const hint = hintFor(state, actor, hand?.kind === 'units', TOUCH);
   const style = POWER_STYLE[state.power];
 
   return (
