@@ -346,6 +346,7 @@ path.selected {
 .dice-log {
   max-height: 180px;
   overflow-y: auto;
+  scrollbar-gutter: stable;
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
   padding: 6px 0;
@@ -381,6 +382,7 @@ path.selected {
 }
 .hits {
   font-weight: 600;
+  white-space: nowrap;
 }
 .result {
   font-size: 15px;
