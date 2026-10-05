@@ -1,7 +1,8 @@
 import { DurableObject } from 'cloudflare:workers';
 import { NO_SUCH_ROOM, ROOM_ID } from '../src/net/protocol';
 import type { CreateRoomResponse, PlayerId, PushKeyResponse, PushPayload, ServerMsg } from '../src/net/protocol';
-import type { Options } from '../src/engine/types';
+import { POWERS } from '../src/engine/types';
+import type { Options, Power } from '../src/engine/types';
 import { loadVapid, pushRequest } from './push';
 import type { VapidEnv } from './push';
 import { computerToMove, computerTurn, handle, newRoom, parseClientMsg, parseOptions, view, whoToNotify } from './room';
@@ -30,10 +31,12 @@ export default {
     const url = new URL(req.url);
     if (req.method === 'POST' && url.pathname === '/api/rooms') {
       const body: unknown = await req.json().catch(() => null);
-      const options = parseOptions(typeof body === 'object' && body !== null ? (body as { options?: unknown }).options : null);
+      const request = typeof body === 'object' && body !== null ? (body as Record<string, unknown>) : {};
+      const options = parseOptions(request.options);
+      const computer = Array.isArray(request.computer) ? POWERS.filter((p) => (request.computer as unknown[]).includes(p)) : [];
       const id = roomId();
       const seed = crypto.getRandomValues(new Uint32Array(1))[0]!;
-      await env.ROOMS.get(env.ROOMS.idFromName(id)).create(id, seed, options);
+      await env.ROOMS.get(env.ROOMS.idFromName(id)).create(id, seed, options, computer);
       return json({ id } satisfies CreateRoomResponse);
     }
     if (req.method === 'GET' && url.pathname === '/api/push-key') {
@@ -62,10 +65,11 @@ export class Room extends DurableObject<Env> {
     });
   }
 
-  async create(id: string, seed: number, options: Partial<Options>): Promise<void> {
+  async create(id: string, seed: number, options: Partial<Options>, computer: Power[]): Promise<void> {
     if (this.record) throw new Error(`room ${id} already exists`);
-    this.record = newRoom(id, seed, options);
+    this.record = newRoom(id, seed, options, computer);
     await this.ctx.storage.put(RECORD_KEY, this.record);
+    if (computerToMove(this.record)) await this.ctx.storage.setAlarm(Date.now() + COMPUTER_PAUSE_MS);
   }
 
   override async fetch(): Promise<Response> {

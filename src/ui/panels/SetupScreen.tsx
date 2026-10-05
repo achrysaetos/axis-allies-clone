@@ -42,7 +42,7 @@ export function SetupScreen({ saved, onStart }: Props) {
       const res = await fetch('/api/rooms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ options } satisfies CreateRoomRequest),
+        body: JSON.stringify({ options, computer: POWERS.filter((p) => players[SIDE[p]] === 'ai') } satisfies CreateRoomRequest),
       });
       if (!res.ok) throw new Error(`the server answered ${res.status}`);
       const { id } = (await res.json()) as CreateRoomResponse;

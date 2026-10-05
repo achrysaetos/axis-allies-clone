@@ -47,6 +47,8 @@ export type ServerMsg =
 
 export interface CreateRoomRequest {
   options: Partial<Options>;
+  /** Powers the computer plays from the start, as chosen on the setup screen. */
+  computer: Power[];
 }
 
 export interface CreateRoomResponse {

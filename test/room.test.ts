@@ -289,6 +289,11 @@ describe('push subscriptions', () => {
 });
 
 describe('computer seats', () => {
+  it('a room starts with the computer in the seats the setup screen gave it', () => {
+    const r = newRoom('abcdefghij', 1, {}, ['Germans', 'Japanese']);
+    expect(r.seats).toEqual({ Russians: null, Germans: COMPUTER, British: null, Japanese: COMPUTER, Americans: null });
+  });
+
   it('any player can hand an open seat to the computer, take it back, or open it again', () => {
     const { r, alex, bea } = twoPlayers();
     const r1 = accepted(r, alex, { t: 'seat', power: 'British', to: 'computer' });

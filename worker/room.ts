@@ -27,11 +27,11 @@ export interface Outcome {
   reply?: ServerMsg;
 }
 
-export function newRoom(id: string, seed: number, options: Partial<Options>): RoomRecord {
+export function newRoom(id: string, seed: number, options: Partial<Options>, computer: readonly Power[] = []): RoomRecord {
   return {
     id,
     version: 0,
-    seats: Object.fromEntries(POWERS.map((p) => [p, null])) as Record<Power, Holder>,
+    seats: Object.fromEntries(POWERS.map((p) => [p, computer.includes(p) ? COMPUTER : null])) as Record<Power, Holder>,
     players: [],
     session: { state: newGame(seed, options), fallen: [] },
     phaseStart: null,
