@@ -10,6 +10,8 @@ export function SpaceInfo({ state, id }: { state: GameState; id: SpaceId }) {
   const owner = state.owner[id];
   const factory = factoryAt(state, id);
   const units = unitsAt(state, id).filter((u) => u.type !== 'factory');
+  // Cargo set to land here is still aboard its transport at sea until the battle.
+  const landing = state.units.filter((u) => u.offloadedTo === id && u.at !== id);
   return (
     <section className="hover-card">
       <h4>{id}</h4>
@@ -26,6 +28,12 @@ export function SpaceInfo({ state, id }: { state: GameState; id: SpaceId }) {
           <UnitChips units={units.filter((u) => u.owner === p)} />
         </div>
       ))}
+      {landing.length > 0 && (
+        <div className="hover-owner">
+          <span className="dim">Landing from {landing[0]!.at}</span>
+          <UnitChips units={landing} />
+        </div>
+      )}
     </section>
   );
 }
