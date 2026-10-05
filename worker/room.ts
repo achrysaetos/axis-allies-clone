@@ -12,7 +12,8 @@ export interface RoomRecord {
   id: string;
   version: number;
   seats: Record<Power, Holder>;
-  players: { id: PlayerId; name: string; token: string }[];
+  /** `leftAt` is when the player's last connection closed; their seats stay theirs for a grace period after it. */
+  players: { id: PlayerId; name: string; token: string; leftAt?: number }[];
   session: { state: GameState; fallen: Unit[] };
   /** The state before the first move of the current phase; undo replays `moves` from here, one drop at a time. */
   phaseStart: GameState | null;
@@ -72,7 +73,19 @@ function played(r: RoomRecord, s: Session, actions: Action[]): RoomRecord {
   };
 }
 
-export function handle(r: RoomRecord, me: PlayerId | null, msg: ClientMsg, online: ReadonlySet<PlayerId>): Outcome {
+export const MAX_PLAYERS = 24;
+/** A drop of many moves is one message; anything else is a single action, so one message never acts past the sender's move. */
+export const MAX_BATCH = 40;
+/** A phone that locks drops its connection for a moment; nobody may take that player's seats until this has passed. */
+export const SEAT_GRACE_MS = 90_000;
+
+export function handle(
+  r: RoomRecord,
+  me: PlayerId | null,
+  msg: ClientMsg,
+  online: ReadonlySet<PlayerId>,
+  now = Date.now(),
+): Outcome {
   const refuse = (error: string): Outcome => ({ record: r, error });
   switch (msg.t) {
     case 'hello': {
@@ -81,6 +94,7 @@ export function handle(r: RoomRecord, me: PlayerId | null, msg: ClientMsg, onlin
     }
     case 'join': {
       if (me) return refuse('you have already joined');
+      if (r.players.length >= MAX_PLAYERS) return refuse('this game already has as many players as it can take');
       const name = msg.name.trim().slice(0, NAME_MAX);
       if (!name) return refuse('pick a name first');
       const p = { id: crypto.randomUUID(), name, token: crypto.randomUUID() };
@@ -90,8 +104,12 @@ export function handle(r: RoomRecord, me: PlayerId | null, msg: ClientMsg, onlin
       if (!me) return refuse('pick a name first');
       const holder = r.seats[msg.power];
       if (msg.to === 'open' && holder !== me && holder !== COMPUTER) return refuse('that seat is not yours');
-      if (msg.to !== 'open' && holder !== null && holder !== COMPUTER && holder !== me && online.has(holder))
-        return refuse('another player holds that seat');
+      if (msg.to !== 'open' && holder !== null && holder !== COMPUTER && holder !== me) {
+        if (online.has(holder)) return refuse('another player holds that seat');
+        const left = r.players.find((p) => p.id === holder)?.leftAt;
+        if (left !== undefined && now - left < SEAT_GRACE_MS)
+          return refuse('that player lost their connection a moment ago; give them a minute to come back');
+      }
       const next = msg.to === 'me' ? me : msg.to === 'computer' ? COMPUTER : null;
       if (holder === next) return { record: r };
       return { record: { ...r, seats: { ...r.seats, [msg.power]: next } } };
@@ -102,6 +120,8 @@ export function handle(r: RoomRecord, me: PlayerId | null, msg: ClientMsg, onlin
       if (state.winner) return refuse('the game is over');
       if (!me || r.seats[actingPower(state)] !== me) return refuse('it is not your move');
       if (msg.version !== r.version) return refuse('the game moved on before your action arrived');
+      if (msg.t === 'act' && msg.actions.length > 1 && !msg.actions.every((a) => a.type === 'move'))
+        return refuse('only moves can be sent together');
       const step =
         msg.t === 'act' ? actAll(asSession(r), msg.actions) : quickResolve(asSession(r), msg.battle, (p) => r.seats[p] === me);
       if (!step.ok) return refuse(step.error);
@@ -146,9 +166,10 @@ export const PUSHES_PER_PLAYER = 5;
 export const computerToMove = (r: RoomRecord) => !r.session.state.winner && r.seats[actingPower(r.session.state)] === COMPUTER;
 
 /** The computer's next stretch of play when one of its seats must act, or null when no computer is to move. */
-export function computerTurn(r: RoomRecord, budgetMs: number): Outcome | null {
+export function computerTurn(r: RoomRecord, maxSteps: number): Outcome | null {
   if (!computerToMove(r)) return null;
-  const step = aiBurst(asSession(r), budgetMs);
+  // Worker clocks stand still during computation, so the burst is bounded by actions rather than time.
+  const step = aiBurst(asSession(r), Infinity, maxSteps);
   if (!step.ok) return { record: r, error: step.error };
   const { state: next, fallen } = step.session;
   return { record: { ...r, version: r.version + 1, session: { state: next, fallen }, phaseStart: null, moves: [] } };
@@ -176,6 +197,11 @@ const DECISION: { [K in Decision['kind']]: (power: string, space: string) => str
   intercept: (p, at) => `${p} may intercept the raid on ${at}`,
   landStranded: (p) => `${p} must land stranded fighters`,
 };
+
+/** Marks a player's last connection closing, which starts the grace period on their seats. */
+export function left(r: RoomRecord, player: PlayerId, now: number): RoomRecord {
+  return { ...r, players: r.players.map((p) => (p.id === player ? { ...p, leftAt: now } : p)) };
+}
 
 /** Offline players who should hear that a change made it their move, or that the game is over. */
 export function whoToNotify(before: RoomRecord, after: RoomRecord, online: ReadonlySet<PlayerId>): Notice[] {
@@ -206,6 +232,8 @@ const isObject = (x: unknown): x is Record<string, unknown> => typeof x === 'obj
 const isVersion = (x: unknown): x is number => Number.isInteger(x);
 
 const B64URL = /^[A-Za-z0-9_-]+$/;
+/** The browsers' push services; the Worker posts to no other host, so a subscription cannot aim it elsewhere. */
+const PUSH_HOSTS = ['fcm.googleapis.com', 'push.services.mozilla.com', 'push.apple.com', 'notify.windows.com'];
 /** Lengths of a P-256 public key (65 bytes) and an auth secret (16 bytes) in unpadded base64url. */
 const P256DH_LENGTH = 87;
 const AUTH_LENGTH = 22;
@@ -215,7 +243,9 @@ function parseSubscription(x: unknown): PushSubscriptionKeys | null {
   const { p256dh, auth } = x.keys;
   if (typeof p256dh !== 'string' || p256dh.length !== P256DH_LENGTH || !B64URL.test(p256dh)) return null;
   if (typeof auth !== 'string' || auth.length !== AUTH_LENGTH || !B64URL.test(auth)) return null;
-  if (!URL.canParse(x.endpoint) || new URL(x.endpoint).protocol !== 'https:') return null;
+  if (!URL.canParse(x.endpoint)) return null;
+  const url = new URL(x.endpoint);
+  if (url.protocol !== 'https:' || !PUSH_HOSTS.some((h) => url.hostname === h || url.hostname.endsWith(`.${h}`))) return null;
   return { endpoint: x.endpoint, keys: { p256dh, auth } };
 }
 
@@ -241,6 +271,7 @@ export function parseClientMsg(text: string): ClientMsg | null {
       return isVersion(m.version) &&
         Array.isArray(m.actions) &&
         m.actions.length > 0 &&
+        m.actions.length <= MAX_BATCH &&
         m.actions.every((a) => isObject(a) && typeof a.type === 'string')
         ? { t: 'act', version: m.version, actions: m.actions as Action[] }
         : null;

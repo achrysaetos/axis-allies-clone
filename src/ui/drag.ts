@@ -26,14 +26,21 @@ export function useDrag(handlers: {
   onDrop: (id: SpaceId | null) => void;
 }) {
   const [at, setAt] = useState<{ x: number; y: number } | null>(null);
-  const armed = useRef<{ x: number; y: number; live: boolean } | null>(null);
+  // `pointer` is the finger or mouse that pressed the piece; a second finger means a pinch, which cancels the drag.
+  const armed = useRef<{ x: number; y: number; live: boolean; pointer?: number } | null>(null);
   const h = useRef(handlers);
   h.current = handlers;
 
   useEffect(() => {
-    const move = (e: PointerEvent) => {
+    const down = (e: PointerEvent) => {
       const a = armed.current;
       if (!a) return;
+      if (a.pointer === undefined) a.pointer = e.pointerId;
+      else if (a.pointer !== e.pointerId) cancel();
+    };
+    const move = (e: PointerEvent) => {
+      const a = armed.current;
+      if (!a || (a.pointer !== undefined && a.pointer !== e.pointerId)) return;
       if (!a.live) {
         if (Math.hypot(e.clientX - a.x, e.clientY - a.y) < SLOP) return;
         if (!h.current.onStart()) {
@@ -47,6 +54,7 @@ export function useDrag(handlers: {
     };
     const up = (e: PointerEvent) => {
       const a = armed.current;
+      if (a?.pointer !== undefined && a.pointer !== e.pointerId) return;
       armed.current = null;
       if (!a?.live) return;
       setAt(null);
@@ -58,10 +66,12 @@ export function useDrag(handlers: {
       armed.current = null;
       setAt(null);
     };
+    window.addEventListener('pointerdown', down);
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
     window.addEventListener('pointercancel', cancel);
     return () => {
+      window.removeEventListener('pointerdown', down);
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', up);
       window.removeEventListener('pointercancel', cancel);

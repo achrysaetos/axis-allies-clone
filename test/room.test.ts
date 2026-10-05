@@ -1,5 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { PUSHES_PER_PLAYER, computerTurn, handle, newRoom, parseClientMsg, view, whoToNotify } from '../worker/room';
+import {
+  MAX_PLAYERS,
+  PUSHES_PER_PLAYER,
+  SEAT_GRACE_MS,
+  computerTurn,
+  handle,
+  left,
+  newRoom,
+  parseClientMsg,
+  view,
+  whoToNotify,
+} from '../worker/room';
 import type { RoomRecord } from '../worker/room';
 import { COMPUTER } from '../src/net/protocol';
 import type { ClientMsg, PlayerId, PushSubscriptionKeys } from '../src/net/protocol';
@@ -8,12 +19,12 @@ import { ids, move, ok, scenario } from './helpers';
 
 const nobody = new Set<PlayerId>();
 
-function send(r: RoomRecord, me: PlayerId | null, msg: ClientMsg, online: ReadonlySet<PlayerId> = nobody) {
-  return handle(r, me, msg, online);
+function send(r: RoomRecord, me: PlayerId | null, msg: ClientMsg, online: ReadonlySet<PlayerId> = nobody, now?: number) {
+  return handle(r, me, msg, online, now);
 }
 
-function accepted(r: RoomRecord, me: PlayerId | null, msg: ClientMsg, online?: ReadonlySet<PlayerId>): RoomRecord {
-  const out = send(r, me, msg, online);
+function accepted(r: RoomRecord, me: PlayerId | null, msg: ClientMsg, online?: ReadonlySet<PlayerId>, now?: number): RoomRecord {
+  const out = send(r, me, msg, online, now);
   if (out.error) throw new Error(`expected ${msg.t} to be accepted: ${out.error}`);
   return out.record;
 }
@@ -252,7 +263,7 @@ describe('who hears about a change by push', () => {
 });
 
 const sub = (n: number): PushSubscriptionKeys => ({
-  endpoint: `https://push.example/send/${n}`,
+  endpoint: `https://fcm.googleapis.com/fcm/send/${n}`,
   keys: { p256dh: 'B'.repeat(87), auth: 'a'.repeat(22) },
 });
 
@@ -277,10 +288,13 @@ describe('push subscriptions', () => {
     expect(r.pushes.filter((x) => x.player === bea)).toHaveLength(1);
   });
 
-  it('accepts only an https endpoint with base64url keys of the right length', () => {
+  it('accepts only an https endpoint at a browser push service, with base64url keys of the right length', () => {
     const parse = (subscription: unknown) => parseClientMsg(JSON.stringify({ t: 'subscribe', subscription }));
     expect(parse(sub(1))).toEqual({ t: 'subscribe', subscription: sub(1) });
-    expect(parse({ ...sub(1), endpoint: 'http://push.example/x' })).toBeNull();
+    expect(parse({ ...sub(1), endpoint: 'http://fcm.googleapis.com/x' })).toBeNull();
+    expect(parse({ ...sub(1), endpoint: 'https://attacker.example/collect' })).toBeNull();
+    expect(parse({ ...sub(1), endpoint: 'https://fcm.googleapis.com.attacker.example/x' })).toBeNull();
+    expect(parse({ ...sub(1), endpoint: 'https://updates.push.services.mozilla.com/wpush/v2/x' })).not.toBeNull();
     expect(parse({ ...sub(1), endpoint: 'not a url' })).toBeNull();
     expect(parse({ ...sub(1), keys: { p256dh: 'B'.repeat(86) + '=', auth: 'a'.repeat(22) } })).toBeNull();
     expect(parse({ ...sub(1), keys: { p256dh: 'B'.repeat(87), auth: 'a'.repeat(23) } })).toBeNull();
@@ -328,5 +342,30 @@ describe('computer seats', () => {
     const r1 = { ...r, seats: { ...r.seats, Russians: COMPUTER } };
     expect(send(r1, bea, { t: 'act', version: r1.version, actions: [{ type: 'endPhase' }] }).error).toMatch(/not your move/);
     expect(computerTurn(r, 50)).toBeNull();
+  });
+});
+
+describe('abuse limits', () => {
+  it('one message cannot carry a defender decision or a turn end along with other actions', () => {
+    const { r, bea } = twoPlayers();
+    const out = send(r, bea, { t: 'act', version: r.version, actions: [{ type: 'endPhase' }, { type: 'endPhase' }] });
+    expect(out.error).toMatch(/only moves can be sent together/);
+    expect(out.record).toBe(r);
+  });
+
+  it('a room takes at most MAX_PLAYERS players', () => {
+    let r = newRoom('abcdefghij', 1, {});
+    for (let i = 0; i < MAX_PLAYERS; i++) [r] = join(r, `p${i}`);
+    expect(send(r, null, { t: 'join', name: 'one more' }).error).toMatch(/as many players/);
+  });
+
+  it('a seat whose holder just dropped is kept for them through the grace period', () => {
+    const { r, alex, bea } = twoPlayers();
+    const t0 = 1_000_000;
+    const dropped = left(r, alex, t0);
+    expect(send(dropped, bea, { t: 'seat', power: 'Germans', to: 'me' }, new Set([bea]), t0 + 5_000).error).toMatch(/a minute/);
+    expect(
+      accepted(dropped, bea, { t: 'seat', power: 'Germans', to: 'me' }, new Set([bea]), t0 + SEAT_GRACE_MS).seats.Germans,
+    ).toBe(bea);
   });
 });

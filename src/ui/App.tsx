@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { actingPower } from '../engine/game';
 import { POWERS } from '../engine/types';
 import type { Power } from '../engine/types';
@@ -45,6 +45,7 @@ function OnlineGame({ id, onLeave }: { id: string; onLeave: () => void }) {
     // While this tab's own actions are in flight, its optimistic board is ahead of the server's last word.
     if (room && synced) setLocal({ state: room.state, fallen: room.fallen });
   }, [room, synced]);
+  const adopt = useCallback((s: Session) => setLocal({ state: s.state, fallen: s.fallen }), []);
   const seats = room?.seats;
   const controllers = useMemo(
     () => Object.fromEntries(POWERS.map((p) => [p, me && seats?.[p] === me ? 'human' : 'remote'])) as Record<Power, Controller>,
@@ -92,12 +93,7 @@ function OnlineGame({ id, onLeave }: { id: string; onLeave: () => void }) {
   }
   return (
     <>
-      <Game
-        session={{ ...local, controllers, undo: [] }}
-        setSession={(s) => setLocal({ state: s.state, fallen: s.fallen })}
-        onMenu={onLeave}
-        online={{ ...conn, room }}
-      />
+      <Game session={{ ...local, controllers, undo: [] }} setSession={adopt} onMenu={onLeave} online={{ ...conn, room }} />
       {conn.status === 'open' && !me && <NamePrompt onJoin={(name) => conn.send({ t: 'join', name })} />}
     </>
   );

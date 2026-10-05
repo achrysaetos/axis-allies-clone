@@ -379,13 +379,18 @@ export function Game({
     [commit, showError, send],
   );
   useEffect(() => setAutoBattle(null), [serverError]);
+  // Each board state is answered at most once, so a re-render while the server is still replying never asks twice.
+  const answered = useRef<GameState | null>(null);
   useEffect(() => {
     if (autoBattle === null) return;
     const b = state.battles.find((x) => x.id === autoBattle);
     if (!b || b.resolved) return setAutoBattle(null);
     const d = state.pending;
-    if (d && 'battle' in d && d.battle === autoBattle && d.power === b.attacker && controllers[d.power] === 'human')
+    if (answered.current === state) return;
+    if (d && 'battle' in d && d.battle === autoBattle && d.power === b.attacker && controllers[d.power] === 'human') {
+      answered.current = state;
       quick(autoBattle);
+    }
   }, [state, autoBattle, controllers, quick]);
 
   // The turn card already sits over the new power's home, so the player is oriented before pressing Start.

@@ -171,17 +171,18 @@ export function aiStep(session: Session): Step {
 }
 
 /** AI actions until a phase or turn boundary, a human's decision, or the time budget, so each step stays visible. */
-export function aiBurst(session: Session, budgetMs: number): Step {
+/** Plays the computer's moves until a phase or battle boundary, the time budget, or `maxSteps` actions. */
+export function aiBurst(session: Session, budgetMs: number, maxSteps = Infinity): Step {
   const start = performance.now();
   const { phase, power } = session.state;
   let cur = session;
-  for (;;) {
+  for (let n = 1; ; n++) {
     const r = aiStep(cur);
     if (!r.ok) return cur === session ? r : { ok: true, session: cur };
     cur = r.session;
     const s = cur.state;
     if (s.winner || s.phase !== phase || s.power !== power || cur.controllers[actingPower(s)] !== 'ai') break;
-    if (s.activeBattle !== null || performance.now() - start > budgetMs) break;
+    if (s.activeBattle !== null || performance.now() - start > budgetMs || n >= maxSteps) break;
   }
   return { ok: true, session: cur };
 }

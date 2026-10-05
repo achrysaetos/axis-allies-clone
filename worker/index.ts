@@ -5,7 +5,7 @@ import { POWERS } from '../src/engine/types';
 import type { Options, Power } from '../src/engine/types';
 import { loadVapid, pushRequest } from './push';
 import type { VapidEnv } from './push';
-import { computerToMove, computerTurn, handle, newRoom, parseClientMsg, parseOptions, view, whoToNotify } from './room';
+import { computerToMove, computerTurn, handle, left, newRoom, parseClientMsg, parseOptions, view, whoToNotify } from './room';
 import type { Notice, Outcome, RoomRecord } from './room';
 
 interface Env extends VapidEnv {
@@ -18,7 +18,7 @@ interface Attachment {
 
 const RECORD_KEY = 'room';
 const COMPUTER_PAUSE_MS = 150;
-const COMPUTER_BURST_MS = 200;
+const COMPUTER_BURST_STEPS = 6;
 const COMPUTER_RETRY_MS = 3000;
 const BASE32 = 'abcdefghijklmnopqrstuvwxyz234567';
 
@@ -60,8 +60,12 @@ export class Room extends DurableObject<Env> {
     super(ctx, env);
     void ctx.blockConcurrencyWhile(async () => {
       const stored = await ctx.storage.get<RoomRecord>(RECORD_KEY);
-      // Rooms created before push notifications have no subscriptions.
-      this.record = stored && { ...stored, pushes: stored.pushes ?? [] };
+      // Rooms saved by earlier versions lack subscriptions, and kept undo history as single moves rather than drops.
+      this.record = stored && {
+        ...stored,
+        pushes: stored.pushes ?? [],
+        moves: stored.moves.map((m) => (Array.isArray(m) ? m : [m])),
+      };
     });
   }
 
@@ -121,7 +125,12 @@ export class Room extends DurableObject<Env> {
   override async alarm(): Promise<void> {
     const record = this.record;
     if (!record) return;
-    const out = computerTurn(record, COMPUTER_BURST_MS);
+    let out: Outcome | null;
+    try {
+      out = computerTurn(record, COMPUTER_BURST_STEPS);
+    } catch (e) {
+      out = { record, error: e instanceof Error ? e.message : String(e) };
+    }
     if (!out) return;
     if (out.error) {
       console.warn(`computer is stuck: ${out.error}`);
@@ -137,11 +146,21 @@ export class Room extends DurableObject<Env> {
     } catch {
       // Already closed.
     }
+    await this.leaving(ws);
+  }
+
+  /** When a player's last connection closes, their seats start a short grace period before others may take them. */
+  private async leaving(ws: WebSocket): Promise<void> {
+    const player = (ws.deserializeAttachment() as Attachment | null)?.player;
+    if (this.record && player && !this.online(ws).has(player)) {
+      this.record = left(this.record, player, Date.now());
+      await this.ctx.storage.put(RECORD_KEY, this.record);
+    }
     this.broadcast(ws);
   }
 
   override async webSocketError(ws: WebSocket): Promise<void> {
-    this.broadcast(ws);
+    await this.leaving(ws);
   }
 
   private async push(notices: Notice[]): Promise<void> {
@@ -152,7 +171,7 @@ export class Room extends DurableObject<Env> {
     const sends = notices.flatMap(({ player, title, body }) =>
       this.record!.pushes.filter((s) => s.player === player).map(async (s) => {
         const res = await fetch(await pushRequest(s, JSON.stringify({ title, body, url } satisfies PushPayload), vapid));
-        console.log(`push to ${new URL(s.endpoint).host}: ${res.status}${res.ok ? '' : ` ${await res.text()}`}`);
+        console.log(`push to ${new URL(s.endpoint).host}: ${res.status}`);
         if (res.status === 404 || res.status === 410) gone.add(s.endpoint);
       }),
     );
