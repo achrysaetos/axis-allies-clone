@@ -26,7 +26,7 @@ Two players share the screen. Each power's turn opens with a turn card naming th
 
 Preconditions:
 
-- A two-player game started from the setup screen (`opening` scenario, or `Start new game`).
+- A two-player game started from the setup screen (`opening` scenario, or `Start the war`).
 
 - **Card.** Start the game. The overlay reads `Round 1 · Allies player`, `Soviet Union`, `24 IPCs to spend`. Press Enter. The card closes. Hover `data-space="Russia"` and the `.hover-card` shows `Russia`.
 - **Odds.** Press the end button (choose `End anyway` on the empty-purchase warning), drag a stack from `Russia` onto `data-space="West Russia"` with `left_click_drag`, then wait a second. A `.map-tag` percentage pill appears above `West Russia`. While still holding units over an enemy space, the pill reads `NN% if you go`.

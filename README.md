@@ -9,7 +9,7 @@ npm install
 npm run dev
 ```
 
-Open the printed local URL and press **Start new game**. The game autosaves in the browser after every action, so **Continue** on the start screen picks up where you left off. **Export save** in the ☰ menu saves the game to a file and **Import saved game** on the start screen loads one.
+Open the printed local URL and pick who plays each of the five powers (a player or the computer, so one to five people) and press **Start the war**. The game autosaves in the browser after every action, so **Continue** on the start screen picks up where you left off. **Export save** in the ☰ menu saves the game to a file and **Import saved game** on the start screen loads one.
 
 ## Play online
 
@@ -20,7 +20,7 @@ npm run dev:worker
 npm run dev
 ```
 
-Press **Play online with friends** on the start screen. The game opens at a `#/g/<id>` link. Enter a name, click a power in the seat strip under the top bar to take it, and use **Copy invite link** to send the link to friends. Each player acts only for the powers they hold, and a defender answers its own casualty choices. Click an open seat to hand it to the computer instead, which the server then plays; the start screen's Player/Computer choice per side presets this. Reopening the link in the same browser keeps your seats. `npm run deploy` builds the client and deploys the Worker to your Cloudflare account.
+On the start screen pick **Online with friends** and press **Create game and get the link**. The game opens at a `#/g/<id>` link. Enter a name, click a power in the seat strip under the top bar to take it, and use **Copy invite link** to send the link to friends. Each player acts only for the powers they hold, and a defender answers its own casualty choices. Click an open seat to hand it to the computer instead, which the server then plays; the start screen's Player/Computer choice per power presets this. Reopening the link in the same browser keeps your seats. `npm run deploy` builds the client and deploys the Worker to your Cloudflare account.
 
 ### Push notifications
 

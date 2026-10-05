@@ -4,7 +4,7 @@ Friends play one game from separate browsers. One player creates a room from the
 
 ## Sub-features
 
-- Creating a room with `Play online with friends`, which opens `#/g/<room id>`.
+- Creating a room by picking `Online with friends` on the home screen, then `Create game and get the link`, which opens `#/g/<room id>`.
 - The `Join this game` name prompt on first visit. A reload keeps the player and their seats.
 - Computer seats. Clicking an open seat offers `Play <power>` or `Let the computer play it`. The server then plays that power in short bursts (its pieces slide in, the hint reads `<Power> (computer) is playing…`), and human defenders still answer their own decisions. A computer seat can be taken back (`Take <power>`) or opened (`Open the seat`), and your own seat can be handed over (`Hand it to the computer`).
 - The seat strip under the top bar. It shows each power's holder and an online dot, and `Copy invite link`. Clicking a seat opens a small `.seat-ask` question with the choices that fit who holds it.
@@ -17,13 +17,13 @@ Friends play one game from separate browsers. One player creates a room from the
 
 ## How to get to it (user POV)
 
-Setup screen, then `Play online with friends`. Send the invite link to a friend, who opens it in their own browser.
+Home screen, pick `Online with friends`, then `Create game and get the link`. Send the invite link to a friend, who opens it in their own browser.
 
 ## Driving it with the browser pane
 
 - Online play needs the Worker as well as vite. Start `npm run dev:worker` (port 8787) in the background, and serve vite on 127.0.0.1 so a second origin exists: `npx vite --port 5180 --strictPort --host 127.0.0.1`. Vite proxies `/api` to the Worker. Smoke the Worker with `curl -s -X POST http://127.0.0.1:8787/api/rooms -d '{}'`, which returns `{"id":...}`.
 - Player A uses `http://127.0.0.1:5180/` and player B uses `http://localhost:5180/#/g/<id>` in a second tab (`tabs_create`). Different origins keep separate player tokens. Two tabs on the same origin share one token and act as the same player.
-- In A, click `Play online with friends`, type a name in the prompt and press Return, then click a seat in the strip. Do the same in B with a different seat. The Soviet Union moves first.
+- In A, click `Online with friends` then `Create game and get the link`, type a name in the prompt and press Return, then click a seat in the strip. Do the same in B with a different seat. The Soviet Union moves first.
 - Prove a live move by dragging in A and reading B's `[data-space="<name>"] [data-stack]` handles or screenshot. Prove a cross-player battle by attacking B's power, pressing `Roll dice` in A, and finding `<Power> (Axis player): N hits to take` in B.
 - Prove reload persistence with `location.reload()` through `javascript_tool`. The name prompt must not return, and the strip must still show the player's seats.
 
