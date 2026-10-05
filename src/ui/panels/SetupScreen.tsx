@@ -64,7 +64,7 @@ export function SetupScreen({ saved, onStart }: Props) {
     <div className="setup">
       <div className="setup-card">
         <h1>Axis &amp; Allies 1942</h1>
-        <p className="dim">Second Edition. Two players share this screen and take turns.</p>
+        <p className="dim">Second Edition. Share this screen and take turns, or play online with friends.</p>
         {saved && (
           <button className="primary wide" onClick={() => onStart(saved)}>
             Continue: round {saved.state.round}, {powerName(saved.state.power)}
