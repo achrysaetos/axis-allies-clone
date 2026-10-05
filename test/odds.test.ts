@@ -34,6 +34,12 @@ describe('attack forecasts', () => {
     expect(plain.map((f) => f.space)).toEqual(['France']);
     expect(supported[0]!.win).toBeGreaterThan(plain[0]!.win + 0.1);
   });
+
+  it('a warship that fought at sea this turn adds no bombardment to the forecast', () => {
+    const s = landing(true);
+    for (const u of s.units) if (u.type === 'battleship') u.fought = true;
+    expect(forecasts(s)[0]!.win).toBeCloseTo(forecasts(landing(false))[0]!.win, 6);
+  });
 });
 
 describe('raid damage forecast', () => {

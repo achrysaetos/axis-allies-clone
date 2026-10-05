@@ -101,6 +101,7 @@ function bombardment(state: GameState, landing: Unit[]): number[] {
         (u.type === 'battleship' || u.type === 'cruiser') &&
         zones.has(u.at) &&
         !contested(u.at) &&
+        !u.fought &&
         !u.bombarded,
     )
     .slice(0, landing.length)

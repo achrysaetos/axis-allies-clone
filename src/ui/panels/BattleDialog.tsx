@@ -4,7 +4,7 @@ import type { Action, Battle, GameState, Power, Unit, UnitId } from '../../engin
 import type { Controller } from '../session';
 import { SIDE, isSea, space } from '../../engine/data';
 import { factoryAt } from '../../engine/queries';
-import { POWER_STYLE, powerName } from '../theme';
+import { POWER_STYLE, UNIT_GLYPH, powerName } from '../theme';
 import { Chip, PowerTag } from '../units';
 import { DecisionView } from './Decisions';
 import { battleBlocker } from '../../engine/combat';
@@ -169,6 +169,14 @@ export function BattleDialog({
   const mine = d && 'battle' in d && d.battle === battle.id ? d : null;
   const waiting = mine !== null && controllers[mine.power] !== 'human';
   const fresh = !battle.resolved && battle.round === 0 && state.activeBattle !== battle.id;
+  // Warships off the landing beach that already fought at sea this turn sit out the bombardment; say so, or the
+  // player wonders why their battleship is silent.
+  const beaches = new Set(state.units.filter((u) => u.offloadedTo === battle.space && u.at !== battle.space).map((u) => u.at));
+  const grounded = state.units
+    .filter(
+      (u) => u.owner === battle.attacker && (u.type === 'battleship' || u.type === 'cruiser') && beaches.has(u.at) && u.fought,
+    )
+    .map((u) => `${UNIT_GLYPH[u.type].name.toLowerCase()} in ${u.at}`);
   const blocker = fresh ? battleBlocker(state, battle) : null;
   const human = controllers[battle.attacker] === 'human';
   const { attackers, defenders } = lineup(state, battle);
@@ -202,6 +210,12 @@ export function BattleDialog({
             {forecast.kind === 'sbr'
               ? `About ${forecast.defLoss.toFixed(1)} damage expected`
               : `${Math.round(forecast.win * 100)}% to win · you lose about ${Math.round(forecast.attLoss)} IPCs, the defender about ${Math.round(forecast.defLoss)}`}
+          </div>
+        )}
+        {fresh && grounded.length > 0 && (
+          <div className="dim">
+            The {grounded.join(' and the ')} fought a sea battle this turn, so{' '}
+            {grounded.length === 1 ? 'it cannot' : 'they cannot'} bombard the beach.
           </div>
         )}
         {battle.dice.map((r, i) => (
