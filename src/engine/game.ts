@@ -105,7 +105,7 @@ function eligibleFactories(s: GameState, power: Power): SpaceId[] {
     .map((u) => u.at);
 }
 
-const productionLeft = (s: GameState, at: SpaceId) => {
+export const productionLeft = (s: GameState, at: SpaceId) => {
   const f = factoryAt(s, at);
   return f ? Math.max(0, space(at).ipc - f.damage - (s.placements[at] ?? 0)) : 0;
 };

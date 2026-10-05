@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CAPITAL_OF, isAir, unitCount } from '../engine/data';
 import { battleBlocker } from '../engine/combat';
-import { actingPower } from '../engine/game';
+import { actingPower, productionLeft } from '../engine/game';
 import { areAllied, capitalHeld, factoryAt } from '../engine/queries';
 import type { Action, Battle, GameState, Power, SpaceId, UnitId, UnitType } from '../engine/types';
 import { MapView } from './map/MapView';
@@ -276,7 +276,20 @@ export function Game({
     if (hand.kind === 'new') {
       const opt = placementOptions(state, hand.type).find((p) => p.at === to);
       if (!opt) return showError(`A new ${hand.type === 'factory' ? 'industrial complex' : hand.type} cannot be placed in ${to}`);
-      if (act({ type: 'place', unitType: hand.type, at: to, count: Math.min(hand.count, opt.max) })) setHand(null);
+      const before = state.placements;
+      if (!act({ type: 'place', unitType: hand.type, at: to, count: Math.min(hand.count, opt.max) })) return;
+      setHand(null);
+      // The map moves on to factories with room left, so say why this one stopped taking units.
+      const after = current.current.state;
+      const full = Object.keys(after.placements).filter(
+        (f) => after.placements[f] !== before[f] && productionLeft(after, f) === 0,
+      );
+      if (full.length > 0 && after.purchases.length > 0)
+        setToast({
+          text: `${full.join(' and ')} has placed all it can this turn (ships launched from it count too)`,
+          id: Date.now(),
+          info: true,
+        });
       return;
     }
     if (to === hand.from) return setHand(null);
