@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { CAPITAL_OF, isAir } from '../engine/data';
+import { CAPITAL_OF, isAir, unitCount } from '../engine/data';
 import { battleBlocker } from '../engine/combat';
 import { actingPower } from '../engine/game';
 import { areAllied, capitalHeld, factoryAt } from '../engine/queries';
@@ -19,6 +19,7 @@ import { forecasts, oddsClass } from './odds';
 import { ConfirmEnd } from './panels/ConfirmEnd';
 import { endPhaseWarnings } from './warnings';
 import { powerName } from './theme';
+import { resolveMove } from './paths';
 import { dropMoves, dropPreview, grabbable, handReach, pickable, shipmates, stackAt } from './pieces';
 import type { Hand } from './pieces';
 import { useDrag } from './drag';
@@ -248,12 +249,18 @@ export function Game({
       }
       if (!act(r.moves.map((m) => ({ type: 'move' as const, ...m })))) return false;
       const moved = new Set(r.moves.flatMap((m) => m.units));
-      const behind = units.filter((id) => !moved.has(id)).length;
+      const left = units.filter((id) => !moved.has(id));
       const transport = (id: UnitId) =>
         !units.includes(id) && current.current.state.units.find((u) => u.id === id)?.type === 'transport';
       const sail = r.moves.find((m) => m.units.every(transport));
-      if (behind > 0) setToast({ text: `${behind} could not reach ${to} and stayed behind`, id: Date.now(), info: true });
-      else if (sail)
+      if (left.length > 0) {
+        const after = current.current.state;
+        const why = resolveMove(after, { units: left, sbr }, from, to);
+        const names = tally(after.units.filter((u) => left.includes(u.id)))
+          .map((t) => unitCount(t.count, t.type))
+          .join(', ');
+        setToast({ text: `${names} stayed in ${from}${why.ok ? '' : `: ${why.error}`}`, id: Date.now(), info: true });
+      } else if (sail)
         setToast({ text: `The transport sailed to ${sail.path[sail.path.length - 1]} to land them`, id: Date.now(), info: true });
       setHand(null);
       return true;

@@ -98,6 +98,8 @@ const raids = (state: GameState, units: Unit[], to: SpaceId, sbr: boolean) => {
 
 function pathFor(state: GameState, units: Unit[], sbr: boolean, from: SpaceId, to: SpaceId, limit: number): MoveResolution {
   const paths = candidatePaths(units, from, to, limit);
+  if (paths.length === 0 && !isPassable(to))
+    return { ok: false, error: `${to} is neutral, and no unit may enter or fly over a neutral territory.` };
   if (paths.length === 0 && units.every((u) => isLand(u.type)) && !space(from).water && !space(to).water)
     return {
       ok: false,

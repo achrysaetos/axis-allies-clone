@@ -6,7 +6,7 @@ In the combat move and noncombat move phases the player drags pieces from a terr
 
 - `move-select` picks up one unit by clicking a piece, or all of that type with shift-click or double-click, and puts one back with right-click or alt-click. Esc lets go.
 - `move-highlight` shows dashed highlights on every space the held or dragged units can legally reach, and a yellow route arrow to the hovered target.
-- `move-mixed` drags a stack (shift-drag for everything in the space) and leaves behind the units that cannot reach the target, with an info toast `N could not reach X and stayed behind`. Faded pieces are spent.
+- `move-mixed` drags a stack (shift-drag for everything in the space) and leaves behind the units that cannot reach the target, with an info toast naming them and the rule, such as `1 artillery stayed in United Kingdom: not enough transport capacity`. A drop on a neutral space says it is neutral. Faded pieces are spent.
 - `move-blitz` moves a tank through an empty hostile territory, capturing it.
 - `move-load` loads land units by dragging them onto the sea zone.
 - `move-offload` offloads cargo by dragging the cargo piece (dashed outline) onto land, as an amphibious assault in combat move or into friendly land in noncombat.
