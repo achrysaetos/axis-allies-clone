@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { space } from '../src/engine/data';
 import { dropMoves, dropPreview, grabbable, handReach, shipmates, stacksAt } from '../src/ui/pieces';
 import { ids, move, scenario } from './helpers';
+import type { ScenarioOptions } from './helpers';
 
 const RUSSIAN_LAND = ['Russia', 'Archangel', 'Vologda', 'Karelia S.S.R.', 'Novosibirsk', 'Kazakh S.S.R.', 'Caucasus'];
 
@@ -105,6 +106,36 @@ describe('pieces on the board', () => {
     if (!r.ok) throw new Error(r.error);
     expect(r.moves[0]!.units).toEqual(ids(s, 'British', 'transport', '6 Sea Zone'));
     expect(r.moves.at(-1)!.path.at(-1)).toBe(coast);
+  });
+
+  it('cargo never sails its transport into enemy ships: the drop is refused and says where the fight would be', () => {
+    const setup = (enemy: ScenarioOptions['units']) => {
+      let s = scenario({
+        power: 'British',
+        phase: 'combatMove',
+        units: [
+          ['British', 'transport', '6 Sea Zone'],
+          ['British', 'infantry', 'United Kingdom'],
+          ['Germans', 'infantry', 'Germany'],
+          ...enemy,
+        ],
+      });
+      s = move(s, ids(s, 'British', 'infantry', 'United Kingdom'), ['United Kingdom', '6 Sea Zone']);
+      return s;
+    };
+    const calm = setup([]);
+    const hand = ids(calm, 'British', 'infantry', '6 Sea Zone');
+    const coast = [...handReach(calm, hand, '6 Sea Zone')].find(
+      (id) => !space(id).water && !space('6 Sea Zone').neighbors.includes(id),
+    )!;
+    const zones = space(coast).neighbors.filter((n) => space(n).water && n !== '6 Sea Zone');
+    const s = setup(zones.map((z) => ['Germans', 'destroyer', z] as const));
+
+    const r = dropMoves(s, hand, '6 Sea Zone', coast, false);
+
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toMatch(/enemy units wait/);
+    expect(handReach(s, hand, '6 Sea Zone').has(coast)).toBe(false);
   });
 
   it('a stack dropped on a transport loads what fits and leaves the rest ashore', () => {

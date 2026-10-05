@@ -249,7 +249,12 @@ export function Game({
       if (!act(r.moves.map((m) => ({ type: 'move' as const, ...m })))) return false;
       const moved = new Set(r.moves.flatMap((m) => m.units));
       const behind = units.filter((id) => !moved.has(id)).length;
+      const transport = (id: UnitId) =>
+        !units.includes(id) && current.current.state.units.find((u) => u.id === id)?.type === 'transport';
+      const sail = r.moves.find((m) => m.units.every(transport));
       if (behind > 0) setToast({ text: `${behind} could not reach ${to} and stayed behind`, id: Date.now(), info: true });
+      else if (sail)
+        setToast({ text: `The transport sailed to ${sail.path[sail.path.length - 1]} to land them`, id: Date.now(), info: true });
       setHand(null);
       return true;
     },

@@ -100,6 +100,9 @@ function viaTransport(state: GameState, hand: UnitId[], from: SpaceId, to: Space
   const ships = carriersOf(state, hand);
   if (ships.length === 0 || !space(from).water || space(to).water) return null;
   let best: PlannedMove[] | null = null;
+  let hostile: SpaceId | null = null;
+  const power = state.units.find((u) => u.id === ships[0])!.owner;
+  const enemyIn = (zone: SpaceId) => state.units.some((u) => u.at === zone && !areAllied(u.owner, power));
   for (const zone of space(to).neighbors.filter((n) => space(n).water && n !== from)) {
     const sail = resolveMove(state, { units: ships, sbr: false }, from, zone);
     if (!sail.ok) continue;
@@ -111,11 +114,22 @@ function viaTransport(state: GameState, hand: UnitId[], from: SpaceId, to: Space
     }
     const land = resolveMove(s, { units: hand, sbr: false }, zone, to);
     if (!land.ok) continue;
+    // Sailing into enemy ships starts a sea battle, which is a choice the player makes, never a side effect of a drop.
+    if (enemyIn(zone)) {
+      hostile ??= zone;
+      continue;
+    }
     const moves = [...sail.moves, ...land.moves];
     const steps = (ms: PlannedMove[]) => ms.reduce((n, m) => n + m.path.length, 0);
     if (!best || steps(moves) < steps(best)) best = moves;
   }
-  return best && { ok: true, moves: best };
+  if (best) return { ok: true, moves: best };
+  return hostile
+    ? {
+        ok: false,
+        error: `To land on ${to} the transport must sail into ${hostile}, where enemy units wait. Move the transport there first if you mean to fight.`,
+      }
+    : null;
 }
 
 /** Spaces a hand can be dropped on, counting coasts its transport could sail to first. */
