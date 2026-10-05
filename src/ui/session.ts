@@ -125,20 +125,24 @@ export function quickResolve(session: Session, battle: number, decides: (p: Powe
 
 export const QUICK_RETREAT_BELOW = 0.3;
 
+/** The attacker's chances if the battle goes on as it stands, or null when only aircraft are left to fight for land. */
+export function pressOnOdds(state: GameState, b: Battle) {
+  const attackers = casualtyPool(state, b, 'attacker');
+  if (b.kind === 'land' && !attackers.some((u) => isLand(u.type) && u.type !== 'aaGun')) return null;
+  return simulate({
+    kind: b.kind === 'sea' ? 'sea' : 'land',
+    attackers: asCombatants(attackers),
+    defenders: asCombatants(casualtyPool(state, b, 'defender')),
+    trials: 300,
+  });
+}
+
 /** Quick play retreats when the attack has turned bad, or when only aircraft are left to fight for land they cannot take. */
 function quickRetreat(state: GameState, d: Extract<Decision, { kind: 'retreat' }>): Action {
   const b = state.battles.find((x) => x.id === d.battle)!;
   const to = d.options.find((o) => o !== b.space) ?? d.options[0] ?? null;
-  const attackers = casualtyPool(state, b, 'attacker');
-  const defenders = casualtyPool(state, b, 'defender');
-  if (b.kind === 'land' && !attackers.some((u) => isLand(u.type) && u.type !== 'aaGun')) return { type: 'retreat', to };
-  const odds = simulate({
-    kind: b.kind === 'sea' ? 'sea' : 'land',
-    attackers: asCombatants(attackers),
-    defenders: asCombatants(defenders),
-    trials: 300,
-  });
-  return { type: 'retreat', to: odds.win < QUICK_RETREAT_BELOW ? to : null };
+  const odds = pressOnOdds(state, b);
+  return { type: 'retreat', to: !odds || odds.win < QUICK_RETREAT_BELOW ? to : null };
 }
 
 /** Keeps an AI turn moving when its own action is rejected. */

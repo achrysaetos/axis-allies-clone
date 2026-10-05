@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { SIDE, STATS, isAir } from '../../engine/data';
 import { assignable, autoCasualties } from '../../engine/casualties';
 import type { Action, Decision, GameState, HitCategory, Unit, UnitId } from '../../engine/types';
-import { casualtyPool, unreachable } from '../session';
+import { oddsClass } from '../odds';
+import { casualtyPool, pressOnOdds, unreachable } from '../session';
 import { UnitSvg } from '../icons';
 import { POWER_STYLE, UNIT_GLYPH, powerName } from '../theme';
 import { Chip } from '../units';
@@ -290,21 +291,7 @@ export function DecisionView({ state, d, act }: { state: GameState; d: Decision;
         />
       );
     case 'retreat':
-      return (
-        <div className="decision">
-          <div className="decision-title">{powerName(d.power)}: press on or retreat?</div>
-          <div className="row actions wrap">
-            <button className="primary" onClick={() => act({ type: 'retreat', to: null })}>
-              Press on
-            </button>
-            {d.options.map((o) => (
-              <button key={o} onClick={() => act({ type: 'retreat', to: o })}>
-                {o === state.battles.find((b) => b.id === d.battle)?.space ? 'Withdraw air units' : `Retreat to ${o}`}
-              </button>
-            ))}
-          </div>
-        </div>
-      );
+      return <RetreatChoice key={key} state={state} d={d} act={act} />;
     case 'intercept':
       return (
         <UnitChecklist
@@ -323,4 +310,29 @@ export function DecisionView({ state, d, act }: { state: GameState; d: Decision;
     default:
       return unreachable(d);
   }
+}
+
+function RetreatChoice({ state, d, act }: { state: GameState; d: Of<'retreat'>; act: Act }) {
+  const b = state.battles.find((x) => x.id === d.battle)!;
+  const odds = useMemo(() => pressOnOdds(state, b), [state, b]);
+  return (
+    <div className="decision">
+      <div className="decision-title">{powerName(d.power)}: press on or retreat?</div>
+      <div className={odds ? oddsClass(odds.win) : 'dim'}>
+        {odds
+          ? `${Math.round(odds.win * 100)}% to win if you press on · you lose about ${Math.round(odds.attLoss)} more IPCs, the defender about ${Math.round(odds.defLoss)}`
+          : `Only aircraft are left, so pressing on cannot take ${b.space}.`}
+      </div>
+      <div className="row actions wrap">
+        <button className="primary" onClick={() => act({ type: 'retreat', to: null })}>
+          Press on
+        </button>
+        {d.options.map((o) => (
+          <button key={o} onClick={() => act({ type: 'retreat', to: o })}>
+            {o === b.space ? 'Withdraw air units' : `Retreat to ${o}`}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 }
