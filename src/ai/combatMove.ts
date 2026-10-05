@@ -59,7 +59,41 @@ export function planCombatMove(s: GameState): Draft {
     }
     for (const o of force) for (const u of o.units) used.add(u.id);
   }
+  landCommittedCargo(d, used);
   return d;
+}
+
+/**
+ * A replan can start midway through an assault it no longer picks, such as after a save is reopened mid-phase:
+ * troops that boarded, or a transport that sailed, are bound to land somewhere. Send each at the weakest coast it reaches.
+ */
+function landCommittedCargo(d: Draft, used: Set<UnitId>): void {
+  const boundFor = (s: GameState) =>
+    new Set(
+      mine(s)
+        .filter((t) => t.type === 'transport' && t.offloadedTo === null)
+        .filter((t) => {
+          const cargo = s.units.filter((u) => u.carriedBy === t.id);
+          return cargo.length > 0 && ((t.movedInCombat && !t.escaped) || cargo.some((u) => u.loadedIn === 'combatMove'));
+        })
+        .map((t) => t.id),
+    );
+  for (const tr of boundFor(d.state)) {
+    const s = d.state;
+    if (!boundFor(s).has(tr)) continue;
+    const transport = s.units.find((u) => u.id === tr)!;
+    const coasts = targets(s)
+      .filter((t) => t.kind === 'land')
+      .sort((a, b) => enemiesAt(s, a.at, s.power).length - enemiesAt(s, b.at, s.power).length);
+    for (const t of coasts) {
+      const option = amphibious(s, t, [transport], used)[0];
+      if (!option) continue;
+      const before = new Set(combatMoveErrors(s));
+      const mark = d.mark();
+      if (d.tryAll(option.actions) && combatMoveErrors(d.state).every((e) => before.has(e))) break;
+      d.rollback(mark);
+    }
+  }
 }
 
 /** Transports caught in a zone with enemy warships sail out before anything else moves; returns the movers. */

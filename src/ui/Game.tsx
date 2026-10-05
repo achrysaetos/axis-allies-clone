@@ -38,6 +38,8 @@ import { SeatStrip } from './panels/Seats';
 
 const AI_DELAY_MS = 120;
 const AI_BUDGET_MS = 30;
+/** Engine refusals are terse clauses ("units that entered a battle must stop"); players read sentences. */
+const sentence = (t: string) => t.charAt(0).toUpperCase() + t.slice(1) + (/[.!?…]$/.test(t) ? '' : '.');
 const TOAST_MS = 4500;
 /** Room the raid-or-attack choice needs, so it never opens past the edge of the screen. */
 const CHOICE_W = 250;
@@ -407,7 +409,7 @@ export function Game({
     );
   }, [turnKey, state.power, viewedSpace]);
 
-  const canUndo = online ? online.room.canUndo && controllers[state.power] === 'human' : session.undo.length > 0;
+  const canUndo = controllers[state.power] === 'human' && (online ? online.room.canUndo : session.undo.length > 0);
   const undoneFrom = useRef<GameState | null>(null);
   const reportUndo = useCallback((before: GameState, after: GameState) => {
     const where = new Map(before.units.map((u) => [u.id, u.at]));
@@ -603,7 +605,7 @@ export function Game({
         )}
         {toast && (
           <div key={toast.id} className={toast.info ? 'toast info' : 'toast'} onClick={() => setToast(null)}>
-            {toast.text}
+            {sentence(toast.text)}
           </div>
         )}
         {greeting && !overlay && (

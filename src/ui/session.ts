@@ -158,11 +158,17 @@ export function fallbackAction(state: GameState): Action {
 
 /** One AI action; rejected actions fall back to a default, then to replaying the movement phase from its start. */
 export function aiStep(session: Session): Step {
-  const proposed = aiAction(session.state);
-  const r = act(session, proposed);
-  if (r.ok) return r;
-  console.warn(`AI ${proposed.type} rejected: ${r.error}`);
-  const fallback = act(session, fallbackAction(session.state));
+  let fallback: Step;
+  try {
+    const proposed = aiAction(session.state);
+    const r = act(session, proposed);
+    if (r.ok) return r;
+    console.warn(`AI ${proposed.type} rejected: ${r.error}`);
+    fallback = act(session, fallbackAction(session.state));
+  } catch (e) {
+    // The planner found nothing legal, such as when its own moves left cargo that must still land.
+    fallback = { ok: false, error: e instanceof Error ? e.message : String(e) };
+  }
   if (fallback.ok) return fallback;
   const phaseStart = session.undo[0];
   if (!phaseStart) return fallback;

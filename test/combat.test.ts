@@ -92,16 +92,21 @@ describe('general combat (p.16-19)', () => {
     expect(battleIn(run(2), 'Caucasus').dice[0]!.rolls).toHaveLength(5);
   });
 
-  it('antiaircraft alone in an attacked territory is destroyed without firing', () => {
+  it('antiaircraft alone in an attacked territory fires at the aircraft and is then destroyed', () => {
     let s = scenario({
       units: [
         ['Germans', 'armour', 'West Russia'],
         ['Germans', 'fighter', 'West Russia'],
         ['Russians', 'aaGun', 'Caucasus'],
       ],
+      dice: [6],
     });
     s = move(s, ids(s, 'Germans', 'fighter', 'West Russia'), ['West Russia', 'Caucasus']);
     s = move(s, ids(s, 'Germans', 'armour', 'West Russia'), ['West Russia', 'Caucasus']);
+    expect(count(s, 'Russians', 'aaGun', 'Caucasus')).toBe(1);
+    s = fight(s, 'Caucasus');
+    expect(battleIn(s, 'Caucasus').dice[0]).toMatchObject({ label: 'aa', rolls: [6], hits: 0 });
+    expect(count(s, 'Germans', 'fighter', 'Caucasus')).toBe(1);
     expect(count(s, 'Russians', 'aaGun', 'Caucasus')).toBe(0);
     expect(s.owner['Caucasus']).toBe('Germans');
   });

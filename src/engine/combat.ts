@@ -305,7 +305,7 @@ function step(s: GameState, b: Battle): void {
     }
     case 'aa': {
       b.step = 'roundStart';
-      if (b.kind !== 'land' || !liveDefenders(s, b).some((u) => u.type !== 'aaGun')) return;
+      if (b.kind !== 'land') return;
       const aa = liveDefenders(s, b).filter((u) => u.type === 'aaGun').length;
       const air = liveAttackers(s, b).filter((u) => isAir(u.type)).length;
       const shots = Math.min(aa * 3, air);
@@ -420,6 +420,7 @@ function start(s: GameState, b: Battle): void {
     }
   }
   const here = unitsAt(s, b.space);
+  if (b.kind === 'sea') for (const u of here) if (u.owner === power && isAir(u.type) && u.carriedBy !== null) u.carriedBy = null;
   b.attackers = here
     .filter(
       (u) =>
@@ -584,6 +585,10 @@ export function applyDecision(s: GameState, action: { type: string } & Record<st
   const d = s.pending;
   if (!d) return 'nothing to decide';
   const b = 'battle' in d ? s.battles.find((x) => x.id === d.battle) : undefined;
+  // Casualty lists may name a two-hit battleship twice; every other choice names each unit at most once.
+  const named = (action.units ?? action.ships) as unknown[] | undefined;
+  if (d.kind !== 'casualties' && Array.isArray(named) && new Set(named).size !== named.length)
+    return 'each unit can be named only once';
   switch (d.kind) {
     case 'casualties': {
       if (action.type !== 'casualties') return 'choose casualties';

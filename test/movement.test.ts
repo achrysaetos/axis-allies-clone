@@ -298,7 +298,7 @@ describe('air movement (p.13, 26-27)', () => {
     );
   });
 
-  it('fighters that have not taken off ride a moving carrier as cargo and sit out the battle', () => {
+  it('fighters that have not taken off ride a moving carrier and launch to fight when it attacks', () => {
     let s = scenario({
       power: 'Americans',
       units: [
@@ -316,7 +316,7 @@ describe('air movement (p.13, 26-27)', () => {
     expect(count(s, 'Americans', 'fighter', '12 Sea Zone')).toBe(2);
     s = ok(s, { type: 'endPhase' });
     s = ok(s, { type: 'startBattle', battle: s.battles[0]!.id });
-    expect(s.battles[0]!.attackers).toHaveLength(2);
+    expect(s.battles[0]!.attackers).toHaveLength(4);
   });
 
   it('a fighter that rode a moving carrier cannot then fly off in noncombat', () => {

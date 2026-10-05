@@ -167,30 +167,24 @@ function planAir(state: GameState, units: Unit[], path: SpaceId[], combat: boole
     if (!f || areAllied(f.owner, state.power)) return 'raids must target an enemy industrial complex';
   }
   if (combat) {
-    const needCarrier = new Map<SpaceId, number>();
     for (const u of units) {
+      if (u.type === 'fighter') continue;
       const left = remainingMove(u) - steps;
-      if ([...airDistances(dest, left).keys()].some((s) => canLandAir(state, s, state.power))) continue;
-      if (u.type !== 'fighter') return `${u.type} would have no possible landing space after attacking ${dest}`;
-      needCarrier.set(dest + ':' + left, (needCarrier.get(dest + ':' + left) ?? 0) + 1);
-    }
-    for (const [key, n] of needCarrier) {
-      const left = Number(key.slice(key.lastIndexOf(':') + 1));
-      if (carrierSlotsWithin(state, dest, left) < n)
-        return `fighters would have no possible landing space after attacking ${dest}`;
+      if (![...airDistances(dest, left).keys()].some((s) => canLandAir(state, s, state.power)))
+        return `${u.type} would have no possible landing space after attacking ${dest}`;
     }
   } else if (space(dest).water) {
     if (!units.every((u) => u.type === 'fighter')) return `air units cannot land in ${dest}`;
-    if (
-      carrierSlotsWithin(
-        state,
-        dest,
-        0,
-        units.map((u) => u.id),
-      ) < units.length
-    )
-      return `no carrier can be in ${dest} for these fighters`;
   } else if (!canLandAir(state, dest, state.power)) return `air units cannot land in ${dest}: ${landingRefusal(state, dest)}`;
+  const moving = new Set(units.map((u) => u.id));
+  const after: GameState = {
+    ...state,
+    units: state.units.map((u) => (moving.has(u.id) ? { ...u, at: dest, moved: u.moved + steps, carriedBy: null } : u)),
+  };
+  if (airWithoutCarrier(after).length > airWithoutCarrier(state).length)
+    return combat
+      ? `fighters would have no possible landing space after attacking ${dest}`
+      : `no carrier can be in ${dest} for these fighters`;
   return { kind: 'air', units };
 }
 
@@ -202,37 +196,89 @@ function landingRefusal(state: GameState, dest: SpaceId): string {
   return 'it is not friendly now';
 }
 
-/** Carrier slots that could be available within `left` spaces of `at` by the end of the turn. */
-function carrierSlotsWithin(state: GameState, at: SpaceId, left: number, ignoring: UnitId[] = []): number {
+/**
+ * Air units that have flown and can reach no friendly land, each with the sea zones it could still land in:
+ * any zone within its remaining move during combat move (p.13), otherwise the zone it sits in.
+ */
+function airNeedingCarriers(state: GameState): { unit: Unit; zones: SpaceId[] }[] {
   const power = state.power;
-  const zones = [...airDistances(at, left).keys()].filter((s) => space(s).water);
-  let slots = 0;
-  const counted = new Set<UnitId>();
-  for (const z of zones) {
-    const here = unitsAt(state, z).filter((u) => areAllied(u.owner, power) && !ignoring.includes(u.id));
-    const room =
-      here.filter((u) => u.type === 'carrier').length * CARRIER_CAPACITY - here.filter((u) => u.type === 'fighter').length;
-    slots += Math.max(0, room);
-    for (const c of here) if (c.type === 'carrier') counted.add(c.id);
+  const needs: { unit: Unit; zones: SpaceId[] }[] = [];
+  for (const u of state.units) {
+    if (u.owner !== power || !isAir(u.type) || u.moved === 0 || u.carriedBy !== null) continue;
+    let zones: SpaceId[];
+    if (state.phase === 'combatMove') {
+      const reach = [...airDistances(u.at, remainingMove(u)).keys()];
+      if (reach.some((s) => canLandAir(state, s, power))) continue;
+      zones = reach.filter((s) => space(s).water);
+    } else if (space(u.at).water) zones = [u.at];
+    else continue;
+    needs.push({ unit: u, zones: u.type === 'fighter' ? zones : [] });
   }
-  for (const c of state.units) {
-    if (c.type !== 'carrier' || c.owner !== power || counted.has(c.id) || c.fought || c.movedInCombat) continue;
-    const reach = seaDistances(state, c.at, remainingMove(c), power);
-    if (zones.some((z) => reach.has(z)))
-      slots += CARRIER_CAPACITY - unitsAt(state, c.at).filter((u) => u.carriedBy === c.id).length;
+  return needs;
+}
+
+/** Room on carriers by the end of the turn: one bin per carrier that can still sail, one per zone for the rest. */
+function carrierBins(state: GameState): { zones: Set<SpaceId>; room: number }[] {
+  const power = state.power;
+  const sails = (c: Unit) => c.owner === power && !c.fought && !c.movedInCombat && remainingMove(c) > 0;
+  const bins: { zones: Set<SpaceId>; room: number }[] = [];
+  const zones = new Set(state.units.filter((c) => c.type === 'carrier' && areAllied(c.owner, power)).map((c) => c.at));
+  for (const zone of zones) {
+    const here = unitsAt(state, zone).filter((u) => areAllied(u.owner, power));
+    const sailing = new Set(here.filter((c) => c.type === 'carrier' && sails(c)).map((c) => c.id));
+    for (const id of sailing)
+      bins.push({
+        zones: new Set(seaDistances(state, zone, remainingMove(here.find((c) => c.id === id)!), power).keys()),
+        room: CARRIER_CAPACITY - here.filter((f) => f.carriedBy === id).length,
+      });
+    const seated = here.filter(
+      (f) =>
+        f.type === 'fighter' &&
+        !(f.carriedBy !== null && sailing.has(f.carriedBy)) &&
+        !(f.owner === power && f.moved > 0 && f.carriedBy === null),
+    ).length;
+    const staying = here.filter((c) => c.type === 'carrier' && !sailing.has(c.id)).length;
+    bins.push({ zones: new Set([zone]), room: Math.max(0, staying * CARRIER_CAPACITY - seated) });
   }
   const newCarriers = state.purchases.find((p) => p.type === 'carrier')?.count ?? 0;
-  if (
-    newCarriers > 0 &&
-    zones.some((z) =>
-      space(z).neighbors.some((n) => {
-        const f = factoryAt(state, n);
-        return f && f.owner === power && state.ownerAtTurnStart[n] === power && !state.capturedThisTurn.includes(n);
-      }),
-    )
-  )
-    slots += newCarriers * CARRIER_CAPACITY;
-  return slots;
+  if (newCarriers > 0) {
+    const yards = state.units.filter(
+      (f) =>
+        f.type === 'factory' &&
+        f.owner === power &&
+        state.ownerAtTurnStart[f.at] === power &&
+        !state.capturedThisTurn.includes(f.at),
+    );
+    const launch = yards.flatMap((f) => space(f.at).neighbors.filter((n) => space(n).water));
+    bins.push({ zones: new Set(launch), room: newCarriers * CARRIER_CAPACITY });
+  }
+  return bins;
+}
+
+/** Air units that cannot each be promised their own carrier seat, matching fighters to carriers across all orders. */
+function airWithoutCarrier(state: GameState): Unit[] {
+  const needs = airNeedingCarriers(state);
+  if (needs.length === 0) return [];
+  const bins = carrierBins(state);
+  const seated = bins.map((): number[] => []);
+  const seat = (i: number, tried: Set<number>): boolean => {
+    for (const [b, bin] of bins.entries()) {
+      if (tried.has(b) || !needs[i]!.zones.some((z) => bin.zones.has(z))) continue;
+      tried.add(b);
+      if (seated[b]!.length < bin.room) {
+        seated[b]!.push(i);
+        return true;
+      }
+      for (const [k, j] of seated[b]!.entries()) {
+        if (seat(j, tried)) {
+          seated[b]![k] = i;
+          return true;
+        }
+      }
+    }
+    return false;
+  };
+  return needs.filter((_, i) => !seat(i, new Set())).map((n) => n.unit);
 }
 
 function planLoad(state: GameState, units: Unit[], zone: SpaceId, chosen: UnitId | undefined): Plan | string {
@@ -330,8 +376,7 @@ export function applyMove(draft: GameState, plan: Plan, action: MoveAction): voi
       for (let i = 1; i < path.length; i++) {
         const s = path[i]!;
         const enemies = enemyUnitsAt(draft, s, power);
-        const onlyInfrastructure = enemies.every((u) => u.type === 'factory' || u.type === 'aaGun');
-        if (combat && isHostileLand(draft, s, power) && onlyInfrastructure) {
+        if (combat && isHostileLand(draft, s, power) && enemies.every((u) => u.type === 'factory')) {
           stopped = enemies.length > 0;
           captureTerritory(draft, s, power);
           if (i < path.length - 1) for (const u of plan.units) u.blitzed = true;
@@ -354,6 +399,7 @@ export function applyMove(draft: GameState, plan: Plan, action: MoveAction): voi
         u.at = dest;
         u.moved += steps;
         u.movedInCombat ||= combat;
+        if (u.type === 'submarine' && hasEnemyDestroyer(draft, dest, power)) u.moved = STATS[u.type].move;
       }
       for (const c of draft.units) if (c.carriedBy !== null && moving.has(c.carriedBy)) c.at = dest;
       return;
@@ -392,6 +438,12 @@ export function combatMoveErrors(state: GameState): string[] {
   const amphibZones = new Set(
     state.units.filter((u) => u.owner === power && u.carriedBy !== null && u.offloadedTo !== null).map((u) => u.at),
   );
+  // A blitzing tank's cameFrom is the territory it took on the way through.
+  const blitzedThrough = new Set(
+    state.units
+      .filter((u) => u.owner === power && u.blitzed && u.cameFrom !== null && state.capturedThisTurn.includes(u.cameFrom))
+      .map((u) => u.cameFrom),
+  );
   for (const u of state.units) {
     if (u.owner !== power || !u.movedInCombat) continue;
     if (u.carriedBy !== null && isLand(u.type)) {
@@ -403,6 +455,8 @@ export function combatMoveErrors(state: GameState): string[] {
     if (isLand(u.type)) {
       if (!wasHostileAtTurnStart(state, u.at, power) && !u.blitzed)
         errors.push(`${u.type} in ${u.at} cannot end a combat move in friendly territory`);
+      else if (blitzedThrough.has(u.at))
+        errors.push(`${u.type} cannot end a combat move in ${u.at}: a tank already blitzed through and took it this turn`);
     } else if (isAir(u.type)) {
       const target = space(u.at).water ? enemies.length > 0 : wasHostileAtTurnStart(state, u.at, power);
       if (!target) errors.push(`${u.type} in ${u.at} must end its combat move in a space under attack`);
@@ -414,6 +468,8 @@ export function combatMoveErrors(state: GameState): string[] {
       errors.push(`${u.type} in ${u.at} must end its combat move in a sea zone with enemy units`);
     }
   }
+  for (const u of airWithoutCarrier(state))
+    errors.push(`${u.type} in ${u.at} would have nowhere to land; keep a carrier within its reach or call it back`);
   for (const zone of new Set(state.units.filter((u) => u.owner === power && isSea(u.type)).map((u) => u.at))) {
     const mine = unitsAt(state, zone).filter((u) => u.owner === power && u.carriedBy === null);
     if (enemyUnitsAt(state, zone, power).length === 0 || amphibZones.has(zone)) continue;

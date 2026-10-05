@@ -181,7 +181,7 @@ export function SetupScreen({ saved, onStart }: Props) {
                 power={p}
                 who={seats[p]}
                 onHover={setLit}
-                onToggle={() => setSeats({ ...seats, [p]: seats[p] === 'human' ? 'ai' : 'human' })}
+                onToggle={() => setSeats((s) => ({ ...s, [p]: s[p] === 'human' ? 'ai' : 'human' }))}
               />
             ))}
           </div>

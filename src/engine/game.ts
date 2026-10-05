@@ -10,7 +10,7 @@ import {
   isSea,
   space,
 } from './data';
-import { POWERS } from './types';
+import { POWERS, UNIT_TYPES } from './types';
 import type { Action, Decision, GameState, Power, Purchase, Result, SpaceId, Unit, UnitId, UnitType } from './types';
 import {
   areAllied,
@@ -121,6 +121,7 @@ const costOf = (ps: Purchase[]) => ps.reduce((n, p) => n + STATS[p.type].cost * 
 
 function buy(s: GameState, purchases: Purchase[]): string | null {
   if (s.phase !== 'purchase') return 'units are bought in the purchase phase';
+  if (purchases.some((p) => !UNIT_TYPES.includes(p.type))) return 'no such unit type';
   if (purchases.some((p) => !Number.isInteger(p.count) || p.count < 0)) return 'invalid purchase count';
   const clean = purchases.filter((p) => p.count > 0);
   if (clean.length > 0 && !capitalHeld(s, s.power)) return 'a power without its capital cannot buy units';

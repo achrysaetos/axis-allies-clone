@@ -55,6 +55,14 @@ export function view(r: RoomRecord, online: ReadonlySet<PlayerId>): RoomView {
 
 const controllersOf = (r: RoomRecord) =>
   Object.fromEntries(POWERS.map((p) => [p, r.seats[p] === COMPUTER ? 'ai' : 'human'])) as Record<Power, Controller>;
+/**
+ * A 32-bit dice state could be recovered from a dozen public rolls, so every step that may roll starts from fresh
+ * server randomness, and past dice say nothing about future ones.
+ */
+const reseeded = (r: RoomRecord): GameState => ({
+  ...r.session.state,
+  rng: crypto.getRandomValues(new Uint32Array(1))[0]! || 1,
+});
 const asSession = (r: RoomRecord, state = r.session.state): Session => ({
   ...r.session,
   state,
@@ -122,8 +130,10 @@ export function handle(
       if (msg.version !== r.version) return refuse('the game moved on before your action arrived');
       if (msg.t === 'act' && msg.actions.length > 1 && !msg.actions.every((a) => a.type === 'move'))
         return refuse('only moves can be sent together');
-      const step =
-        msg.t === 'act' ? actAll(asSession(r), msg.actions) : quickResolve(asSession(r), msg.battle, (p) => r.seats[p] === me);
+      // Moves never roll, and undo replays them, so only a step that can roll draws fresh dice.
+      const rolls = msg.t === 'resolve' || !msg.actions.every((a) => a.type === 'move');
+      const session = asSession(r, rolls ? reseeded(r) : r.session.state);
+      const step = msg.t === 'act' ? actAll(session, msg.actions) : quickResolve(session, msg.battle, (p) => r.seats[p] === me);
       if (!step.ok) return refuse(step.error);
       return { record: played(r, step.session, msg.t === 'act' ? msg.actions : []) };
     }
@@ -169,10 +179,25 @@ export const computerToMove = (r: RoomRecord) => !r.session.state.winner && r.se
 export function computerTurn(r: RoomRecord, maxSteps: number): Outcome | null {
   if (!computerToMove(r)) return null;
   // Worker clocks stand still during computation, so the burst is bounded by actions rather than time.
-  const step = aiBurst(asSession(r), Infinity, maxSteps);
+  // The computer's last resort is replaying its movement phase from the start, so that start outlives each burst.
+  const before = r.session.state;
+  const phaseStart = r.phaseStart ?? before;
+  // Only battles roll; other phases keep the state as is, so the computer's cached plan still matches it.
+  const state = before.phase === 'combat' ? reseeded(r) : before;
+  const step = aiBurst({ ...asSession(r, state), undo: [phaseStart] }, Infinity, maxSteps);
   if (!step.ok) return { record: r, error: step.error };
   const { state: next, fallen } = step.session;
-  return { record: { ...r, version: r.version + 1, session: { state: next, fallen }, phaseStart: null, moves: [] } };
+  const moving = (next.phase === 'combatMove' || next.phase === 'noncombatMove') && !next.pending;
+  const samePhase = moving && next.phase === before.phase && next.power === before.power;
+  return {
+    record: {
+      ...r,
+      version: r.version + 1,
+      session: { state: next, fallen },
+      phaseStart: samePhase ? phaseStart : null,
+      moves: [],
+    },
+  };
 }
 
 export interface Notice {

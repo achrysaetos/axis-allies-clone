@@ -137,15 +137,11 @@ export function simulate(spec: BattleSpec): Odds {
 }
 
 function fight(spec: BattleSpec, att: Piece[], def: Piece[], rand: () => number): void {
+  let bombardHits = 0;
   if (spec.kind === 'land') {
-    const d = live(def);
-    if (d.length > 0 && d.some((f) => f.type !== 'aaGun')) {
-      const shots = Math.min(3 * d.filter((f) => f.type === 'aaGun').length, att.filter((f) => isAir(f.type)).length);
-      for (let i = 0; i < shots; i++) if (rand() * 6 < 1) hit(att, 'air');
-    }
-    let bombardHits = 0;
+    const shots = Math.min(3 * def.filter((f) => f.type === 'aaGun').length, att.filter((f) => isAir(f.type)).length);
+    for (let i = 0; i < shots; i++) if (rand() * 6 < 1) hit(att, 'air');
     for (const v of spec.bombard ?? []) if (rand() * 6 < v) bombardHits++;
-    for (let i = 0; i < bombardHits; i++) hit(def, 'any');
   }
   for (let round = 0; round < 15; round++) {
     let a = live(att);
@@ -156,7 +152,8 @@ function fight(spec: BattleSpec, att: Piece[], def: Piece[], rand: () => number)
     }
     if (spec.kind === 'sea' && a.length > 0 && d.length > 0) {
       const dCombat = d.filter((f) => f.type !== 'transport');
-      if (!canHitAny(a, dCombat, true) && !canHitAny(dCombat, a, false) && canHitAny(a, d, true)) {
+      const aCombat = a.filter((f) => f.type !== 'transport');
+      if (!canHitAny(a, dCombat, true) && !canHitAny(dCombat, aCombat, false) && canHitAny(a, d, true)) {
         for (const f of d) f.hp = 0;
         return;
       }
@@ -185,6 +182,8 @@ function fight(spec: BattleSpec, att: Piece[], def: Piece[], rand: () => number)
       false,
       rand,
     );
+    // Units hit by bombardment fire back in the first round before they are removed.
+    if (round === 0) for (let i = 0; i < bombardHits; i++) hit(def, 'any');
     applyHits(def, aHits);
     applyHits(att, dHits);
   }
