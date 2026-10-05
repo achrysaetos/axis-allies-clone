@@ -134,6 +134,7 @@ export function pressOnOdds(state: GameState, b: Battle) {
     attackers: asCombatants(attackers),
     defenders: asCombatants(casualtyPool(state, b, 'defender')),
     trials: 300,
+    keepLand: true,
   });
 }
 

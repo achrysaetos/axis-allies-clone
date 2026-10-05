@@ -35,6 +35,22 @@ describe('attack forecasts', () => {
     expect(supported[0]!.win).toBeGreaterThan(plain[0]!.win + 0.1);
   });
 
+  it('an attack with planes and one tank counts on keeping the tank alive to take the space', () => {
+    let s = scenario({
+      units: [
+        ['Germans', 'armour', 'West Russia', 2],
+        ['Germans', 'fighter', 'West Russia', 4],
+        ['Germans', 'bomber', 'West Russia'],
+        ['Russians', 'infantry', 'Archangel'],
+        ['Russians', 'artillery', 'Archangel'],
+        ['Russians', 'fighter', 'Archangel'],
+      ],
+    });
+    for (const t of ['armour', 'fighter', 'bomber'] as UnitType[])
+      s = move(s, ids(s, 'Germans', t, 'West Russia'), ['West Russia', 'Archangel']);
+    expect(forecasts(s).find((f) => f.space === 'Archangel')!.win).toBeGreaterThan(0.9);
+  });
+
   it('a warship that fought at sea this turn adds no bombardment to the forecast', () => {
     const s = landing(true);
     for (const u of s.units) if (u.type === 'battleship') u.fought = true;

@@ -52,6 +52,7 @@ export function forecasts(state: GameState): Forecast[] {
             landing.filter((u) => u.offloadedTo === id),
           ),
       trials: TRIALS,
+      keepLand: true,
     });
     out.push({ space: id, kind: water ? 'sea' : 'land', ...odds });
   }

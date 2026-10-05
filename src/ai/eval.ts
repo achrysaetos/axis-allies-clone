@@ -15,6 +15,8 @@ export interface BattleSpec {
   /** Attack values of ships bombarding before the first round of an amphibious assault. */
   bombard?: number[];
   trials?: number;
+  /** The attacker takes its last land unit as a casualty only after its aircraft, as a player does to keep the space. */
+  keepLand?: boolean;
 }
 
 export interface Odds {
@@ -112,6 +114,10 @@ const lossValue = (start: Piece[], end: Piece[]) => start.reduce((n, f, i) => n 
 export function simulate(spec: BattleSpec): Odds {
   const trials = spec.trials ?? 120;
   const baseA = pieces(spec.attackers);
+  if (spec.keepLand && spec.kind === 'land') {
+    const keeper = baseA.findIndex((f) => isLand(f.type) && f.type !== 'aaGun');
+    if (keeper >= 0) baseA.push(...baseA.splice(keeper, 1));
+  }
   const baseD = pieces(spec.defenders);
   const rand = rng(baseA.length * 7919 + baseD.length * 104729 + 17);
   let wins = 0;
