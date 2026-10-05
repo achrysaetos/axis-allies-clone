@@ -413,10 +413,21 @@ export function Game({
   const canUndo = online ? online.room.canUndo && controllers[state.power] === 'human' : session.undo.length > 0;
   const onUndo = useCallback(() => {
     if (!canUndo) return;
-    if (send) send({ t: 'undo' });
-    else commit(undo(current.current));
     setHand(null);
-    setToast({ text: 'Last move undone', id: Date.now(), info: true });
+    if (send) {
+      send({ t: 'undo' });
+      return setToast({ text: 'Last move undone', id: Date.now(), info: true });
+    }
+    const now = current.current.state;
+    const back = undo(current.current);
+    commit(back);
+    const where = new Map(now.units.map((u) => [u.id, u.at]));
+    const returned = back.state.units.filter((u) => where.get(u.id) !== u.at && u.carriedBy === null);
+    const to = returned[0]?.at;
+    const names = tally(returned)
+      .map((t) => unitCount(t.count, t.type))
+      .join(', ');
+    setToast({ text: to ? `Undone: ${names} back in ${to}` : 'Last move undone', id: Date.now(), info: true });
   }, [commit, send, canUndo]);
 
   const endPhase = useCallback(() => {

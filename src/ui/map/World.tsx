@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import type { CSSProperties } from 'react';
-import { SIDE, space } from '../../engine/data';
+import { SIDE, isAir, space } from '../../engine/data';
 import type { GameState, SpaceId, Unit, UnitId } from '../../engine/types';
 import { UnitIcon } from '../icons';
 import { stacksAt } from '../pieces';
@@ -48,6 +48,7 @@ function Pieces({
   stacks,
   held,
   glides,
+  combat,
 }: {
   id: SpaceId;
   x: number;
@@ -55,6 +56,8 @@ function Pieces({
   stacks: Stack[];
   held: ReadonlySet<UnitId>;
   glides: WorldProps['glides'];
+  /** In the combat phase, retreated planes still sit in the battle until they fly out in noncombat. */
+  combat: boolean;
 }) {
   if (stacks.length === 0) return null;
   // Each side gets its own rows, so attackers and defenders in a contested space read apart.
@@ -87,7 +90,7 @@ function Pieces({
                 style={glide ? ({ '--dx': `${glide[0]}px`, '--dy': `${glide[1]}px` } as CSSProperties) : undefined}
               >
                 <title>
-                  {`${style.name} ${UNIT_GLYPH[st.type].name.toLowerCase()} ×${st.units.length}${st.carried ? ' (aboard a transport)' : ''}${st.spent ? ' (done for now)' : ''}`}
+                  {`${style.name} ${UNIT_GLYPH[st.type].name.toLowerCase()} ×${st.units.length}${st.carried ? ' (aboard a transport)' : ''}${combat && st.units.some((u) => u.retreated) && isAir(st.type) ? ' (retreated: flies out to land in noncombat)' : st.spent ? ' (done for now)' : ''}`}
                 </title>
                 <rect x={-GAP / 2} y={-3} width={w + GAP} height={PIECE_H + 6} fill="transparent" />
                 <rect
@@ -317,6 +320,7 @@ export const World = memo(function World({ state, selected, highlights, held, ta
           stacks={stacksAt(state, byAt.get(s.id) ?? [])}
           held={held}
           glides={glides}
+          combat={state.phase === 'combat'}
         />
       ))}
       {SHAPES.filter((s) => tags.has(s.id)).map((s) => (
