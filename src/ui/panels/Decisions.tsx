@@ -272,7 +272,7 @@ export function DecisionView({ state, d, act }: { state: GameState; d: Decision;
           ids={d.subs}
           max={d.subs.length}
           initial={[]}
-          title={`${powerName(d.power)}: submerge submarines? Chosen subs leave the battle.`}
+          title={`${powerName(d.power)}: submerge submarines? With no enemy destroyer here, a sub may dive at the start of a round instead of firing; it leaves the battle safely.`}
           confirm={(n) => (n === 0 ? 'Keep fighting' : `Submerge ${n}`)}
           onConfirm={(units) => act({ type: 'submerge', units })}
         />
