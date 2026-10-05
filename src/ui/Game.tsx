@@ -211,9 +211,14 @@ export function Game({
   const retreat = pendingRetreat && {
     options: pendingRetreat.options.filter((o) => o !== state.battles.find((b) => b.id === pendingRetreat.battle)?.space),
   };
+  /** In Mobilize with nothing in hand, every space that can take something bought, so the board shows where to place. */
+  const placeable = useMemo(() => {
+    if (state.phase !== 'mobilize' || !humanActs || greeting) return [];
+    return [...new Set(state.purchases.flatMap((p) => placementOptions(state, p.type).map((o) => o.at)))];
+  }, [state, humanActs, greeting]);
   const highlights = useMemo(
-    () => reach ?? new Set(retreat ? retreat.options : placements.map((p) => p.at)),
-    [reach, retreat, placements],
+    () => reach ?? new Set(retreat ? retreat.options : placements.length > 0 ? placements.map((p) => p.at) : placeable),
+    [reach, retreat, placements, placeable],
   );
   /** Where the held units would go if dropped on the hovered space, and the odds of the attack they would make. */
   const preview = useMemo(
@@ -225,11 +230,7 @@ export function Game({
   useEffect(() => {
     if (viewedSpace) setFocus({ id: viewedSpace, nonce: Date.now(), inset: dialogInset() });
   }, [viewedSpace]);
-  const revealed = useMemo(() => {
-    if (placements.length > 0) return placements.map((p) => p.at);
-    if (state.phase !== 'mobilize' || !humanActs || greeting) return [];
-    return [...new Set(state.purchases.flatMap((p) => placementOptions(state, p.type).map((o) => o.at)))];
-  }, [placements, state, humanActs, greeting]);
+  const revealed = useMemo(() => (placements.length > 0 ? placements.map((p) => p.at) : placeable), [placements, placeable]);
   const held = useMemo(() => new Set(hand?.kind === 'units' ? hand.units : []), [hand]);
   const odds = useMemo(() => (humanActs ? forecasts(state) : []), [state, humanActs]);
   const tags = useMemo(() => {
