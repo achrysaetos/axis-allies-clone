@@ -41,3 +41,4 @@ when	what	why	evidence	result
 2026-10-04	raid-choice-on-screen	Playtest #7: the raid-or-attack choice is clamped inside the window	kept: press at 1435,890 opened the choice at 1190..1410 x 800..872 in a 1440x900 window
 2026-10-04	mobilize-highlights	Playtest #9: every space that can take a bought unit is highlighted as Mobilize starts, matching the hint	kept: mobilize scenario shows 4 highlighted spaces before any card is picked
 2026-10-04	factory-full-note	Playtest #10: placing the last unit a factory can take says so before the map moves on to factories with room	kept: 3 inf in Italy -> 'Italy has placed all it can this turn (ships launched from it count too)'
+2026-10-04	fade-combat-trails	Playtest #11: in noncombat the combat-move trails fade to 25% so the moves being made stand out	kept: blitz scenario noncombat shows the tank's trail as .old; a fresh noncombat move trail is not

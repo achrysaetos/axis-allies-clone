@@ -1011,6 +1011,9 @@ path.captured {
   stroke-width: 2.5;
   stroke-linecap: round;
 }
+.trails line.old {
+  opacity: 0.25;
+}
 .hover-owner {
   display: flex;
   align-items: center;

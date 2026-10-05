@@ -147,19 +147,22 @@ function Route({ route, className = 'route' }: { route: SpaceId[]; className?: s
 /** Faint arrows from where the moving power's pieces began the turn, so the turn's moves can be reviewed at a glance. */
 function MoveTrails({ state }: { state: GameState }) {
   if (state.phase !== 'combatMove' && state.phase !== 'combat' && state.phase !== 'noncombatMove') return null;
-  const trails = new Set(
-    state.units
-      .filter((u) => u.owner === state.power && u.turnStart !== u.at && u.carriedBy === null)
-      .map((u) => `${u.turnStart}>${u.at}`),
-  );
+  // In noncombat the attacks are history, so their trails fade and the moves being made now stand out.
+  const trails = new Map<string, boolean>();
+  for (const u of state.units)
+    if (u.owner === state.power && u.turnStart !== u.at && u.carriedBy === null) {
+      const key = `${u.turnStart}>${u.at}`;
+      const old = state.phase === 'noncombatMove' && u.movedInCombat;
+      trails.set(key, (trails.get(key) ?? true) && old);
+    }
   return (
     <g className="trails" pointerEvents="none">
-      {[...trails].map((t) => {
+      {[...trails].map(([t, old]) => {
         const [[x1, y1], [x2, y2]] = routePoints(t.split('>')) as [[number, number], [number, number]];
         const len = Math.hypot(x2 - x1, y2 - y1) || 1;
         const pull = Math.min(22, len / 3);
         const [ex, ey] = [x2 - ((x2 - x1) / len) * pull, y2 - ((y2 - y1) / len) * pull];
-        return <line key={t} x1={x1} y1={y1} x2={ex} y2={ey} markerEnd="url(#trail-head)" />;
+        return <line key={t} x1={x1} y1={y1} x2={ex} y2={ey} markerEnd="url(#trail-head)" className={old ? 'old' : undefined} />;
       })}
     </g>
   );
