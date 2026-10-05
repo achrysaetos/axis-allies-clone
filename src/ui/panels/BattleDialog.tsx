@@ -259,7 +259,7 @@ export function BattleDialog({
               </button>
               <button
                 onClick={() => onQuick(battle.id)}
-                title="Each side loses its cheapest units first, and you retreat below a 30% chance to win"
+                title="Your cheapest units are lost first and you retreat below a 30% chance to win; a human defender still picks their own casualties"
               >
                 Fight it out automatically
               </button>

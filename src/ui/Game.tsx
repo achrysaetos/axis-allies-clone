@@ -343,19 +343,34 @@ export function Game({
     setHover(id);
   };
 
+  // A battle being finished automatically: it makes the attacker's choices, waits while a human defender makes theirs,
+  // then carries on.
+  const [autoBattle, setAutoBattle] = useState<number | null>(null);
   const quick = useCallback(
     (battle: number) => {
-      if (send) {
-        send({ t: 'resolve', battle });
-        return setBattleView(battle);
-      }
-      const r = quickResolve(current.current, battle);
-      if (!r.ok) return showError(r.error);
-      commit(r.session);
+      setAutoBattle(battle);
       setBattleView(battle);
+      if (send) return send({ t: 'resolve', battle });
+      const s = current.current;
+      const attacker = s.state.battles.find((b) => b.id === battle)?.attacker;
+      const r = quickResolve(s, battle, (p) => p === attacker || s.controllers[p] !== 'human');
+      if (!r.ok) {
+        setAutoBattle(null);
+        return showError(r.error);
+      }
+      commit(r.session);
     },
     [commit, showError, send],
   );
+  useEffect(() => setAutoBattle(null), [serverError]);
+  useEffect(() => {
+    if (autoBattle === null) return;
+    const b = state.battles.find((x) => x.id === autoBattle);
+    if (!b || b.resolved) return setAutoBattle(null);
+    const d = state.pending;
+    if (d && 'battle' in d && d.battle === autoBattle && d.power === b.attacker && controllers[d.power] === 'human')
+      quick(autoBattle);
+  }, [state, autoBattle, controllers, quick]);
 
   // The turn card already sits over the new power's home, so the player is oriented before pressing Start.
   useEffect(() => {
