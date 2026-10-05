@@ -141,12 +141,16 @@ export function Game({
         commit(r.session);
         return true;
       }
+      if (online?.status !== 'open') {
+        showError('Not connected to the game right now. Your move was not made; try again in a moment.');
+        return false;
+      }
       // Only the server knows the dice, so a roll waits for its answer; everything else shows at once.
       if (r.session.state.rng === current.current.state.rng) commit(r.session);
       send({ t: 'act', actions });
       return true;
     },
-    [commit, showError, send],
+    [commit, showError, send, online?.status],
   );
 
   useEffect(() => {
@@ -181,11 +185,16 @@ export function Game({
     return () => clearTimeout(t);
   }, [state, controllers, commit, showError, aiRetry]);
 
+  // A decision this screen must make always brings its battle up; someone else's battle opens once when it starts, and
+  // an onlooker who closes it is left alone until the next one.
+  const d0 = state.pending;
+  const myDecision = d0 && 'battle' in d0 && controllers[d0.power] === 'human' ? `${d0.battle}:${d0.kind}:${d0.power}` : null;
   useEffect(() => {
-    const d = state.pending;
-    if (d && 'battle' in d) setBattleView(d.battle);
-    else if (state.activeBattle !== null) setBattleView(state.activeBattle);
-  }, [state.pending, state.activeBattle]);
+    if (myDecision) setBattleView(Number(myDecision.split(':')[0]));
+  }, [myDecision]);
+  useEffect(() => {
+    if (state.activeBattle !== null) setBattleView(state.activeBattle);
+  }, [state.activeBattle]);
 
   useEffect(() => {
     setHand(null);

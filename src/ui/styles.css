@@ -26,6 +26,8 @@
 
 html,
 body {
+  height: 100%;
+  overflow: hidden;
   overscroll-behavior: none;
 }
 body {
@@ -100,6 +102,8 @@ input[type='number'] {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  /* The visible height on phones, where 100vh includes the browser bars and lets the page scroll. */
+  height: 100dvh;
 }
 
 .phase-bar {
@@ -507,6 +511,8 @@ path.selected {
 }
 .turn-card {
   width: 420px;
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
   padding: 22px 26px;
   background: var(--panel);
   border: 2px solid;
@@ -1113,7 +1119,12 @@ button.bell.blocked svg {
   stroke: var(--dim);
 }
 .reconnecting {
-  padding: 2px 8px;
+  position: fixed;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 80;
+  padding: 4px 12px;
   border-radius: 10px;
   background: var(--panel-2);
   color: var(--accent);
@@ -1190,12 +1201,29 @@ button.bell.blocked svg {
     gap: 6px;
     padding: 6px 8px;
   }
+  .phase-bar {
+    flex-wrap: wrap;
+    row-gap: 4px;
+  }
   .phase-bar > .round,
-  .phase-bar > .phases,
-  .phase-bar > .money,
   .phase-bar > .to-place,
-  .phase-bar > .vcs {
+  .phase-bar > .vcs,
+  .phase-bar .end .long {
     display: none;
+  }
+  .phase-bar .end .short {
+    display: inline;
+  }
+  .phase-bar > .grow {
+    flex-basis: 100%;
+    height: 0;
+  }
+  .seat-ask {
+    position: fixed;
+    left: 8px;
+    right: 8px;
+    top: 96px;
+    width: auto;
   }
   .seats {
     overflow-x: auto;
@@ -1272,4 +1300,8 @@ button.bell.blocked svg {
 }
 .recap-turn li.capture {
   color: var(--accent);
+}
+
+.end .short {
+  display: none;
 }

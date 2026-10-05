@@ -181,6 +181,12 @@ export function BattleDialog({
   const human = controllers[battle.attacker] === 'human';
   const { attackers, defenders } = lineup(state, battle);
   const log = useRef<HTMLDivElement>(null);
+  // On a phone the sheet is short, so a decision that arrives below the dice is scrolled into view.
+  const decision = useRef<HTMLDivElement>(null);
+  const asked = mine && !waiting ? `${mine.kind}:${mine.power}:${battle.round}` : null;
+  useEffect(() => {
+    if (asked) decision.current?.scrollIntoView({ block: 'nearest' });
+  }, [asked]);
   useEffect(() => {
     log.current?.scrollTo({ top: log.current.scrollHeight });
   }, [battle.dice.length, battle.id]);
@@ -191,7 +197,12 @@ export function BattleDialog({
           {battle.kind === 'sbr' ? 'Bombing raid on' : 'Battle for'} {battle.space}
         </h3>
         <span className="dim">{battle.round > 0 ? `Round ${battle.round}` : ''}</span>
-        <button className="link" disabled={mine !== null} onClick={onClose} title={mine ? 'A decision is pending' : 'Close'}>
+        <button
+          className="link"
+          disabled={mine !== null && !waiting}
+          onClick={onClose}
+          title={mine && !waiting ? 'A decision is pending' : 'Close'}
+        >
           ✕
         </button>
       </header>
@@ -300,7 +311,9 @@ export function BattleDialog({
           <div className="dim">Waiting for {playing(mine.power)}…</div>
         ) : (
           <>
-            <DecisionView state={state} d={mine} act={act} />
+            <div ref={decision}>
+              <DecisionView state={state} d={mine} act={act} />
+            </div>
             {human && (
               <button className="link" onClick={() => onQuick(battle.id)}>
                 Finish this battle automatically{mine.power === battle.attacker ? ' (retreats below 30%)' : ''}

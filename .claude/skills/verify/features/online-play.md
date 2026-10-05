@@ -11,7 +11,7 @@ Friends play one game from separate browsers. One player creates a room from the
 - The hint line while someone else acts, `Soviet Union (Alex) is playing…`, or `Nobody holds Soviet Union yet…` for an empty seat.
 - Live moves, purchases, phase changes and Undo arriving on the other screen.
 - Cross-player battles. The attacker sees `Waiting for Germany (Bea)…` while the defender gets the casualty decision.
-- A `▶ ` title prefix when it becomes your move in a background tab, and `Reconnecting…` while the socket is down.
+- A `▶ ` title prefix when it becomes your move in a background tab, and a `Reconnecting…` banner at the top center while the socket is down. Actions made while disconnected are refused with `Not connected to the game right now…` and nothing changes on the board.
 - A room link that does not exist shows `There is no game at this link.`
 - Push notifications to a player whose tab is closed, and the bell after `Copy invite link` that turns them on or off.
 
