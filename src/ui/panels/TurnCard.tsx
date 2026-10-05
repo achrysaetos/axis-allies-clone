@@ -41,7 +41,10 @@ export function TurnCard({ state, onStart }: { state: GameState; onStart: () => 
             <span className="bad">Your capital is in enemy hands: you cannot buy units or collect income.</span>
           ) : (
             <>
-              <strong>{state.treasury[state.power]} IPCs</strong> to spend · income {income(state, state.power)} per turn
+              <strong>
+                {state.treasury[state.power]} IPC{state.treasury[state.power] === 1 ? '' : 's'}
+              </strong>{' '}
+              {state.phase === 'purchase' ? 'to spend' : 'in the treasury'} · income {income(state, state.power)} per turn
             </>
           )}
         </div>
