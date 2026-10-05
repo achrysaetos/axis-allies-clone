@@ -4,7 +4,7 @@ import { capitalHeld, income } from '../../engine/queries';
 import type { GameState, Power } from '../../engine/types';
 import { POWER_STYLE, readable } from '../theme';
 
-const NOTABLE = /captures|liberates|seizes|bombs|battle for|holds against|lost|win with|cannot collect/;
+const NOTABLE = /captures|liberates|seizes|bombs|battle for|holds against|retreats|clears|lost|win with|cannot collect/;
 /** Everything notable since this power's last turn ended, so the returning player catches up at a glance. */
 export function sinceLastTurn(log: string[], power: Power): string[] {
   const ended = new RegExp(`^${power} (collects \\d+ IPCs|cannot collect income)`);

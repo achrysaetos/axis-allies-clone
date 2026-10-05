@@ -125,6 +125,8 @@ export interface Battle {
   }[];
   resolved: boolean;
   skipped: boolean;
+  /** Where the attackers retreated to, once they have; planes that retreat stay put until noncombat. */
+  retreatedTo?: SpaceId;
   winner: 'attacker' | 'defender' | 'none' | null;
   /** Every unit that entered the battle, so losses can be reported after the dead leave play. */
   roster: { id: UnitId; owner: Power; type: UnitType }[];

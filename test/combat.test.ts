@@ -158,6 +158,8 @@ describe('general combat (p.16-19)', () => {
     expect(count(s, 'Germans', 'armour', 'West Russia')).toBe(1);
     expect(count(s, 'Germans', 'fighter', 'Archangel')).toBe(1);
     expect(battleIn(s, 'Archangel').resolved).toBe(true);
+    expect(battleIn(s, 'Archangel').retreatedTo).toBe('West Russia');
+    expect(s.log).toContain('Germans retreats 1 tank, 1 fighter from Archangel to West Russia');
   });
 });
 

@@ -138,7 +138,12 @@ function outcome(state: GameState, b: Battle): string {
   const attacker = powerName(b.attacker);
   if (b.kind === 'sbr')
     return b.winner === 'attacker' ? `${attacker} damages the industrial complex` : 'Every bomber was shot down';
-  if (b.winner === 'defender') return `${b.space} holds`;
+  if (b.winner === 'defender')
+    return b.retreatedTo && b.retreatedTo !== b.space
+      ? `${attacker} retreats to ${b.retreatedTo}. ${b.space} holds`
+      : b.retreatedTo
+        ? `${attacker}'s planes break off. ${b.space} holds`
+        : `${b.space} holds`;
   if (b.winner === 'none') return 'Neither side can hit the other, so the battle ends';
   if (b.kind === 'sea') return `${attacker} wins the sea battle`;
   const owner = state.owner[b.space];

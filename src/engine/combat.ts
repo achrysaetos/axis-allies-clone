@@ -660,6 +660,9 @@ function retreat(s: GameState, b: Battle, to: SpaceId): void {
     }
   }
   b.attackers = b.attackers.filter((id) => !leaving.some((u) => u.id === id));
-  s.log.push(`${b.attacker} retreats from ${b.space}`);
+  b.retreatedTo = to;
+  const types = [...new Set(leaving.map((u) => u.type))];
+  const what = types.map((t) => unitCount(leaving.filter((u) => u.type === t).length, t)).join(', ');
+  s.log.push(`${b.attacker} retreats ${what} from ${b.space}${to === b.space ? '' : ` to ${to}`}`);
   if (liveAttackers(s, b).length === 0) finish(s, b, 'defender');
 }
