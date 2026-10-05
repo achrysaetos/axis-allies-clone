@@ -54,20 +54,6 @@ function useCaptured(owner: GameState['owner']): ReadonlySet<SpaceId> {
   return captured;
 }
 const GLIDE_MS = 600;
-const PINCH_SETTLE_MS = 250;
-const STREAM_GAP_MS = 200;
-
-/**
- * Chrome and Safari report a trackpad's legacy wheelDeltaY as exactly -3 × deltaY, while a mouse wheel's comes in
- * steps of 120 however finely it scrolls; Firefox reports a mouse wheel in lines.
- */
-function isMouseWheel(e: WheelEvent): boolean {
-  if (e.deltaMode !== WheelEvent.DOM_DELTA_PIXEL) return true;
-  const legacy = (e as WheelEvent & { wheelDeltaY?: number }).wheelDeltaY;
-  if (legacy !== undefined && legacy !== 0) return legacy !== -3 * e.deltaY;
-  return e.deltaX === 0 && Math.abs(e.deltaY) >= 50;
-}
-
 /** Stacks that just arrived from elsewhere, held while they slide into place. */
 function useGlides(units: GameState['units'], animate: boolean): ReadonlyMap<string, [number, number]> {
   const [glides, setGlides] = useState<ReadonlyMap<string, [number, number]>>(new Map());
@@ -188,36 +174,16 @@ export function MapView({ onSpace, onPiece, onPieceDown, onHover, onBackground, 
     });
   const zoomRef = useRef(zoomAt);
   zoomRef.current = zoomAt;
-  const panRef = useRef((_dx: number, _dy: number) => {});
-  panRef.current = (dx, dy) =>
-    setView((cur) => {
-      const base = normalize(cur ?? v, size.w, size.h);
-      return normalize({ ...base, tx: base.tx + dx, ty: base.ty + dy }, size.w, size.h);
-    });
 
   useEffect(() => {
     const el = box.current;
     if (!el) return;
-    let pinchedAt = -Infinity;
-    let lastAt = -Infinity;
-    let mouse = false;
+    // Every wheel, a mouse's or a trackpad's, zooms about the pointer; panning is a drag, like moving a board.
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
       const r = el.getBoundingClientRect();
-      if (e.ctrlKey) {
-        pinchedAt = e.timeStamp;
-        return zoomRef.current(Math.exp(-e.deltaY * 0.01), e.clientX - r.left, e.clientY - r.top);
-      }
-      // A trackpad sends a few plain scroll events as the fingers settle after a pinch; they must not pan the map.
-      if (e.timeStamp - pinchedAt < PINCH_SETTLE_MS) return;
-      // A mouse wheel zooms and a trackpad's two-finger scroll pans like dragging. One flick is one device, so a
-      // stream of events keeps the kind its first event had.
-      if (e.timeStamp - lastAt > STREAM_GAP_MS) mouse = isMouseWheel(e);
-      lastAt = e.timeStamp;
-      if (mouse) {
-        const dy = e.deltaMode === WheelEvent.DOM_DELTA_LINE ? e.deltaY * 33 : e.deltaY;
-        zoomRef.current(Math.exp(-dy * 0.0015), e.clientX - r.left, e.clientY - r.top);
-      } else panRef.current(-e.deltaX, -e.deltaY);
+      const dy = e.deltaMode === WheelEvent.DOM_DELTA_LINE ? e.deltaY * 33 : e.deltaY;
+      zoomRef.current(Math.exp(-dy * (e.ctrlKey ? 0.01 : 0.0015)), e.clientX - r.left, e.clientY - r.top);
     };
     // The page itself never zooms or scrolls: a pinch or ctrl-wheel anywhere else would zoom the browser instead of the map.
     const guard = (e: WheelEvent) => {
