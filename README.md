@@ -1,6 +1,17 @@
 # Axis & Allies 1942 Second Edition
 
-A private, rules-complete clone of Axis & Allies 1942 Second Edition. Two players share one screen: one plays the Allies (Soviet Union, United Kingdom, United States) and the other plays the Axis (Germany, Japan). Either side can also be handed to the computer.
+A private, rules-complete clone of Axis & Allies 1942 Second Edition. One to five people play the five powers: the Allies (Soviet Union, United Kingdom, United States) against the Axis (Germany, Japan). Players take turns on one screen or play online through a link. The computer can play any power.
+
+[![A short demo: picking who plays, the turn card, buying units, dragging an attack onto Belorussia, and fighting the battle](docs/media/demo.gif)](docs/media/demo.mp4)
+
+The demo above runs at 1.5x speed. Click it for the [full-quality video](docs/media/demo.mp4).
+
+| | |
+| --- | --- |
+| ![The start screen, with a seat card for each power set to Player or Computer](docs/media/home.jpg) | ![A planned German attack on Belorussia, with its 56% win chance shown above the target](docs/media/board.jpg) |
+| **Start screen.** Pick a player or the computer for each power, then play here or online. | **Combat move.** Drag pieces onto a target. The pill above it shows the chance to win. |
+| ![The battle dialog, with the dice rolled and the Soviet player choosing casualties](docs/media/battle.jpg) | <img src="docs/media/phone.jpg" alt="The Soviet purchase phase on a phone" width="240"> |
+| **Combat.** Each roll shows its dice against the unit's value. The defender picks casualties. | **Phones.** The same game fits a phone, so friends can join from an invite link. |
 
 ## Run it
 
@@ -9,7 +20,7 @@ npm install
 npm run dev
 ```
 
-Open the printed local URL and pick who plays each of the five powers (a player or the computer, so one to five people) and press **Start the war**. The game autosaves in the browser after every action, so **Continue** on the start screen picks up where you left off. **Export save** in the ☰ menu saves the game to a file and **Import saved game** on the start screen loads one.
+Open the printed local URL and pick who plays each of the five powers (a player or the computer, so one to five people) and press **Start the war**. The game autosaves in the browser after every action, so **Continue** on the start screen picks up where you left off. **Export save** in the ☰ menu saves the game to a file and **Import a saved game…** on the start screen loads one.
 
 ## Play online
 
